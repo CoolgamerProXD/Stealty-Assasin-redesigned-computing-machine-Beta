@@ -112,7 +112,10 @@ func _build_environment() -> void:
  light.shadow_enabled = Campaign.settings["graphics"] != "LOW"
  add_child(light)
  _box(Vector3(0, -0.15, 0), Vector3(24, 0.3, 16), Color(0.34, 0.32, 0.29))
- _box(Vector3(-12, 1.5, 0), Vector3(0.25, 3, 16), Color(0.52, 0.49, 0.43))
+ # Preserve the original hotel and open its west wall into the new wing.
+ for z: float in [-5.0, 5.0]:
+  _box(Vector3(-12, 1.5, z), Vector3(0.25, 3, 6), Color(0.52, 0.49, 0.43))
+ _build_meridian_wing()
  _box(Vector3(12, 1.5, 0), Vector3(0.25, 3, 16), Color(0.48, 0.46, 0.41))
  _box(Vector3(0, 1.5, -8), Vector3(24, 3, 0.25), Color(0.49, 0.47, 0.42))
  _box(Vector3(0, 1.5, 8), Vector3(24, 3, 0.25), Color(0.49, 0.47, 0.42))
@@ -140,6 +143,82 @@ func _build_environment() -> void:
     _box(Vector3(boundary, 1.4, z + side), Vector3(0.32, 2.8, 0.14), Color(0.30, 0.27, 0.23), false)
  var region := NavigationRegion3D.new()
  region.navigation_mesh = HotelLayout.navigation_mesh()
+ add_child(region)
+
+func _build_meridian_wing() -> void:
+ # A new west wing and upper level retain all original coordinates. Walkable
+ # area is approximately seven times the original single-floor area; the
+ # ground footprint itself is approximately 3.5 times the original.
+ var floor_mat := Color(0.34,0.32,0.29)
+ var walls := Color(0.55,0.52,0.46)
+ var dark := Color(0.25,0.20,0.17)
+ var brass := Color(0.70,0.53,0.29)
+ _box(Vector3(-27,-0.15,0),Vector3(30,0.3,32),floor_mat)
+ for z: float in [-16.0,16.0]:
+  _box(Vector3(-27,3.5,z),Vector3(30,7,0.25),walls)
+  _box(Vector3(0,5.4,z * 0.5),Vector3(24,3.6,0.25),walls)
+ _box(Vector3(-42,3.5,0),Vector3(0.25,7,32),walls)
+ _box(Vector3(12,5.4,0),Vector3(0.25,3.6,16),walls)
+ for z: float in [-12.0,12.0]: _box(Vector3(-12,3.5,z),Vector3(0.25,7,8),walls)
+ # Upper slabs leave a four metre stairwell, instead of a solid ceiling over it.
+ _box(Vector3(-27,3.45,-7.5),Vector3(30,0.3,17),floor_mat)
+ _box(Vector3(-27,3.45,10.5),Vector3(30,0.3,11),floor_mat)
+ _box(Vector3(-39.5,3.45,3),Vector3(5,0.3,4),floor_mat)
+ _box(Vector3(-18.5,3.45,3),Vector3(13,0.3,4),floor_mat)
+ _box(Vector3(0,3.45,0),Vector3(24,0.3,16),floor_mat)
+ # One gentle, collision-bearing architectural stair ramp: both directions.
+ var ramp := StaticBody3D.new()
+ ramp.name = "WestWingRamp"
+ ramp.position = Vector3(-31,1.70,3)
+ ramp.rotation.z = -atan(3.6 / 12.0)
+ add_child(ramp)
+ var ramp_mesh := MeshInstance3D.new()
+ var shape := BoxMesh.new()
+ shape.size = Vector3(12.55,0.2,3.4)
+ ramp_mesh.mesh = shape
+ var ramp_mat := StandardMaterial3D.new()
+ ramp_mat.albedo_color = Color(0.38,0.27,0.20)
+ ramp_mesh.material_override = ramp_mat
+ ramp.add_child(ramp_mesh)
+ var collider := CollisionShape3D.new()
+ var ramp_shape := BoxShape3D.new()
+ ramp_shape.size = shape.size
+ collider.shape = ramp_shape
+ ramp.add_child(collider)
+ for side: float in [-1.9,1.9]:
+  _box(Vector3(-31,2.4,3+side),Vector3(12.2,0.08,0.08),brass,false)
+ # Private room door faces the upper corridor, with real physical partitions.
+ for z: float in [-12.5,-7.0]: _box(Vector3(-34,5.25,z),Vector3(0.2,3.3,3.0),walls)
+ _box(Vector3(-38,5.25,-14),Vector3(8,3.3,0.2),walls)
+ _box(Vector3(-38,5.25,-5.5),Vector3(8,3.3,0.2),walls)
+ _box(Vector3(-38,4.0,-11),Vector3(4,0.8,2.2),Color(0.62,0.58,0.48),false)
+ _box(Vector3(-38,4.45,-11.7),Vector3(4,0.15,0.6),Color(0.83,0.80,0.70),false)
+ _box(Vector3(-40,4.05,-7),Vector3(1.3,0.9,0.8),dark,false)
+ _box(Vector3(-39,3.63,-8.7),Vector3(4,0.04,2),Color(0.33,0.20,0.18),false)
+ # Upper guest gallery and lower dining / service lounge.
+ for x: float in [-38.0,-30.0,-22.0,-15.0]:
+  for y: float in [2.95,6.85]:
+   _box(Vector3(x,y,0),Vector3(2,0.06,0.22),Color(0.90,0.76,0.53),false)
+  for z: float in [-15.7,15.7]:
+   _box(Vector3(x,4.9,z),Vector3(2.1,1.8,0.06),dark,false)
+   _box(Vector3(x,4.9,z + (0.04 if z < 0 else -0.04)),Vector3(1.7,1.35,0.04),Color(0.42,0.39,0.31),false)
+ for x: float in [-38.0,-31.0,-24.0,-17.0]:
+  _box(Vector3(x,0.45,-10),Vector3(2.4,0.9,1.3),dark,false)
+  _box(Vector3(x,0.95,-10),Vector3(2.5,0.12,1.4),Color(0.65,0.57,0.46),false)
+  for z: float in [-11.5,-8.5]:
+   _box(Vector3(x,0.35,z),Vector3(1.2,0.7,0.55),Color(0.22,0.30,0.29),false)
+ for x: float in [-38.0,-30.0,-22.0,-15.0]:
+  _box(Vector3(x,0.4,11),Vector3(2.3,0.8,0.8),Color(0.23,0.33,0.32),false)
+  _box(Vector3(x,0.8,11.3),Vector3(2.3,0.7,0.15),Color(0.20,0.28,0.28),false)
+ _box(Vector3(-27,7.1,0),Vector3(30,0.2,32),Color(0.32,0.32,0.30),false)
+ _box(Vector3(0,7.1,0),Vector3(24,0.2,16),Color(0.32,0.32,0.30),false)
+ # Navigation on the original floor remains untouched; the stationary target
+ # receives a separate upper region. NPCs do not yet route across the ramp.
+ var region := NavigationRegion3D.new()
+ var nav := NavigationMesh.new()
+ nav.vertices = PackedVector3Array([Vector3(-41.5,3.6,-15.5),Vector3(-12.5,3.6,-15.5),Vector3(-12.5,3.6,15.5),Vector3(-41.5,3.6,15.5)])
+ nav.add_polygon(PackedInt32Array([0,3,2,1]))
+ region.navigation_mesh = nav
  add_child(region)
 
 func _build_player() -> void:

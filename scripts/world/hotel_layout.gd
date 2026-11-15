@@ -22,8 +22,12 @@ static func navigation_mesh() -> NavigationMesh:
  return mesh
 
 static func is_safe_player_position(point: Vector3) -> bool:
- if not point.is_finite() or absf(point.x) > 11.0 or point.y < 0.0 or point.y > 3.0 or absf(point.z) > 7.0:
-  return false
+ if not point.is_finite() or point.y < 0.0 or point.y > 6.0: return false
+ if point.x < -11.0:
+  return point.x >= -41.0 and absf(point.z) <= 15.0
+ if absf(point.x) > 11.0 or absf(point.z) > 7.0: return false
+ # Upstairs spans the original hotel too; its lower partitions do not continue.
+ if point.y >= 3.3: return true
  for boundary: float in [2.0, 7.0]:
   if absf(point.x - boundary) < 0.44 and not (absf(point.z) >= 2.35 and absf(point.z) <= 3.65):
    return false

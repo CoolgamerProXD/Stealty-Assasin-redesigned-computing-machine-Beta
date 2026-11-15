@@ -67,11 +67,8 @@ class PopulationDataTests(unittest.TestCase):
         self.assertNotIn(target["name"], [person["identity"] for person in self.people])
         self.assertTrue(target["description"] and target["schedule"])
         for x, y, z in [target["start"]] + [entry["destination"] for entry in target["schedule"]]:
-            self.assertLessEqual(abs(x), 11.0)
-            self.assertLessEqual(abs(z), 7.0)
-            for boundary in (2.0, 7.0):
-                if abs(x - boundary) < 0.5:
-                    self.assertTrue(2.35 <= abs(z) <= 3.65)
+            self.assertTrue(-41.0 < x < -34.5 and -13.5 < z < -6.0)
+            self.assertGreaterEqual(y, 3.5)
         initiation = json.loads((ROOT / "resources/initiation_mission.json").read_text())
         self.assertEqual(initiation["primary_target"]["id"], "assessment_unit")
         self.assertEqual(initiation["required_action"], "disable_assessment_unit")

@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -68,6 +68,15 @@ func run() -> void:
  await capture("cinema_hotel_corridor")
  for quality: String in ["LOW", "MEDIUM", "HIGH"]:
   await sample_preset(service, quality)
+ camera.global_position = Vector3(-19, 2.1, -3)
+ camera.look_at(Vector3(-34,1.1,-10),Vector3.UP)
+ await capture("cinema_hotel_wing")
+ camera.global_position = Vector3(-31,5.2,-1)
+ camera.look_at(Vector3(-38,4.5,-10),Vector3.UP)
+ await capture("cinema_hotel_upper")
+ camera.global_position = Vector3(-5,1.4,-2.2)
+ camera.look_at(Vector3(-5,0.8,-3.6),Vector3.UP)
+ await capture("cinema_hotel_intel")
  var target: HotelNpc = hotel.get("primary_npc")
  camera.global_position = target.global_position + Vector3(2.4, 1.7, 2.4)
  camera.look_at(target.global_position + Vector3.UP * 1.0, Vector3.UP)
@@ -122,6 +131,15 @@ func run() -> void:
   await sample_preset(service, quality)
  station.queue_free()
  await process_frame
+ for preview_name: String in ["hong_kong", "ngong_ping"]:
+  var scenery: Node3D = load("res://scenes/" + preview_name + "_preview.tscn").instantiate()
+  root.add_child(scenery)
+  for i: int in range(5): await physics_frame
+  var scenery_cam := shot_camera(scenery, Vector3(0,4.0,24), Vector3(0,2.0,-20))
+  await capture("cinema_city" if preview_name == "hong_kong" else "cinema_ngong_ping")
+  check(scenery_cam.current and scenery.get("player") != null, preview_name + " preview renders with player")
+  scenery.queue_free()
+  await process_frame
  var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
  root.add_child(menu)
  await process_frame

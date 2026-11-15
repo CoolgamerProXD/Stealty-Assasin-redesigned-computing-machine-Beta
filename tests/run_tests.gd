@@ -157,6 +157,24 @@ func run() -> void:
  for existing: HotelNpc in npcs:
   existing.set_physics_process(false)
   existing.collision_layer = 0
+ # Walk the actual continuous ramp in both directions; no teleport across floors.
+ var upstairs_target: HotelNpc = world.get("primary_npc")
+ check(upstairs_target.global_position.y > 3.4 and upstairs_target.global_position.x < -34, "Meridian target starts in upper private room")
+ player.global_position = Vector3(-24,0.08,3)
+ player.rotation.y = 0
+ player.velocity = Vector3.ZERO
+ await physics_frame
+ Input.action_press("move_left")
+ await create_timer(6.0).timeout
+ Input.action_release("move_left")
+ print("WING_DIAG: ascent=", player.global_position)
+ check(player.global_position.x < -35.0 and player.global_position.y > 3.3, "player walks from ground level up the connected ramp")
+ Input.action_press("move_right")
+ await create_timer(6.0).timeout
+ Input.action_release("move_right")
+ print("WING_DIAG: descent=", player.global_position)
+ check(player.global_position.x > -27.0 and player.global_position.y < 0.5, "player walks back down the connected ramp")
+ check(HotelLayout.is_safe_player_position(Vector3(-38,3.65,-9)), "upper-floor checkpoint position accepted")
  # Exercise real player physics and input, away from walls and interactables.
  player.global_position = Vector3(-10, 0.1, 0)
  await physics_frame
@@ -769,6 +787,43 @@ func run() -> void:
  else:
   check(false, "completed Initiation can be replayed")
   check(false, "replay does not relock Meridian")
+ if current_scene != null:
+  current_scene.queue_free()
+  current_scene = null
+ # Exercise the actual map-selection buttons and Escape scene transitions.
+ for preview_name: String in ["TUNG CHUNG", "HONG KONG", "NGONG PING"]:
+  change_scene_to_file("res://scenes/main_menu.tscn")
+  await process_frame
+  await process_frame
+  var menu: Node = current_scene
+  menu.call("_missions")
+  var chosen: Button = null
+  for child: Node in menu.get("panel").get_children():
+   if child is Button and child.text.contains(preview_name): chosen = child
+  check(chosen != null and not chosen.disabled, preview_name + " preview button is clickable")
+  if chosen:
+   chosen.pressed.emit()
+   await process_frame
+   await process_frame
+   var preview: Node = current_scene
+   check(preview != null and preview.scene_file_path.contains("preview"), preview_name + " preview loads from selection")
+   if preview:
+    var preview_player: HotelPlayer = preview.get("player")
+    var before_preview := preview_player.global_position
+    Input.action_press("move_forward")
+    await create_timer(0.5).timeout
+    Input.action_release("move_forward")
+    check(preview_player.global_position.distance_to(before_preview) > 0.2, preview_name + " preview supports player movement")
+    var exit_event := InputEventAction.new()
+    exit_event.action = "release_mouse"
+    exit_event.pressed = true
+    preview.call("_unhandled_input", exit_event)
+    await process_frame
+    await process_frame
+    var returned := current_scene != null and current_scene.scene_file_path == "res://scenes/main_menu.tscn"
+    if returned:
+     returned = current_scene.get("panel").get_child(0).text == "MISSION SELECTION"
+    check(returned, preview_name + " Escape returns to mission selection")
  if current_scene != null:
   current_scene.queue_free()
   current_scene = null
