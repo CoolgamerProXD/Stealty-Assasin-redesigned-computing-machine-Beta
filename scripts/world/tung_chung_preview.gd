@@ -97,7 +97,7 @@ func _station() -> void:
  # Rhythm of columns, floor strips and ceiling lights establishes the concourse.
  for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
   for z: float in [-6.0,6.0]:
-   _box(Vector3(x,2.6,z), Vector3(0.6,5.2,0.6), Color(0.76,0.79,0.76))
+   _box(Vector3(x,2.6,z), Vector3(0.6,5.2,0.6), Color(0.76,0.79,0.76), true)
    _box(Vector3(x,0.35,z), Vector3(0.8,0.7,0.8), dark)
   _box(Vector3(x,5.1,0), Vector3(4.8,0.05,0.3), Color(1.0,0.91,0.72))
  for x: float in [-14.0,-7.0,0.0,7.0,14.0]:
@@ -125,7 +125,7 @@ func _station() -> void:
   _box(Vector3(15.75,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
  _sign("CONCOURSE  /  UPPER WALKWAY", Vector3(17,4.65,-3.85), 28)
  # A central information island and seating; kept non-solid in this blockout.
- _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38))
+ _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38), true)
  _box(Vector3(-1,1.15,0), Vector3(5.2,0.12,2.2), Color(0.76,0.75,0.66))
  _sign("INFORMATION", Vector3(-1,2.6,0.5), 36)
  for x: float in [5.0,9.0,13.0]:
@@ -141,6 +141,18 @@ func _station() -> void:
  _box(Vector3(0,0.65,11.9), Vector3(38,0.12,0.06), orange)
  _box(Vector3(1,4.2,8), Vector3(9,0.8,0.2), dark)
  _sign("PLATFORM  /  TRAINS", Vector3(1,4.2,7.86), 40)
+ # Non-operational architectural details; routes are not real station layouts.
+ for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
+  _box(Vector3(x,5.12,-4), Vector3(0.24,0.18,17), Color(0.25,0.31,0.31))
+  _box(Vector3(x,3.0,-13.82), Vector3(5.0,0.05,0.05), orange)
+  _box(Vector3(x,0.08,0), Vector3(0.04,0.04,19), Color(0.64,0.68,0.64))
+ for x: float in [-9.0,-5.0,2.0,6.0,9.0,13.0]:
+  _box(Vector3(x,2.4,-11.34),Vector3(1.1,0.58,0.025),Color(0.84,0.72,0.50))
+  _box(Vector3(x,2.4,-11.30),Vector3(0.96,0.44,0.02),Color(0.26,0.39,0.37))
+ for x: float in [-17.0,-9.0,-1.0,7.0,15.0]:
+  _box(Vector3(x,1.0,11.83),Vector3(0.035,1.9,0.035),Color(0.92,0.65,0.27))
+  _box(Vector3(x,2.9,11.83),Vector3(0.8,0.10,0.035),Color(0.92,0.65,0.27))
+
 
 func _population() -> void:
  var coats: Array[Color] = [Color(0.55,0.31,0.24), Color(0.25,0.36,0.46), Color(0.42,0.44,0.30), Color(0.48,0.36,0.46), Color(0.28,0.45,0.42), Color(0.60,0.52,0.38), Color(0.31,0.32,0.35)]
@@ -148,8 +160,8 @@ func _population() -> void:
   var profile := NpcProfile.new()
   profile.identity = "Passenger %02d" % i
   profile.occupation = "employee" if i % 5 == 0 else "civilian"
-  var start := Vector3(-17 + float(i % 7) * 5.5, 0.05, -3.0 + float(i / 7) * 8.0)
-  var end := Vector3(clampf(start.x + (4.0 if i % 2 == 0 else -4.0), -19, 19), 0.05, start.z + (2.0 if i % 3 == 0 else -2.0))
+  var start := Vector3(-17 + float(i % 7) * 5.5, 0.05, -3.0 + float(i / 7) * 11.5)
+  var end := Vector3(clampf(start.x + (4.0 if i % 2 == 0 else -4.0), -19, 19), 0.05, start.z)
   profile.schedule.append(ScheduleEntry.new(end, "waiting" if i % 3 == 0 else "conversing", 3.0 + float(i % 4)))
   profile.schedule.append(ScheduleEntry.new(start, "idle", 2.0 + float(i % 3)))
   var npc := HotelNpc.new()

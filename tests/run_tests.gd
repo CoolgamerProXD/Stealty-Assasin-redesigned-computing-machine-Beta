@@ -847,6 +847,18 @@ func run() -> void:
     await create_timer(0.5).timeout
     Input.action_release("move_forward")
     check(preview_player.global_position.distance_to(before_preview) > 0.2, preview_name + " preview supports player movement")
+    if preview_name != "TUNG CHUNG":
+     var preview_npcs: Array[HotelNpc] = preview.get("npcs")
+     check(preview_npcs.size() >= 3, preview_name + " preview includes local visitors")
+     var visitor := preview_npcs[0]
+     var visitor_start := visitor.global_position
+     await create_timer(1.0).timeout
+     check(visitor.global_position.distance_to(visitor_start) > 0.2, preview_name + " visitor follows its open public-space route")
+     var query := PhysicsRayQueryParameters3D.create(visitor.global_position + Vector3.UP * 0.8, visitor.profile.schedule[0].destination + Vector3.UP * 0.8)
+     var excludes: Array[RID] = [preview_player.get_rid()]
+     for actor: HotelNpc in preview_npcs: excludes.append(actor.get_rid())
+     query.exclude = excludes
+     check(visitor.get_world_3d().direct_space_state.intersect_ray(query).is_empty(), preview_name + " scripted route remains free of solid architecture")
     var exit_event := InputEventAction.new()
     exit_event.action = "release_mouse"
     exit_event.pressed = true

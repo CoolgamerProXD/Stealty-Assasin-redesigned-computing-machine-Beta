@@ -1,11 +1,15 @@
 extends "res://scripts/world/tung_chung_preview.gd"
 ## Original explorable landscape studies, separate from campaign progression.
 @export_enum("city", "mountain") var preview_kind: String = "city"
+var accents: Array[Transform3D] = []
+var accent_colors: Array[Color] = []
 
 func _ready() -> void:
  _environment()
  if preview_kind == "city": _city()
  else: _mountain()
+ _flush_accents()
+ _scene_population()
  player = HotelPlayer.new()
  player.position = Vector3(0,0.05,20)
  add_child(player)
@@ -19,6 +23,49 @@ func _ready() -> void:
  hud.add_theme_constant_override("shadow_offset_x", 2)
  hud.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(hud)
+
+func _accent(pos: Vector3, size: Vector3, color: Color) -> void:
+ accents.append(Transform3D(Basis.IDENTITY.scaled(size),pos))
+ accent_colors.append(color)
+
+func _flush_accents() -> void:
+ if accents.is_empty(): return
+ var multi := MultiMesh.new()
+ multi.transform_format = MultiMesh.TRANSFORM_3D
+ multi.use_colors = true
+ var mesh := BoxMesh.new()
+ var material := StandardMaterial3D.new()
+ material.vertex_color_use_as_albedo = true
+ material.roughness = 0.82
+ mesh.material = material
+ multi.mesh = mesh
+ multi.instance_count = accents.size()
+ for i: int in range(accents.size()):
+  multi.set_instance_transform(i, accents[i])
+  multi.set_instance_color(i, accent_colors[i])
+ var visual := MultiMeshInstance3D.new()
+ visual.name = "DistrictDetails"
+ visual.multimesh = multi
+ visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ add_child(visual)
+
+func _scene_population() -> void:
+ # Short, explicitly unobstructed routes in public space; no cross-district AI.
+ var roles := ["civilian", "employee", "civilian", "civilian"]
+ var routes := [
+  [Vector3(-2,0.05,9), Vector3(-2,0.05,-9)],
+  [Vector3(2,0.05,-8), Vector3(2,0.05,8)],
+  [Vector3(-7,0.05,2), Vector3(7,0.05,2)],
+  [Vector3(7,0.05,-2), Vector3(-7,0.05,-2)]]
+ if preview_kind == "mountain":
+  routes = [
+   [Vector3(-2,0.05,10), Vector3(-2,0.05,-10)],
+   [Vector3(2,0.05,-9), Vector3(2,0.05,9)],
+   [Vector3(-4,0.05,5), Vector3(4,0.05,5)]]
+ var coats: Array[Color] = [Color(0.31,0.40,0.48), Color(0.49,0.33,0.23), Color(0.40,0.45,0.32), Color(0.52,0.43,0.41)]
+ for i: int in range(routes.size()):
+  var person := _target(("Visitor " if preview_kind == "mountain" else "Commuter ") + str(i+1), roles[i], routes[i][0], routes[i][1])
+  person.person.clothing.albedo_color = coats[i]
 
 func _process(_delta: float) -> void:
  var title := "HONG KONG  /  CITY SANDBOX" if preview_kind == "city" else "NGONG PING  /  TIAN TAN BUDDHA"
@@ -59,6 +106,28 @@ func _city() -> void:
  _box(Vector3(0,0.03,-40),Vector3(84,0.06,5),Color(0.27,0.38,0.40))
  _box(Vector3(0,0.03,-43),Vector3(84,0.06,3),Color(0.14,0.30,0.38))
  _sign("HARBOUR PROMENADE",Vector3(0,3,-37),38)
+ # Facade bays, awnings and signs establish distinct public-facing streets.
+ for x: float in [-31.0,-17.0,17.0,31.0]:
+  for z: float in [-30.0,-16.0,16.0,30.0]:
+   _accent(Vector3(x,3.5,z+4.62),Vector3(9.8,0.15,0.12),Color(0.69,0.62,0.49))
+   _accent(Vector3(x,0.13,z+5.2),Vector3(10.4,0.20,0.7),Color(0.49,0.49,0.45))
+   for dx: float in [-3.8,3.8]:
+    _accent(Vector3(x+dx,1.8,z+4.63),Vector3(0.15,3.4,0.12),Color(0.31,0.33,0.31))
+   _accent(Vector3(x,2.8,z+4.75),Vector3(6.8,0.34,0.15),Color(0.18,0.28,0.30))
+   _accent(Vector3(x,1.65,z+4.68),Vector3(5.5,1.65,0.06),Color(0.29,0.42,0.43))
+ for x: float in [-30.0,-24.0,-18.0,-12.0]:
+  for dx: float in [-1.2,0.0,1.2]:
+   _accent(Vector3(x+dx,1.21,8),Vector3(0.7,0.22,0.7),Color(0.52,0.57,0.27) if dx == 0.0 else Color(0.66,0.39,0.21))
+  _accent(Vector3(x,2.26,8),Vector3(3.9,0.1,2.2),Color(0.73,0.30,0.20))
+  for dx: float in [-1.3,0.0,1.3]:
+   _accent(Vector3(x+dx,2.28,8),Vector3(0.35,0.12,2.2),Color(0.89,0.75,0.55))
+ for x: float in [-36.0,-28.0,-20.0,-12.0,-4.0,4.0,12.0,20.0,28.0,36.0]:
+  _accent(Vector3(x,0.8,-39.7),Vector3(0.08,1.6,0.08),Color(0.56,0.61,0.57))
+ _accent(Vector3(0,1.45,-39.7),Vector3(80,0.08,0.08),Color(0.56,0.61,0.57))
+ for z: float in [-25.0,-15.0,-5.0,5.0,15.0,25.0]:
+  for x: float in [-7.3,7.3]:
+   _accent(Vector3(x,1.9,z),Vector3(0.11,3.8,0.11),Color(0.22,0.27,0.26))
+   _accent(Vector3(x,3.85,z),Vector3(0.65,0.10,0.45),Color(0.94,0.78,0.56))
  for x: float in [-35.0,-25.0,-15.0,-5.0,5.0,15.0,25.0,35.0]:
   _box(Vector3(x,1.4,-38),Vector3(0.12,2.8,0.12),dark)
   _box(Vector3(x,2.85,-38),Vector3(0.7,0.1,0.7),Color(0.95,0.80,0.58))
@@ -101,6 +170,18 @@ func _mountain() -> void:
   for z: float in [-33.0,-17.0,0.0,26.0,36.0]:
    _box(Vector3(x,1.1,z),Vector3(0.45,2.2,0.45),Color(0.28,0.22,0.14))
    _box(Vector3(x,2.7,z),Vector3(2.8,2.4,2.8),Color(0.19,0.36,0.22))
+ # Benches, visitor railings and path edging respect the landmark's public use.
+ for z: float in [-16.0,-6.0,4.0,14.0,24.0]:
+  for x: float in [-6.5,6.5]:
+   _accent(Vector3(x,0.43,z),Vector3(1.8,0.12,0.65),Color(0.37,0.25,0.17))
+   _accent(Vector3(x,0.22,z),Vector3(1.5,0.45,0.08),Color(0.27,0.27,0.23))
+ for z: float in [-20.0,-12.0,-4.0,4.0,12.0,20.0,28.0]:
+  for x: float in [-5.6,5.6]:
+   _accent(Vector3(x,0.10,z),Vector3(0.12,0.18,7.5),Color(0.45,0.47,0.37))
+ for x: float in [-9.0,9.0]:
+  for z: float in [-18.0,-10.0,0.0,10.0,22.0]:
+   _accent(Vector3(x,0.16,z),Vector3(0.9,0.32,0.9),Color(0.39,0.38,0.30))
+   _accent(Vector3(x,0.70,z),Vector3(1.4,0.95,1.4),Color(0.23,0.39,0.23))
  # Distant, stylised peaks, and an atmospheric decorative cable-car vista.
  for x: float in [-39.0,-27.0,27.0,39.0]:
   _peak(Vector3(x,0,-42), 12.0, 15.0 + absf(x)*0.12, Color(0.27,0.37,0.35))
