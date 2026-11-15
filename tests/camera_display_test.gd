@@ -115,16 +115,16 @@ func run() -> void:
  Input.parse_input_event(fire.duplicate())
  await process_frame
  # Simulate a shoulder camera clipped to the far side of the partition.
- player.global_position = Vector3(1.2, 0.05, 0)
- player.camera.global_position = Vector3(2.7, 1.5, 0)
+ player.global_position = Vector3(1.65, 0.05, 0)
  target.global_position = Vector3(4.2, 0.05, 0)
- player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
  await physics_frame
+ player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
  fire.pressed = true
  Input.parse_input_event(fire.duplicate())
  await process_frame
  await physics_frame
  await process_frame
+ print("CAMERA_DIAG: obstruction player=", player.global_position, " camera=", player.camera.global_position, " charges=", player.equipment.charges, " message=", world.get("message"))
  check(target.stunned_time == 0.0 and player.equipment.charges == 3 and str(world.get("message")).contains("obstructed"), "camera across wall cannot shoot through player obstruction")
  right.pressed = false
  Input.parse_input_event(right.duplicate())

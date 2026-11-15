@@ -276,8 +276,8 @@ func _build_ui() -> void:
  crosshair.set_anchors_preset(Control.PRESET_CENTER)
  crosshair.offset_left = -20
  crosshair.offset_right = 20
- crosshair.offset_top = -20
- crosshair.offset_bottom = 20
+ crosshair.offset_top = -24
+ crosshair.offset_bottom = 24
  crosshair.visible = false
  overlay.add_child(crosshair)
  instinct_label = Label.new()
