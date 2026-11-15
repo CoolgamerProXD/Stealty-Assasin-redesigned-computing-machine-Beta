@@ -277,6 +277,8 @@ func run() -> void:
  var before_duplicate: int = active_mission.clues.size()
  world.call("_on_interaction", objects[2])
  check(active_mission.clues.size() == before_duplicate, "repeated collection does not duplicate progress")
+ SessionSnapshot.restore({"clues": ["ledger", "memo"], "extracted": true, "action_complete": false}, player, active_mission, objects)
+ check(active_mission.action_complete and active_mission.extracted, "completed legacy Meridian checkpoint migrates witness objective")
  world.queue_free()
  await process_frame
  var campaign := CampaignProgress.new()
@@ -454,6 +456,8 @@ func run() -> void:
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn":
    current_scene.call("_apply_timeline", 6.0, 0.1)
    check(current_scene.get("actor").position.z < 0.0 and current_scene.get("left_door").position.x < -2.0, "cinematic timeline opens doors and walks outside")
+   current_scene.call("_process", 1.2)
+   check(current_scene.get("door_played") and current_scene.get("effects").stream != null, "cinematic starts synthesized door sound")
    var skip_event := InputEventAction.new()
    skip_event.action = "release_mouse"
    skip_event.pressed = true
@@ -464,6 +468,7 @@ func run() -> void:
    check(service.progress.is_unlocked("meridian"), "skipping Ruby scene preserves campaign unlock")
   else:
    check(false, "cinematic timeline opens doors and walks outside")
+   check(false, "cinematic starts synthesized door sound")
    check(false, "skipping Ruby scene preserves campaign unlock")
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn":
    current_scene.call("_continue")
@@ -477,8 +482,17 @@ func run() -> void:
   check(false, "resume restarts simulation")
   check(false, "objective completion saves unlock and opens Ruby scene")
   check(false, "cinematic timeline opens doors and walks outside")
+  check(false, "cinematic starts synthesized door sound")
   check(false, "skipping Ruby scene preserves campaign unlock")
   check(false, "debrief can be skipped to main menu")
+ if current_scene != null and current_scene.scene_file_path == "res://scenes/main_menu.tscn":
+  check(service.begin("initiation"), "completed Initiation can be replayed")
+  await process_frame
+  await process_frame
+  check(current_scene != null and current_scene.scene_file_path == "res://scenes/initiation.tscn" and service.progress.is_unlocked("meridian"), "replay does not relock Meridian")
+ else:
+  check(false, "completed Initiation can be replayed")
+  check(false, "replay does not relock Meridian")
  if current_scene != null:
   current_scene.queue_free()
   current_scene = null
