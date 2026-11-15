@@ -82,7 +82,7 @@ func run() -> void:
  player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
  await physics_frame
  check(player.aiming and world.get("crosshair").is_visible_in_tree(), "right mouse input shows aiming crosshair on virtual display")
- var reticle: Label = world.get("crosshair")
+ var reticle: Control = world.get("crosshair")
  var view_center := player.camera.get_viewport().get_visible_rect().size * 0.5
  print("CAMERA_DIAG: rect=", reticle.get_global_rect(), " parent_size=", reticle.get_parent().size, " viewport=", view_center, " anchors=", reticle.anchor_left, ",", reticle.anchor_top)
  check(reticle.get_global_rect().get_center().distance_to(view_center) < 1.0, "displayed crosshair is at the viewport center")

@@ -9,7 +9,7 @@ var primary_npc: HotelNpc
 var hud: Label
 var prompt: Label
 var equipment_hud: Label
-var crosshair: Label
+var crosshair: Control
 var shot_audio: AudioStreamPlayer
 var last_shot_start: Vector3
 var last_shot_end: Vector3
@@ -265,19 +265,13 @@ func _build_ui() -> void:
  bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
  bottom.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(bottom)
- crosshair = Label.new()
- crosshair.text = "+"
- crosshair.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
- crosshair.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
- crosshair.add_theme_font_size_override("font_size", 32)
- crosshair.add_theme_color_override("font_outline_color", Color.BLACK)
- crosshair.add_theme_constant_override("outline_size", 4)
+ crosshair = preload("res://scripts/ui/aim_reticle.gd").new()
  crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
  crosshair.set_anchors_preset(Control.PRESET_CENTER)
  crosshair.offset_left = -20
  crosshair.offset_right = 20
- crosshair.offset_top = -24
- crosshair.offset_bottom = 24
+ crosshair.offset_top = -20
+ crosshair.offset_bottom = 20
  crosshair.visible = false
  overlay.add_child(crosshair)
  instinct_label = Label.new()
