@@ -2,6 +2,8 @@ extends "res://scripts/world/hotel.gd"
 ## The fictional Civic Evaluation Annex uses the existing player, NPC and interactions.
 var robot: Interactable
 var patrol_clock: float = 0.0
+var robot_alert: bool = false
+var robot_light: StandardMaterial3D
 
 func mission_id() -> String:
  return "initiation"
@@ -100,6 +102,7 @@ func _build_interactions() -> void:
  robot_material.albedo_color = Color(0.16, 0.55, 0.65)
  robot_material.emission_enabled = true
  robot_material.emission = Color(0.08, 0.3, 0.38)
+ robot_light = robot_material
  head.material_override = robot_material
  robot.add_child(head)
  _add_interactable(Vector3(-13, 0, 7), "Complete assessment", "extract", "exit", Color(0.4, 0.8, 0.5))
@@ -113,6 +116,15 @@ func _on_interaction(object: Interactable) -> void:
  super._on_interaction(object)
 
 func _physics_process(delta: float) -> void:
- if robot and not robot.used:
-  patrol_clock += delta
-  robot.position.x = -5.0 + sin(patrol_clock * 0.6) * 1.4
+ if not robot: return
+ if robot.used:
+  robot_alert = false
+  robot_light.emission = Color(0.03, 0.03, 0.03)
+  return
+ robot_alert = _clear_reach(robot.global_position, 3.0)
+ patrol_clock += delta * (0.4 if robot_alert else 1.0)
+ robot.position.x = -5.0 + sin(patrol_clock * 0.6) * 1.4
+ if robot_alert:
+  var toward := player.global_position - robot.global_position
+  robot.rotation.y = atan2(-toward.x, -toward.z)
+ robot_light.emission = Color(0.8, 0.18, 0.08) if robot_alert else Color(0.08, 0.3, 0.38)

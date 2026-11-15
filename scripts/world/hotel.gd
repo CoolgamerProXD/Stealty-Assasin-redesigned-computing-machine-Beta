@@ -348,6 +348,8 @@ func _process(_delta: float) -> void:
  var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
  var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "IVO CHEN  /  RECORDS EMPLOYEE"
  var target_state := "COMPLETE" if mission.action_complete else "LOCATE AND INTERACT"
+ if mission_id() == "initiation" and not mission.action_complete and get("robot_alert") == true:
+  target_state = "SCANNING NEARBY"
  hud.text = title + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + mission.progress_text() + "\n" + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
  var slots := "1  TRAINING SIDEARM"
  if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"

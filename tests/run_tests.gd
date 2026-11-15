@@ -279,6 +279,42 @@ func run() -> void:
  check(campaign_copy.completed.has("initiation") and campaign_copy.selected == "quiet_line" and campaign_copy.is_unlocked("initiation"), "campaign progress and replay survive restore")
  campaign_copy.restore({"completed": ["meridian"], "selected": "quiet_line"})
  check(campaign_copy.completed.is_empty() and campaign_copy.selected == "training_sidearm", "out-of-order save cannot bypass unlocks")
+ var gadget_world: Node = scene.instantiate()
+ root.add_child(gadget_world)
+ await process_frame
+ await physics_frame
+ var gadget_player: HotelPlayer = gadget_world.get("player")
+ var gadget_npcs: Array[HotelNpc] = gadget_world.get("npcs")
+ gadget_player.equipment.configure(campaign, "meridian")
+ check(gadget_player.equipment.available.has("quiet_line") and gadget_player.equipment.selected == "quiet_line", "unlocked selected gadget is provisioned in Meridian")
+ var guard: HotelNpc = gadget_npcs[0]
+ for person: HotelNpc in gadget_npcs:
+  person.set_physics_process(false)
+  person.collision_layer = 0
+ guard.global_position = Vector3(-9, 0.05, 1)
+ gadget_player.global_position = Vector3(-9, 0.05, 2)
+ await physics_frame
+ var select_event := InputEventAction.new()
+ select_event.action = "equip_secondary"
+ select_event.pressed = true
+ Input.parse_input_event(select_event)
+ var gadget_event := InputEventAction.new()
+ gadget_event.action = "use_equipment"
+ gadget_event.pressed = true
+ Input.parse_input_event(gadget_event)
+ await process_frame
+ check(guard.stunned_time > 0 and gadget_player.equipment.selected == "quiet_line", "gadget input temporarily disables a nearby NPC")
+ gadget_world.call("_process", 0.0)
+ check(gadget_world.get("hud").text.contains("IVO CHEN") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
+ var gadget_snapshot := SessionSnapshot.capture(gadget_player, gadget_world.get("mission"))
+ gadget_player.equipment.configure(campaign_copy, "meridian")
+ SessionSnapshot.restore(gadget_snapshot, gadget_player, gadget_world.get("mission"), gadget_world.get("interactables"), Callable(gadget_world, "safe_position"), campaign)
+ check(gadget_player.equipment.available.has("quiet_line") and gadget_player.equipment.selected == "quiet_line", "checkpoint restores unlocked gadget selection")
+ gadget_player.equipment.configure(campaign_copy, "meridian")
+ SessionSnapshot.restore(gadget_snapshot, gadget_player, gadget_world.get("mission"), gadget_world.get("interactables"), Callable(gadget_world, "safe_position"), campaign_copy)
+ check(not gadget_player.equipment.available.has("quiet_line"), "checkpoint cannot grant a locked gadget")
+ gadget_world.queue_free()
+ await process_frame
  var initiation_scene: PackedScene = load("res://scenes/initiation.tscn")
  var initiation: Node = initiation_scene.instantiate()
  root.add_child(initiation)
@@ -289,6 +325,9 @@ func run() -> void:
  var init_objects: Array[Interactable] = initiation.get("interactables")
  var init_npcs: Array[HotelNpc] = initiation.get("npcs")
  check(init_mission.configured and init_npcs.size() == 2, "Initiation spawns configured mission and exactly two guards")
+ initiation.call("_process", 0.0)
+ check(initiation.get("hud").text.contains("ASSESSMENT UNIT") and initiation.get("equipment_hud").text.contains("5 / 5"), "Initiation HUD shows target and real starting charges")
+ check(init_player.body_mesh is StylizedPerson and init_npcs[0].person is StylizedPerson, "player and guard spawn articulated visual characters")
  var start_guard := init_npcs[0].global_position
  init_player.global_position = Vector3(-12, 0.05, 0)
  Input.action_press("crouch")
@@ -314,13 +353,36 @@ func run() -> void:
   if obj.kind == "clue": initiation.call("_on_interaction", obj)
  check(init_mission.clues.size() == 3 and not init_mission.can_extract(), "three records alone cannot complete assessment")
  var before_robot := SessionSnapshot.capture(init_player, init_mission)
+ var assessment: Interactable = null
  for obj: Interactable in init_objects:
-  if obj.kind == "robot": initiation.call("_on_interaction", obj)
+  if obj.kind == "robot": assessment = obj
+ for guard: HotelNpc in init_npcs:
+  guard.set_physics_process(false)
+  guard.collision_layer = 0
+ initiation.set_physics_process(false)
+ init_player.global_position = assessment.global_position + Vector3(0, 0.05, 1)
+ await physics_frame
+ var use_event := InputEventAction.new()
+ use_event.action = "use_equipment"
+ use_event.pressed = true
+ Input.parse_input_event(use_event)
+ await process_frame
+ check(init_mission.action_complete and init_player.equipment.charges == 4, "equipment input disables unit and spends one charge")
+ for i: int in range(5):
+  use_event.pressed = false
+  Input.parse_input_event(use_event)
+  use_event.pressed = true
+  Input.parse_input_event(use_event)
+  await process_frame
+ initiation.call("_process", 0.0)
+ check(init_player.equipment.charges == 0 and initiation.get("equipment_hud").text.contains("0 / 5"), "five-charge limit and HUD update follow input")
  check(init_mission.action_complete and init_mission.can_extract(), "assessment unit and three unique records unlock exit")
  var after_robot := SessionSnapshot.capture(init_player, init_mission)
- SessionSnapshot.restore(before_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"))
+ SessionSnapshot.restore(before_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"), campaign)
+ check(init_player.equipment.charges == 5, "checkpoint restores training charges")
  check(not init_mission.action_complete and not init_mission.can_extract(), "snapshot restores active unit")
- SessionSnapshot.restore(after_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"))
+ SessionSnapshot.restore(after_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"), campaign)
+ check(init_player.equipment.charges == 0, "checkpoint preserves spent charges")
  check(init_mission.action_complete and init_mission.clues.size() == 3 and init_mission.can_extract(), "snapshot restores disabled unit and all records")
  for obj: Interactable in init_objects:
   if obj.kind == "extract": initiation.call("_on_interaction", obj)
