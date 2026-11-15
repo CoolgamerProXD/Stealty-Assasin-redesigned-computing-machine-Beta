@@ -84,6 +84,7 @@ func run() -> void:
  check(player.aiming and world.get("crosshair").is_visible_in_tree(), "right mouse input shows aiming crosshair on virtual display")
  var reticle: Label = world.get("crosshair")
  var view_center := player.camera.get_viewport().get_visible_rect().size * 0.5
+ print("CAMERA_DIAG: rect=", reticle.get_global_rect(), " parent_size=", reticle.get_parent().size, " viewport=", view_center, " anchors=", reticle.anchor_left, ",", reticle.anchor_top)
  check(reticle.get_global_rect().get_center().distance_to(view_center) < 1.0, "displayed crosshair is at the viewport center")
  var fire := InputEventMouseButton.new()
  fire.button_index = MOUSE_BUTTON_LEFT
