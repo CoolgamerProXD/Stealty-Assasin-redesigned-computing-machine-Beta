@@ -303,6 +303,9 @@ func run() -> void:
  gadget_event.pressed = true
  Input.parse_input_event(gadget_event)
  await process_frame
+ await physics_frame
+ await process_frame
+ print("EQUIP_DIAG: gadget selected=", gadget_player.equipment.selected, " stun=", guard.stunned_time, " message=", gadget_world.get("message"))
  check(guard.stunned_time > 0 and gadget_player.equipment.selected == "quiet_line", "gadget input temporarily disables a nearby NPC")
  gadget_world.call("_process", 0.0)
  check(gadget_world.get("hud").text.contains("IVO CHEN") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
@@ -367,6 +370,9 @@ func run() -> void:
  use_event.pressed = true
  Input.parse_input_event(use_event)
  await process_frame
+ await physics_frame
+ await process_frame
+ print("EQUIP_DIAG: robot=", init_mission.action_complete, " charges=", init_player.equipment.charges, " message=", initiation.get("message"))
  check(init_mission.action_complete and init_player.equipment.charges == 4, "equipment input disables unit and spends one charge")
  for i: int in range(5):
   use_event.pressed = false
@@ -374,6 +380,7 @@ func run() -> void:
   use_event.pressed = true
   Input.parse_input_event(use_event)
   await process_frame
+  await physics_frame
  initiation.call("_process", 0.0)
  check(init_player.equipment.charges == 0 and initiation.get("equipment_hud").text.contains("0 / 5"), "five-charge limit and HUD update follow input")
  check(init_mission.action_complete and init_mission.can_extract(), "assessment unit and three unique records unlock exit")

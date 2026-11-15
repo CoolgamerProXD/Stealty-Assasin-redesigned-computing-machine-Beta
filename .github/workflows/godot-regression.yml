@@ -69,7 +69,7 @@ jobs:
                   continue
               lines = path.read_text(errors="replace").splitlines()
               if name in ("import", "startup", "tests", "camera"):
-                  lines = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|^FAIL:|^PASS:|^RESULT:|^CAMERA PASS:|^CAMERA FAIL:|^CAMERA RESULT:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:| at: |Headless 120|Virtual-display run|OpenGL API", line)]
+                  lines = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|^FAIL:|^PASS:|^RESULT:|^CAMERA PASS:|^CAMERA FAIL:|^CAMERA RESULT:|^EQUIP_DIAG:|WARNING:|parse_input_event|^DISPLAY_METRIC:|^DISPLAY_STARTUP:| at: |Headless 120|Virtual-display run|OpenGL API", line)]
               text = "\n".join(lines)[:25000] or "No matching diagnostics."
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print(f"::notice title={name}::{text}")
