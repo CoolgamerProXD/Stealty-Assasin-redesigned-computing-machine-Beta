@@ -1,6 +1,9 @@
 # Testing
 
 ## Campaign expansion verification scope
+
+[Actions run 43700503344](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43700503344) on `a6c6ca95aa9de847ee47ed152ff3e9660e96d3a4` passed: six Python data checks, official 4.4.1 headless import and menu startup, 87/87 Godot behavioral assertions, and 5/5 scripted Xvfb camera checks. The headless tests include a standing-clearance obstruction and isolated campaign scene/debrief transition. Run 43700434097 failed one guard movement assertion because it began measuring after the guard arrived; the test was changed to measure from the initial route position and rerun. These are automated checks, not manual playtesting.
+
 The Godot 4.4.1 workflow runs the existing Meridian regression suite and added checks for campaign order/restore, equipment metadata restrictions, Initiation's two NPCs and one moving guard, objective gating, checkpoint restoration, crouch, and campaign scene transitions/pause/debrief. See the Actions run for exact results for the commit being evaluated; earlier runs below describe earlier commits. Direct calls to interaction handlers and scene transitions are automated functional checks, not a human playthrough. GUI usability, full routes, overhead-clearance edge cases, AI escalation and blocked paths, Windows export/content packaging, real audio and target-device performance still require further work and manual verification. Isolated campaign saves in the integration test are deleted after use.
 
 ## Automated
