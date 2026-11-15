@@ -1,3 +1,7 @@
+# Quality-overhaul materials
+
+The expanded hotel, city, station and respectful abstract mountain landmark use original procedural meshes and materials. Files and terminal-like pickups are generated meshes, not imported assets. The HUD uses original shapes and typography; no commercial artwork was copied. The previews are blockouts, not licensed representations or finished art.
+
 # Assets and dependencies
 
 The fictional Tung Chung preview uses original primitive geometry, shared procedural materials and existing generated people; it does not contain copied station plans, external signs, models or textures. The train is a static exterior and the escalator is scenic.

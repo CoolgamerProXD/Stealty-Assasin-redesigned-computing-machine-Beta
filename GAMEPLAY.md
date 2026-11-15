@@ -1,3 +1,7 @@
+# Meridian and map previews — current
+
+Use Mission Selection to open any of the three separate map previews; Escape returns to Mission Selection. They do not start campaign missions or save story progress. Meridian retains its objectives, witness, target-state and save paths. The west ramp connects the original lobby to two storeys of added space; Adrian remains in the upper private suite. The central top HUD shows mission guidance, bottom-left reports only actual local access/awareness, bottom-right reports selected equipment and real charges, and contextual interaction appears top-left. There is no health system or radar.
+
 # Current direction and preview
 
 Hong Kong is the planned campaign direction; Meridian remains optional legacy content. The main-menu Tung Chung entry is a map preview, not a mission. E observes either nearby character, and Escape returns to the menu; it has no combat, Instinct, save, mission goals, train story or opportunities. See HONG_KONG_MAP_PLAN.md.

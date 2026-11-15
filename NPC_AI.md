@@ -1,3 +1,7 @@
+# Meridian upper floor
+
+Adrian Locke has one long-duration stationary schedule in his upper private suite. The original ground-floor agents retain their local routines. An upper navigation region supports the stationary target, but cross-floor NPC routing and collision-aware pathfinding around all new furniture are not implemented. Completed targets remain terminal and checkpointed; ordinary temporary incapacitation still expires.
+
 # NPC simulation
 
 Completed physical targets enter `objective_completed`, stop AI/perception and cannot be temporarily incapacitated again. A pulse leaves the completed target down; confrontation leaves them standing. The mission checkpoint stores completion and pose, and loading an earlier checkpoint deliberately restores the target to active simulation. Ordinary NPC and Quiet Line incapacitation still expire. The Tung Chung preview reuses schedules but has no mission target state yet.

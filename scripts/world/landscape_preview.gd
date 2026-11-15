@@ -78,9 +78,13 @@ func _mountain() -> void:
  _sign("VILLAGE APPROACH",Vector3(0,3.2,12),38)
  _box(Vector3(0,0.7,-29),Vector3(12,1.4,9),Color(0.42,0.39,0.33),true)
  _box(Vector3(0,1.55,-29),Vector3(8,0.3,6),Color(0.64,0.53,0.36))
- # Stylised seated figure: original abstract forms, not a destructive element.
- _box(Vector3(0,2.2,-29),Vector3(5,1.0,3),Color(0.38,0.31,0.23))
- _box(Vector3(0,3.3,-29),Vector3(3.1,2.2,1.8),Color(0.43,0.35,0.25))
+ # Stylised seated figure: original abstract forms, never a destructive element.
+ _sphere(Vector3(0,2.15,-29),Vector3(6.2,1.25,3.6),Color(0.38,0.31,0.23))
+ _sphere(Vector3(0,3.35,-29),Vector3(3.6,2.8,2.0),Color(0.43,0.35,0.25))
+ for x: float in [-2.0,2.0]:
+  _sphere(Vector3(x,2.85,-29),Vector3(1.0,2.0,0.9),Color(0.43,0.35,0.25))
+  _sphere(Vector3(x*0.55,2.25,-30),Vector3(1.2,0.55,0.7),Color(0.47,0.38,0.27))
+ _sphere(Vector3(0,2.15,-30.1),Vector3(1.9,0.45,0.8),Color(0.47,0.38,0.27))
  var head := MeshInstance3D.new()
  var sphere := SphereMesh.new()
  sphere.radius = 0.75
@@ -92,15 +96,47 @@ func _mountain() -> void:
  head.material_override = material
  head.position = Vector3(0,5.0,-29)
  add_child(head)
+ _sphere(Vector3(0,5.75,-29),Vector3(0.55,0.5,0.55),Color(0.37,0.30,0.22))
  for x: float in [-30.0,-20.0,-12.0,12.0,20.0,30.0]:
   for z: float in [-33.0,-17.0,0.0,26.0,36.0]:
    _box(Vector3(x,1.1,z),Vector3(0.45,2.2,0.45),Color(0.28,0.22,0.14))
    _box(Vector3(x,2.7,z),Vector3(2.8,2.4,2.8),Color(0.19,0.36,0.22))
  # Distant, stylised peaks, and an atmospheric decorative cable-car vista.
- for x: float in [-38.0,-26.0,26.0,38.0]:
-  _box(Vector3(x,5,-41),Vector3(16,10,4),Color(0.27,0.37,0.35))
+ for x: float in [-39.0,-27.0,27.0,39.0]:
+  _peak(Vector3(x,0,-42), 12.0, 15.0 + absf(x)*0.12, Color(0.27,0.37,0.35))
  _box(Vector3(0,8,30),Vector3(80,0.07,0.07),dark)
  for x: float in [-20.0,10.0,32.0]:
   _box(Vector3(x,6.3,30),Vector3(2.0,2.3,1.8),Color(0.66,0.26,0.18))
   _box(Vector3(x,6.6,29.08),Vector3(1.6,1.1,0.05),Color(0.30,0.46,0.48))
   _box(Vector3(x,7.8,30),Vector3(0.12,0.7,0.12),dark)
+
+func _sphere(pos: Vector3, dimensions: Vector3, color: Color) -> void:
+ var visual := MeshInstance3D.new()
+ var mesh := SphereMesh.new()
+ mesh.radius = 0.5
+ mesh.height = 1.0
+ mesh.radial_segments = 12
+ mesh.rings = 6
+ visual.mesh = mesh
+ visual.scale = dimensions
+ visual.position = pos
+ var material := StandardMaterial3D.new()
+ material.albedo_color = color
+ material.roughness = 0.92
+ visual.material_override = material
+ add_child(visual)
+
+func _peak(pos: Vector3, radius: float, height: float, color: Color) -> void:
+ var visual := MeshInstance3D.new()
+ var mesh := CylinderMesh.new()
+ mesh.top_radius = 0.0
+ mesh.bottom_radius = radius
+ mesh.height = height
+ mesh.radial_segments = 7
+ visual.mesh = mesh
+ visual.position = pos + Vector3.UP * height * 0.5
+ var material := StandardMaterial3D.new()
+ material.albedo_color = color
+ material.roughness = 1.0
+ visual.material_override = material
+ add_child(visual)

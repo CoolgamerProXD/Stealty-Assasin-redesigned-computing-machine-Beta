@@ -148,7 +148,7 @@ func run() -> void:
   var scenery: Node3D = load("res://scenes/" + preview_name + "_preview.tscn").instantiate()
   root.add_child(scenery)
   for i: int in range(5): await physics_frame
-  var scenery_cam := shot_camera(scenery, Vector3(0,4.0,24), Vector3(0,2.0,-20))
+  var scenery_cam := shot_camera(scenery, Vector3(0,4.0,24) if preview_name == "hong_kong" else Vector3(0,5.0,-11), Vector3(0,2.5,-20) if preview_name == "hong_kong" else Vector3(0,3.0,-29))
   await capture("cinema_city" if preview_name == "hong_kong" else "cinema_ngong_ping")
   check(scenery_cam.current and scenery.get("player") != null, preview_name + " preview renders with player")
   scenery.queue_free()

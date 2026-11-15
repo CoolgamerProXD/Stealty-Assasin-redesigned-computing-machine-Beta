@@ -11,3 +11,5 @@ The gameplay repair adds only original procedural meshes; no third-party art, au
 Absolute Cinema iteration: no additional third-party art, audio, models or fonts; all new material is project-generated. The Windows workflow downloads official Godot engine and export templates and verifies against the release SHA-512 list.
 
 Hong Kong checkpoint: the station preview adds only original procedural geometry and colors; no new third-party art or audio was imported.
+
+Quality overhaul: all new geometry, object props and HUD icon shapes are project-generated. The reference research below informed functional layout only; no artwork or code was imported.

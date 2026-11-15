@@ -1,3 +1,7 @@
+# Quality-overhaul checkpoint
+
+Run the three previews from Mission Selection. The city and mountain previews are rough static procedural environments without populations; the station retains its agents. Meridian keeps original coordinates and adds a two-floor extension. New architectural detail still needs art, collision, accessibility, navigation and target-device performance review. The ground footprint is ~3.5x the original; combined gross floor area ~7x.
+
 # Development status
 
 The station blockout can be run via `scenes/tung_chung_preview.tscn` or the explicitly labelled main-menu preview. It has no campaign mission logic, combat, Instinct, pause/settings, checkpoints or train gameplay. Architectural props and the decorative escalator are not collidable or traversable; the navigation mesh is an open rectangle, so NPCs may walk through scenery. See HONG_KONG_MAP_PLAN.md for planned work before enabling the real mission.

@@ -1,6 +1,6 @@
 # Hong Kong campaign — production map plan
 
-Status: design, not a claim that these maps or missions are complete. The stations, routes, schedules and setpieces below are fictional gameplay spaces, not real-world railway or site layouts. Preserve Initiation and the existing Meridian mission and saves. Meridian remains a separate legacy assignment rather than being rewritten into the new story. Do not unlock unfinished chapters as playable missions.
+Status: three rough, explorable map previews are now available from Mission Selection. Missions, story sequences and the detailed planned systems below are not complete. The stations, routes, schedules and setpieces below are fictional gameplay spaces, not real-world railway or site layouts. Preserve Initiation and the existing Meridian mission and saves. Meridian remains a separate legacy assignment rather than being rewritten into the new story. Do not unlock unfinished chapters as playable missions.
 
 ## 01 / Initiation
 Keep the evaluation annex, its two guards, three records and moving unit. Ruby remains the handler and the introduction remains skippable.
@@ -29,3 +29,6 @@ A fictional cable-car arrival frames mountain ridges and gives an uninterrupted 
 **Physical target concept:** an as-yet unnamed visitor in a distinctive muted teal jacket, pale scarf and dark trousers, carrying a small sketchbook. Their presentation suggests an observant, unhurried personality: they alternate between studying the view near the Buddha, sitting to sketch and walking to the forecourt. This is a visual/schedule design only; no backstory, Constance connection or deeper lore is established. Allow identification by observation, not an omniscient marker. Respectful public-space behavior is essential.
 
 **Status:** design only; no Ngong Ping map, target, cable-car sequence or mission gameplay is claimed as implemented. Obtain cultural and location review before treating the landmark depiction as final.
+
+## Preview implementation checkpoint
+Station, city and mountain scenes are accessible from Mission Selection and Escape returns there. City and mountain have no NPC crowds, interactive missions, authentic architecture or story logic. All three are original procedural blockouts, not finished maps. The Buddha is a static respectful landmark, not a target or destructible object; no secret facility has been built.

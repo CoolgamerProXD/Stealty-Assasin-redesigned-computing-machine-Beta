@@ -12,6 +12,7 @@ var prompt_panel: PanelContainer
 var equipment_hud: Label
 var awareness_hud: Label
 var interaction_dot: Label
+var equipment_icon: Control
 var crosshair: Control
 var shot_audio: AudioStreamPlayer
 var objective_audio: AudioStreamPlayer
@@ -435,12 +436,18 @@ func _build_ui() -> void:
  right.mouse_filter = Control.MOUSE_FILTER_IGNORE
  right.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(right)
+ var equipment_row := HBoxContainer.new()
+ equipment_row.add_theme_constant_override("separation", 10)
+ right.add_child(equipment_row)
+ equipment_icon = preload("res://scripts/ui/equipment_icon.gd").new()
+ equipment_row.add_child(equipment_icon)
  equipment_hud = Label.new()
  equipment_hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
  equipment_hud.add_theme_font_size_override("font_size", 17)
- right.add_child(equipment_hud)
+ equipment_row.add_child(equipment_hud)
  var bottom := PanelContainer.new()
  prompt_panel = bottom
+ bottom.modulate.a = 0.0
  bottom.position = Vector2(20, 22)
  bottom.custom_minimum_size = Vector2(300, 0)
  bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -788,6 +795,7 @@ func _process(_delta: float) -> void:
  awareness_hud.text = "%s  /  %s\n%s" % [area.to_upper(), access, local_state]
  fps_label.visible = Campaign.settings["show_fps"]
  fps_label.text = "%d FPS" % Engine.get_frames_per_second()
+ equipment_icon.call("set_item", player.equipment.selected)
  equipment_hud.text = Campaign.item_label(player.equipment.selected).to_upper()
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
  crosshair.visible = player.aiming
@@ -798,6 +806,7 @@ func _process(_delta: float) -> void:
   message_remaining = 7.0
  message_remaining = maxf(0.0, message_remaining - _delta)
  var current_message := message if message_remaining > 0.0 else ""
- prompt.text = ("E  /  " + nearest.label + ("\n" if not current_message.is_empty() else "") if nearest else "") + current_message
- prompt_panel.visible = not prompt.text.strip_edges().is_empty()
- prompt_panel.modulate.a = move_toward(prompt_panel.modulate.a, 1.0 if prompt_panel.visible else 0.0, _delta * 6.0)
+ var prompt_content := ("E  /  " + nearest.label + ("\n" if not current_message.is_empty() else "") if nearest else "") + current_message
+ if not prompt_content.is_empty(): prompt.text = prompt_content
+ prompt_panel.modulate.a = move_toward(prompt_panel.modulate.a, 1.0 if not prompt_content.is_empty() else 0.0, _delta * 6.0)
+ prompt_panel.visible = prompt_panel.modulate.a > 0.01

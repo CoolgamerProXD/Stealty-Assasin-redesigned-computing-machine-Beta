@@ -1,3 +1,7 @@
+# Two-floor hotel and selectable previews
+
+The hotel builds a connected western extension plus upper slabs and a physical ramp, leaving the original mission coordinates intact. Upper areas contain a suite and guest rooms; the target's long-duration schedule stays in the suite. Existing NPC navmesh remains on the original level; the independent upper region is not a connected cross-floor route. Save validation permits the added volume but does not fully model all new interior walls. The ground-level footprint is about 3.5x the former layout; summing the two gross floor plates gives about 7x, before subtracting walls and stairwell. The map remains procedural and partially visual-only. The three previews have their own scenes and return to the map selector; no mission or save state is faked.
+
 # Current Hong Kong checkpoint
 
 `TungChungPreview` is a separate exploratory scene, not an assignment: it uses the existing player and scheduled NPC classes, a fictional rectangular navmesh and original modular geometry. Its lack of mission state, shooting, checkpoints, Instinct and train mechanics is intentional and visible in the menu. Meridian keeps its existing mission identity and checkpoint; planned Hong Kong chapters have no scene and cannot be unlocked as playable. Completed physical Meridian targets have a terminal NPC state separate from temporary incapacitation; the checkpoint stores whether the objective was completed with a downed pose.

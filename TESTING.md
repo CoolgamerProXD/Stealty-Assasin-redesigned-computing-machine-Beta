@@ -1,3 +1,7 @@
+# Quality overhaul verification
+
+[Run 43762584461](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43762584461), commit `38da17a`, passed 7 Python data checks, 172 behavioral, 24 camera, 15 rendered and 9 cinematic/UI checks. Automated input walked up the physical ramp, navigated to and interacted with Locke in his private suite, and walked down; separate scripted tests exercised all three map-selection buttons, preview movement and Escape back to selection. Target completion/save tests remain. A Windows export and headless launch passed. Scripted screenshots include both levels, a ceiling-hidden upper-floor overhead footprint, HUD, intel and all three previews. They do not constitute an interactive playthrough, visual signoff, or confirmation on Iris Xe. Subsequent changes require their own run.
+
 # Testing
 
 ## Hong Kong checkpoint verification

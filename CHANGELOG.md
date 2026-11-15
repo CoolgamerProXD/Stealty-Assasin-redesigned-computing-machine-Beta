@@ -1,3 +1,9 @@
+# Quality overhaul
+
+- Added separately playable, labelled station, city and Ngong Ping exploration scenes to Mission Selection; Escape returns to the selector without changing campaign progression.
+- Preserved the original Meridian and added a connected two-storey west wing, upper guest rooms and a stationary private-suite target. This is a procedural partial expansion, not a fully dressed production hotel; ground footprint ~3.5x, gross two-level surface ~7x.
+- Added contextual HUD layout and original equipment icon, procedural document and terminal props, smoothed visual turning and gait-linked footsteps. Retained target terminal state, mission and save migrations. No health or radar was fabricated.
+
 # Hong Kong direction checkpoint
 
 - Preserved Initiation and legacy Meridian, including save paths; added locked planned chapter entries and an explicitly incomplete Tung Chung exploration preview.

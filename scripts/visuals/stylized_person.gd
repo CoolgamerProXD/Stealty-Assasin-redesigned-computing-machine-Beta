@@ -16,6 +16,7 @@ var weapon_equipped: bool = false
 var weapon_draw: float = 0.0
 var weapon_aim_blend: float = 0.0
 var phase: float = 0.0
+var idle_phase: float = 0.0
 var idle_activity: String = "idle"
 var clothing: StandardMaterial3D
 
@@ -107,17 +108,18 @@ func set_role(value: String) -> void:
 func animate_motion(delta: float, speed: float) -> void:
  if not left_leg: return
  phase += delta * minf(speed, 5.0) * 2.6
+ idle_phase += delta * 2.0
  var swing := sin(phase) * minf(speed * 0.16, 0.6)
  var blend := 1.0 - exp(-delta * 10.0)
  weapon_draw = move_toward(weapon_draw, 1.0 if weapon_equipped else 0.0, delta * 3.0)
  weapon_aim_blend = move_toward(weapon_aim_blend, 1.0 if weapon_aiming and weapon_equipped else 0.0, delta * 4.0)
- torso.rotation.z = sin(phase * 0.5) * 0.008
- torso.rotation.x = sin(phase * 0.5) * 0.008
+ torso.rotation.z = sin(idle_phase * 0.5) * 0.008
+ torso.rotation.x = sin(idle_phase * 0.5) * 0.008
  left_leg.rotation.x = lerp_angle(left_leg.rotation.x, swing, blend)
  right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -swing, blend)
  var left_pose := -swing * 0.7
- if speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(phase * 0.6) * 0.16
- elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(phase * 0.5) * 0.06
+ if speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
+ elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(idle_phase * 0.5) * 0.06
  left_arm.rotation.x = lerp_angle(left_arm.rotation.x, lerpf(left_pose, 1.05, weapon_aim_blend), blend)
  left_arm.rotation.z = lerp_angle(left_arm.rotation.z, -0.20 * weapon_aim_blend, blend)
  var ready_pose := lerpf(0.35, 1.35, weapon_aim_blend)

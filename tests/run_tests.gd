@@ -206,6 +206,10 @@ func run() -> void:
  Input.action_release("move_forward")
  var walk_distance: float = player.global_position.distance_to(start)
  check(walk_distance > 0.3, "input moves player through physics")
+ Input.action_press("move_right")
+ await create_timer(0.35).timeout
+ Input.action_release("move_right")
+ check(absf(player.body_mesh.rotation.y) > 0.25, "moving sideways smoothly turns the visible character")
  player.global_position = Vector3(-10, 0.1, 0)
  player.velocity = Vector3.ZERO
  await physics_frame
@@ -489,6 +493,7 @@ func run() -> void:
  check(guard.stunned_time > 0 and gadget_player.equipment.selected == "quiet_line", "gadget input temporarily disables a nearby NPC")
  gadget_world.call("_process", 0.0)
  check(gadget_world.get("hud").text.contains("ADRIAN LOCKE") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
+ check(gadget_world.get("equipment_icon").item == "quiet_line", "equipment icon reflects the actual selected item")
  var locke: HotelNpc = gadget_world.get("primary_npc")
  locke.global_position = Vector3(-8.5, 0.05, 0)
  gadget_player.global_position = Vector3(-9, 0.05, 2)
