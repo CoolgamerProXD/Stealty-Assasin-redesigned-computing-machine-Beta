@@ -19,6 +19,7 @@ func run() -> void:
  var world: Node = scene.instantiate()
  root.add_child(world)
  await process_frame
+ print("DISPLAY_STARTUP: engine clock to first process frame = %.3f ms" % (float(Time.get_ticks_usec()) / 1000.0))
  await physics_frame
  var player: HotelPlayer = world.get("player")
  check(Input.mouse_mode == Input.MOUSE_MODE_CAPTURED, "mouse captured at startup")
