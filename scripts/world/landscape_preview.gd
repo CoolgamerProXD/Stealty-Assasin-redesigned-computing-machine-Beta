@@ -3,12 +3,14 @@ extends "res://scripts/world/tung_chung_preview.gd"
 @export_enum("city", "mountain") var preview_kind: String = "city"
 var accents: Array[Transform3D] = []
 var accent_colors: Array[Color] = []
+var canopy_transforms: Array[Transform3D] = []
 
 func _ready() -> void:
  _environment()
  if preview_kind == "city": _city()
  else: _mountain()
  _flush_accents()
+ _flush_canopies()
  _scene_population()
  player = HotelPlayer.new()
  player.position = Vector3(0,0.05,20)
@@ -47,6 +49,117 @@ func _flush_accents() -> void:
  visual.name = "DistrictDetails"
  visual.multimesh = multi
  visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ add_child(visual)
+
+func _flush_canopies() -> void:
+ if canopy_transforms.is_empty(): return
+ var multi := MultiMesh.new()
+ multi.transform_format = MultiMesh.TRANSFORM_3D
+ var mesh := SphereMesh.new()
+ mesh.radius = 0.5
+ mesh.height = 1.0
+ mesh.radial_segments = 8
+ mesh.rings = 4
+ var material := StandardMaterial3D.new()
+ material.albedo_color = Color(0.22,0.39,0.23)
+ material.roughness = 0.95
+ mesh.material = material
+ multi.mesh = mesh
+ multi.instance_count = canopy_transforms.size()
+ for i: int in range(canopy_transforms.size()): multi.set_instance_transform(i,canopy_transforms[i])
+ var trees := MultiMeshInstance3D.new()
+ trees.name = "TreeCanopies"
+ trees.multimesh = multi
+ trees.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ add_child(trees)
+
+# Fictional accessible upper walkway; it is not connected to the NPC navmesh.
+func _city_walkway() -> void:
+ var ramp := StaticBody3D.new()
+ ramp.name = "CityWalkwayRamp"
+ ramp.position = Vector3(12,1.10,0)
+ ramp.rotation.z = atan(2.4 / 6.0)
+ add_child(ramp)
+ var size := Vector3(6.5,0.2,2.8)
+ var mesh := BoxMesh.new()
+ mesh.size = size
+ var visual := MeshInstance3D.new()
+ visual.mesh = mesh
+ var material := StandardMaterial3D.new()
+ material.albedo_color = Color(0.38,0.40,0.38)
+ material.roughness = 0.88
+ visual.material_override = material
+ ramp.add_child(visual)
+ var collider := CollisionShape3D.new()
+ var shape := BoxShape3D.new()
+ shape.size = size
+ collider.shape = shape
+ ramp.add_child(collider)
+ for z: float in [-1.35,1.35]:
+  var rail := MeshInstance3D.new()
+  var rail_mesh := BoxMesh.new()
+  rail_mesh.size = Vector3(6.5,0.08,0.08)
+  rail.mesh = rail_mesh
+  rail.position = Vector3(0,0.9,z)
+  rail.material_override = material
+  ramp.add_child(rail)
+ _box(Vector3(19,2.25,0),Vector3(8.5,0.3,8),Color(0.44,0.45,0.41),true)
+ for z: float in [-4.0,4.0]:
+  _box(Vector3(19,2.95,z),Vector3(8.5,1.1,0.10),Color(0.25,0.32,0.32),true)
+ _box(Vector3(23.2,2.95,0),Vector3(0.10,1.1,8),Color(0.25,0.32,0.32),true)
+ _sign("PUBLIC WALKWAY", Vector3(16.5,4.2,-3.8),30)
+
+# Gently rolling terrain meshes meet the surrounding ground at their edges.
+# Physics uses the same triangles as the visible terrain, not a flat fake floor.
+func _terrain_patch(x0: float, z0: float, width: float, depth: float, height: float) -> void:
+ var divisions := 12
+ var surface := SurfaceTool.new()
+ surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+ for ix: int in range(divisions):
+  for iz: int in range(divisions):
+   var points: Array[Vector3] = []
+   for corner: Vector2i in [Vector2i(0,0),Vector2i(0,1),Vector2i(1,1),Vector2i(0,0),Vector2i(1,1),Vector2i(1,0)]:
+    var u := float(ix+corner.x)/float(divisions)
+    var v := float(iz+corner.y)/float(divisions)
+    var y := maxf(0.0, sin(PI*u) * sin(PI*v)) * height
+    points.append(Vector3(x0+u*width,y,z0+v*depth))
+   for point: Vector3 in points: surface.add_vertex(point)
+ surface.generate_normals()
+ var mesh := surface.commit()
+ var material := StandardMaterial3D.new()
+ material.albedo_color = Color(0.31,0.43,0.30)
+ material.roughness = 1.0
+ material.cull_mode = BaseMaterial3D.CULL_DISABLED
+ var body := StaticBody3D.new()
+ body.name = "MountainTerrain"
+ add_child(body)
+ var visual := MeshInstance3D.new()
+ visual.mesh = mesh
+ visual.material_override = material
+ body.add_child(visual)
+ var collider := CollisionShape3D.new()
+ collider.shape = mesh.create_trimesh_shape()
+ body.add_child(collider)
+
+func _village_roof(center: Vector3) -> void:
+ var surface := SurfaceTool.new()
+ surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+ var a := Vector3(-4,0,-4)
+ var b := Vector3(4,0,-4)
+ var c := Vector3(4,0,4)
+ var d := Vector3(-4,0,4)
+ var e := Vector3(-4,1.2,0)
+ var f := Vector3(4,1.2,0)
+ for p: Vector3 in [a,b,f,a,f,e, d,e,f,d,f,c, a,e,d, b,c,f]: surface.add_vertex(p)
+ surface.generate_normals()
+ var visual := MeshInstance3D.new()
+ visual.mesh = surface.commit()
+ visual.position = center
+ var material := StandardMaterial3D.new()
+ material.albedo_color = Color(0.40,0.17,0.13)
+ material.roughness = 0.9
+ material.cull_mode = BaseMaterial3D.CULL_DISABLED
+ visual.material_override = material
  add_child(visual)
 
 func _scene_population() -> void:
@@ -95,9 +208,10 @@ func _city() -> void:
     for dx: float in [-3.0,0.0,3.0]:
      _box(Vector3(x+dx,2.0+level*2.0,z+4.54),Vector3(1.6,1.2,0.06),Color(0.22,0.34,0.38))
    _box(Vector3(x,0.3,z+4.9),Vector3(10,0.6,0.8),dark)
+ _city_walkway()
  # Market stalls, pedestrian streets and waterfront promenade.
  for x: float in [-30.0,-24.0,-18.0,-12.0]:
-  _box(Vector3(x,0.55,8),Vector3(3.8,1.1,1.8),Color(0.38,0.25,0.17))
+  _box(Vector3(x,0.55,8),Vector3(3.8,1.1,1.8),Color(0.38,0.25,0.17),true)
   _box(Vector3(x,2.2,8),Vector3(4.1,0.12,2.4),Color(0.67,0.25,0.18))
   for side: float in [-1.7,1.7]: _box(Vector3(x+side,1.3,8),Vector3(0.1,2.5,0.1),dark)
  _sign("MARKET STREET",Vector3(-21,3.0,5),38)
@@ -135,14 +249,17 @@ func _city() -> void:
 func _mountain() -> void:
  _ground(Color(0.36,0.46,0.34))
  var stone := Color(0.61,0.60,0.53)
- var red := Color(0.42,0.17,0.14)
+ _terrain_patch(-43,-38,33,36,2.6)
+ _terrain_patch(10,-38,33,36,2.9)
  var dark := Color(0.22,0.24,0.20)
  # Broad public approach. The statue is a non-destructible landmark.
  _box(Vector3(0,0.03,0),Vector3(11,0.06,80),stone)
  _box(Vector3(0,0.06,-22),Vector3(26,0.12,18),stone.lightened(0.08))
  for x: float in [-22.0,-14.0,14.0,22.0]:
   _box(Vector3(x,1.5,13),Vector3(7,3,7),Color(0.65,0.53,0.39),true)
-  _box(Vector3(x,3.2,13),Vector3(8,0.4,8),red)
+  _village_roof(Vector3(x,3.15,13))
+  _accent(Vector3(x,3.18,9.0),Vector3(8.2,0.16,0.18),Color(0.30,0.18,0.14))
+  _accent(Vector3(x,3.18,17.0),Vector3(8.2,0.16,0.18),Color(0.30,0.18,0.14))
   _box(Vector3(x,1.5,9.44),Vector3(5,1.7,0.05),Color(0.25,0.35,0.32))
  _sign("VILLAGE APPROACH",Vector3(0,3.2,12),38)
  _box(Vector3(0,0.7,-29),Vector3(12,1.4,9),Color(0.42,0.39,0.33),true)
@@ -169,7 +286,8 @@ func _mountain() -> void:
  for x: float in [-30.0,-20.0,-12.0,12.0,20.0,30.0]:
   for z: float in [-33.0,-17.0,0.0,26.0,36.0]:
    _box(Vector3(x,1.1,z),Vector3(0.45,2.2,0.45),Color(0.28,0.22,0.14))
-   _box(Vector3(x,2.7,z),Vector3(2.8,2.4,2.8),Color(0.19,0.36,0.22))
+   canopy_transforms.append(Transform3D(Basis.IDENTITY.scaled(Vector3(3.0,2.7,3.0)),Vector3(x,2.7,z)))
+   canopy_transforms.append(Transform3D(Basis.IDENTITY.scaled(Vector3(1.9,1.8,1.9)),Vector3(x+0.8,3.45,z-0.4)))
  # Benches, visitor railings and path edging respect the landmark's public use.
  for z: float in [-16.0,-6.0,4.0,14.0,24.0]:
   for x: float in [-6.5,6.5]:

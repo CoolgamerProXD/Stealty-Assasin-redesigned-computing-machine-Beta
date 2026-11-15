@@ -124,7 +124,7 @@ func _station() -> void:
   _box(Vector3(13.25,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
   _box(Vector3(15.75,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
  _sign("CONCOURSE  /  UPPER WALKWAY", Vector3(17,4.65,-3.85), 28)
- # A central information island and seating; kept non-solid in this blockout.
+ # The information island is solid; seating remains decorative.
  _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38), true)
  _box(Vector3(-1,1.15,0), Vector3(5.2,0.12,2.2), Color(0.76,0.75,0.66))
  _sign("INFORMATION", Vector3(-1,2.6,0.5), 36)
@@ -134,7 +134,7 @@ func _station() -> void:
   for side: float in [-0.9,0.9]: _box(Vector3(x+side,0.22,5), Vector3(0.12,0.5,0.55), dark)
  # Fictional platform edge and stationary train facade; no rail-access mechanics.
  _box(Vector3(0,0.025,10.7), Vector3(43,0.05,0.25), Color(0.95,0.75,0.20))
- _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.75,0.78,0.76))
+ _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.75,0.78,0.76), true)
  _box(Vector3(0,1.8,11.92), Vector3(37,1.0,0.05), dark)
  for x: float in [-16.0,-12.0,-8.0,-4.0,0.0,4.0,8.0,12.0,16.0]:
   _box(Vector3(x,1.8,11.87), Vector3(2.3,0.75,0.06), Color(0.31,0.44,0.47))

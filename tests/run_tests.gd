@@ -129,7 +129,7 @@ func run() -> void:
  check(not furniture_hit.is_empty() and (furniture_hit.collider as Node).is_in_group("new_furniture_collision"), "restaurant chair blocks physical movement")
  var window_query := PhysicsRayQueryParameters3D.create(Vector3(-30,2,15),Vector3(-30,2,17))
  var window_hit := player.get_world_3d().direct_space_state.intersect_ray(window_query)
- check(not window_hit.is_empty() and str((window_hit.collider as Node).name).begins_with("GlazedWindow"), "visible window bays retain a physical exterior barrier")
+ check(not window_hit.is_empty() and (window_hit.collider as Node).is_in_group("hotel_windows"), "visible window bays retain a physical exterior barrier")
  check(world.get("floor_finish") is ShaderMaterial, "Meridian stone and timber floors use the shared world-space finish")
  var before_migration := player.global_position
  player.global_position = Vector3(-38,0.05,-8.45)
@@ -878,6 +878,18 @@ func run() -> void:
      for actor: HotelNpc in preview_npcs: excludes.append(actor.get_rid())
      query.exclude = excludes
      check(visitor.get_world_3d().direct_space_state.intersect_ray(query).is_empty(), preview_name + " scripted route remains free of solid architecture")
+     if preview_name == "HONG KONG":
+      preview_player.global_position = Vector3(8.4,0.05,0)
+      preview_player.rotation.y = 0
+      preview_player.velocity = Vector3.ZERO
+      await physics_frame
+      Input.action_press("move_right")
+      await create_timer(3.6).timeout
+      Input.action_release("move_right")
+      print("CITY_WALKWAY_DIAG: ", preview_player.global_position)
+      check(preview_player.global_position.x > 15.0 and preview_player.global_position.y > 2.0, "city preview raised walkway is physically reachable")
+     else:
+      check(preview.find_child("MountainTerrain", true, false) != null and preview.find_child("TreeCanopies", true, false) != null, "mountain has physical rolling terrain and batched trees")
     var exit_event := InputEventAction.new()
     exit_event.action = "release_mouse"
     exit_event.pressed = true

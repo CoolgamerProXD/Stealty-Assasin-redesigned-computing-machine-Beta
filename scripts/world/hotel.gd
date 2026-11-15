@@ -96,7 +96,7 @@ func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void
  visual.mesh = box_meshes[size]
  visual.material_override = box_materials[color]
  # Apply the finish only to Meridian's floor slabs, never to Initiation.
- if mission_id() == "meridian" and size.y == 0.3 and size.x >= 13.0 and (is_equal_approx(pos.y,-0.15) or is_equal_approx(pos.y,3.45)):
+ if mission_id() == "meridian" and is_equal_approx(size.y, 0.3) and size.x >= 13.0 and (is_equal_approx(pos.y,-0.15) or is_equal_approx(pos.y,3.45)):
   if floor_finish == null:
    floor_finish = ShaderMaterial.new()
    floor_finish.shader = preload("res://shaders/meridian_floor.gdshader")
@@ -175,6 +175,7 @@ func _build_environment() -> void:
 func _hotel_window(pos: Vector3, size: Vector3) -> void:
  var body := StaticBody3D.new()
  body.name = "GlazedWindow"
+ body.add_to_group("hotel_windows")
  body.position = pos
  add_child(body)
  var shape := BoxShape3D.new()
