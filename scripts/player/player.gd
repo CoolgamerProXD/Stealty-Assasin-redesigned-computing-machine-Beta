@@ -112,21 +112,27 @@ func _physics_process(delta: float) -> void:
  body_mesh.scale.y = stance_height / 1.8
  body_mesh.weapon_equipped = equipment.selected == "training_sidearm"
  body_mesh.weapon_aiming = aiming and body_mesh.weapon_equipped
- body_mesh.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
  pivot.position.y = 1.5 * stance_height / 1.8
  var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)
- velocity.x = move_toward(velocity.x, direction.x * speed, 12.0 * delta)
- velocity.z = move_toward(velocity.z, direction.z * speed, 12.0 * delta)
+ var acceleration := 14.0 if direction.length_squared() > 0.01 else 18.0
+ velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
+ velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)
  if not is_on_floor(): velocity.y -= 9.8 * delta
  else: velocity.y = -0.1
  move_and_slide()
  var moving_speed := Vector2(velocity.x, velocity.z).length()
+ if moving_speed > 0.2 and not aiming:
+  var local_motion := global_basis.inverse() * Vector3(velocity.x, 0, velocity.z)
+  body_mesh.rotation.y = lerp_angle(body_mesh.rotation.y, atan2(-local_motion.x, -local_motion.z), 1.0 - exp(-delta * 10.0))
+ elif aiming:
+  body_mesh.rotation.y = lerp_angle(body_mesh.rotation.y, 0.0, 1.0 - exp(-delta * 12.0))
+ body_mesh.animate_motion(delta, moving_speed)
  if is_on_floor() and moving_speed > 0.5:
   footstep_clock -= delta
   if footstep_clock <= 0.0:
    footsteps.pitch_scale = 0.85 if crouching else (1.15 if moving_speed > 3.3 else 1.0)
    footsteps.play()
-   footstep_clock = 0.32 if moving_speed > 3.3 else (0.72 if crouching else 0.48)
+   footstep_clock = clampf(PI / (2.6 * moving_speed), 0.27, 0.85)
  else: footstep_clock = minf(footstep_clock, 0.1)
 
 # Test the full standing capsule against real geometry; never grow through a ceiling.

@@ -395,7 +395,7 @@ func run() -> void:
  world.call("_interact_nearest")
  world.call("_process", 0.0)
  var hud: Label = world.get("hud")
- check(active_mission.clues.size() == 3 and hud.text.contains("3 / 3") and hud.text.contains("Required: 2"), "HUD reflects collected, available and required records")
+ check(active_mission.clues.size() == 3 and hud.text.contains("3 / 3") and hud.text.contains("REQUIRED 2"), "HUD reflects collected, available and required records")
  var before_duplicate: int = active_mission.clues.size()
  world.call("_on_interaction", objects[2])
  check(active_mission.clues.size() == before_duplicate, "repeated collection does not duplicate progress")

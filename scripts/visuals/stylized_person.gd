@@ -106,7 +106,7 @@ func set_role(value: String) -> void:
 
 func animate_motion(delta: float, speed: float) -> void:
  if not left_leg: return
- phase += delta * (3.0 + minf(speed, 5.0) * 3.0)
+ phase += delta * minf(speed, 5.0) * 2.6
  var swing := sin(phase) * minf(speed * 0.16, 0.6)
  var blend := 1.0 - exp(-delta * 10.0)
  weapon_draw = move_toward(weapon_draw, 1.0 if weapon_equipped else 0.0, delta * 3.0)

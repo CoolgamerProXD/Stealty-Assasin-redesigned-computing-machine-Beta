@@ -10,6 +10,8 @@ var hud: Label
 var prompt: Label
 var prompt_panel: PanelContainer
 var equipment_hud: Label
+var awareness_hud: Label
+var interaction_dot: Label
 var crosshair: Control
 var shot_audio: AudioStreamPlayer
 var objective_audio: AudioStreamPlayer
@@ -195,17 +197,62 @@ func _add_interactable(pos: Vector3, title: String, kind: String, id: String, co
  add_child(object)
  var visual := MeshInstance3D.new()
  var mesh := BoxMesh.new()
- mesh.size = Vector3(0.55, 0.55, 0.55)
- visual.mesh = mesh
  var mat := StandardMaterial3D.new()
- mat.albedo_color = color
- mat.emission_enabled = true
- mat.emission = color * 0.3
+ mat.roughness = 0.72
+ if kind == "clue":
+  mesh.size = Vector3(0.5, 0.07, 0.34)
+  mat.albedo_color = Color(0.65, 0.48, 0.29)
+  visual.position.y = 0.81
+  if id in ["archive", "sensor_log"]:
+   mesh.size = Vector3(0.52,0.34,0.06)
+   visual.position.y = 1.05
+   mat.albedo_color = Color(0.12,0.18,0.19)
+ elif kind == "disguise":
+  mesh.size = Vector3(0.48, 0.65, 0.20)
+  mat.albedo_color = Color(0.24, 0.36, 0.42)
+  visual.position.y = 0.7
+ elif kind == "extract":
+  mesh.size = Vector3(0.70, 0.025, 0.70)
+  mat.albedo_color = Color(0.40, 0.65, 0.46)
+  visual.position.y = 0.025
+ elif kind in ["primary", "target"]:
+  mesh.size = Vector3(0.2, 0.025, 0.2)
+  mat.albedo_color = color
+  visual.visible = false
+ else:
+  mesh.size = Vector3(0.55, 0.55, 0.55)
+  mat.albedo_color = color
+  visual.position.y = 0.4
+ visual.mesh = mesh
  visual.material_override = mat
- visual.position.y = 0.4
  object.add_child(visual)
+ if kind == "clue":
+  # Folder, layered paper and ink lines sit on a small desk-like surface.
+  if id in ["archive", "sensor_log"]:
+   _pickup_detail(visual, Vector3(0,0,-0.04), Vector3(0.43,0.25,0.015), Color(0.22,0.45,0.45))
+   _pickup_detail(visual, Vector3(0,-0.24,0), Vector3(0.06,0.18,0.06), Color(0.18,0.22,0.22))
+  else:
+   _pickup_detail(visual, Vector3(0, 0.05, 0), Vector3(0.42,0.03,0.27), Color(0.87,0.84,0.72))
+   for z: float in [-0.08, -0.02, 0.04]:
+    _pickup_detail(visual, Vector3(0,0.071,z), Vector3(0.27,0.005,0.01), Color(0.24,0.25,0.24))
+  _box(pos + Vector3(0,0.38,0), Vector3(0.9,0.76,0.65), Color(0.30,0.23,0.18), false)
+ elif kind == "disguise":
+  for x: float in [-0.29,0.29]: _pickup_detail(visual, Vector3(x,0,0), Vector3(0.16,0.58,0.18), Color(0.24,0.36,0.42))
+  _pickup_detail(visual, Vector3(0,0.1,-0.11), Vector3(0.08,0.3,0.02), Color(0.78,0.77,0.72))
  object.activated.connect(_on_interaction)
  interactables.append(object)
+
+func _pickup_detail(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> void:
+ var part := MeshInstance3D.new()
+ var mesh := BoxMesh.new()
+ mesh.size = size
+ part.mesh = mesh
+ part.position = pos
+ var mat := StandardMaterial3D.new()
+ mat.albedo_color = color
+ mat.roughness = 0.8
+ part.material_override = mat
+ parent.add_child(part)
 
 func _build_interactions() -> void:
  for record: Dictionary in mission.available_records:
@@ -239,48 +286,58 @@ func _build_ui() -> void:
  overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
  canvas.add_child(overlay)
- var left := PanelContainer.new()
- left.position = Vector2(20, 20)
- left.custom_minimum_size = Vector2(485, 0)
- left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ # Original restrained HUD: only mission-derived information, no invented health.
  var style := StyleBoxFlat.new()
- style.bg_color = Color(0.025, 0.04, 0.05, 0.88)
- style.border_width_left = 3
- style.border_color = Color(0.75, 0.54, 0.31)
- style.content_margin_left = 16
- style.content_margin_right = 16
- style.content_margin_top = 12
- style.content_margin_bottom = 12
- left.add_theme_stylebox_override("panel", style)
- overlay.add_child(left)
+ style.bg_color = Color(0.025, 0.04, 0.05, 0.64)
+ style.content_margin_left = 12
+ style.content_margin_right = 12
+ style.content_margin_top = 6
+ style.content_margin_bottom = 6
+ var objective := PanelContainer.new()
+ objective.set_anchors_preset(Control.PRESET_CENTER_TOP)
+ objective.offset_left = -300
+ objective.offset_right = 300
+ objective.offset_top = 18
+ objective.offset_bottom = 76
+ objective.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ objective.add_theme_stylebox_override("panel", style)
+ overlay.add_child(objective)
  hud = Label.new()
- hud.custom_minimum_size.x = 450
+ hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
  hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
- hud.add_theme_font_size_override("font_size", 17)
- left.add_child(hud)
+ hud.add_theme_font_size_override("font_size", 16)
+ objective.add_child(hud)
  var right := PanelContainer.new()
  right.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
- right.offset_left = -315
+ right.offset_left = -245
  right.offset_right = -20
- right.offset_top = -155
+ right.offset_top = -80
  right.offset_bottom = -20
  right.mouse_filter = Control.MOUSE_FILTER_IGNORE
  right.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(right)
  equipment_hud = Label.new()
- equipment_hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ equipment_hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
  equipment_hud.add_theme_font_size_override("font_size", 17)
  right.add_child(equipment_hud)
  var bottom := PanelContainer.new()
  prompt_panel = bottom
- bottom.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
- bottom.offset_left = 20
- bottom.offset_right = 850
- bottom.offset_top = -105
- bottom.offset_bottom = -20
+ bottom.position = Vector2(20, 22)
+ bottom.custom_minimum_size = Vector2(300, 0)
  bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
  bottom.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(bottom)
+ awareness_hud = Label.new()
+ awareness_hud.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+ awareness_hud.offset_left = 24
+ awareness_hud.offset_top = -70
+ awareness_hud.offset_right = 420
+ awareness_hud.offset_bottom = -20
+ awareness_hud.add_theme_font_size_override("font_size", 16)
+ awareness_hud.add_theme_color_override("font_shadow_color", Color.BLACK)
+ awareness_hud.add_theme_constant_override("shadow_offset_x", 2)
+ awareness_hud.add_theme_constant_override("shadow_offset_y", 2)
+ overlay.add_child(awareness_hud)
  crosshair = preload("res://scripts/ui/aim_reticle.gd").new()
  crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
  crosshair.set_anchors_preset(Control.PRESET_CENTER)
@@ -290,9 +347,23 @@ func _build_ui() -> void:
  crosshair.offset_bottom = 20
  crosshair.visible = false
  overlay.add_child(crosshair)
+ interaction_dot = Label.new()
+ interaction_dot.text = "·"
+ interaction_dot.set_anchors_preset(Control.PRESET_CENTER)
+ interaction_dot.offset_left = -5
+ interaction_dot.offset_right = 5
+ interaction_dot.offset_top = -14
+ interaction_dot.offset_bottom = 14
+ interaction_dot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ interaction_dot.visible = false
+ overlay.add_child(interaction_dot)
  instinct_label = Label.new()
- instinct_label.text = "INSTINCT"
- instinct_label.position = Vector2(20, 230)
+ instinct_label.text = "INSTINCT  /  ACTIVE"
+ instinct_label.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+ instinct_label.offset_left = 24
+ instinct_label.offset_top = -98
+ instinct_label.offset_right = 260
+ instinct_label.offset_bottom = -75
  instinct_label.add_theme_font_size_override("font_size", 15)
  instinct_label.modulate = Color(0.95, 0.82, 0.5)
  instinct_label.visible = false
@@ -319,7 +390,7 @@ func _build_ui() -> void:
  prompt = Label.new()
  prompt.add_theme_font_size_override("font_size", 16)
  prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
- prompt.custom_minimum_size.x = 780
+ prompt.custom_minimum_size.x = 280
  bottom.add_child(prompt)
 
 func _select_equipment(slot: int) -> void:
@@ -593,21 +664,16 @@ func _process(_delta: float) -> void:
   if npc.suspicion > highest and _clear_reach(npc.global_position, 9.0, npc.get_rid()):
    highest = npc.suspicion
    local_state = "INVESTIGATING" if npc.state == "investigating" else "SUSPICIOUS"
- var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
- var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "ADRIAN LOCKE  /  OPERATIONS DIRECTOR"
- var target_done := mission.action_complete if mission_id() == "initiation" else mission.target_complete
- var target_state := "COMPLETE" if target_done else "ACTIVE"
- if mission_id() == "initiation" and not mission.action_complete and get("robot_alert") == true:
-  target_state = "SCANNING NEARBY"
- hud.text = title + "\n" + mission.objective_text() + "\n" + mission.progress_text() + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + "%s  /  %s  ·  %s  ·  %s" % [area.to_upper(), access, player.role.to_upper(), local_state]
+ var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "ADRIAN LOCKE"
+ hud.text = target + "  /  " + mission.objective_text() + "\n" + "RECORDS  %d / %d  ·  REQUIRED %d" % [mission.clues.size(), mission.available_records.size(), mission.required_records]
+ awareness_hud.text = "%s  /  %s\n%s" % [area.to_upper(), access, local_state]
  fps_label.visible = Campaign.settings["show_fps"]
  fps_label.text = "%d FPS" % Engine.get_frames_per_second()
- var slots := "1  TRAINING SIDEARM"
- if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"
- equipment_hud.text = "EQUIPMENT\n" + slots + "\nEQUIPPED  /  " + Campaign.item_label(player.equipment.selected).to_upper()
+ equipment_hud.text = Campaign.item_label(player.equipment.selected).to_upper()
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
  crosshair.visible = player.aiming
  var nearest := _nearest()
+ interaction_dot.visible = nearest != null and not player.aiming
  if message != last_message:
   last_message = message
   message_remaining = 7.0
@@ -615,3 +681,4 @@ func _process(_delta: float) -> void:
  var current_message := message if message_remaining > 0.0 else ""
  prompt.text = ("E  /  " + nearest.label + ("\n" if not current_message.is_empty() else "") if nearest else "") + current_message
  prompt_panel.visible = not prompt.text.strip_edges().is_empty()
+ prompt_panel.modulate.a = move_toward(prompt_panel.modulate.a, 1.0 if prompt_panel.visible else 0.0, _delta * 6.0)
