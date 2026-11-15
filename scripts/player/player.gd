@@ -39,6 +39,7 @@ func _ready() -> void:
  add_child(body_mesh)
  set_disguise("visitor")
  body_mesh.add_sidearm()
+ body_mesh.add_quiet_tool()
  pivot = Node3D.new()
  pivot.position.y = 1.5
  add_child(pivot)
@@ -116,6 +117,7 @@ func _physics_process(delta: float) -> void:
  collision_shape.position.y = stance_height * 0.5
  body_mesh.crouch_amount = clampf((1.8 - stance_height) / 0.65, 0.0, 1.0)
  body_mesh.weapon_equipped = equipment.selected == "training_sidearm"
+ body_mesh.quiet_tool_equipped = equipment.selected == "quiet_line"
  body_mesh.weapon_aiming = aiming and body_mesh.weapon_equipped
  pivot.position.y = 1.5 * stance_height / 1.8
  var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)

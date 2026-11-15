@@ -17,6 +17,10 @@ var gait_speed: float = 0.0
 var torso: MeshInstance3D
 var weapon: Node3D
 var muzzle_flash: MeshInstance3D
+var quiet_tool: Node3D
+var quiet_tool_equipped: bool = false
+var quiet_tool_draw: float = 0.0
+var quiet_tool_action: float = 0.0
 var weapon_recoil: float = 0.0
 var weapon_aiming: bool = false
 var weapon_equipped: bool = false
@@ -108,6 +112,31 @@ func add_sidearm() -> void:
  muzzle_flash = _box(weapon, Vector3(0, -0.38, 0), Vector3(0.13, 0.14, 0.13), flash_mat)
  muzzle_flash.visible = false
 
+# An abstract coiled Quiet Line device is a visual cue for the existing
+# non-graphic fictional gadget. It does not add or change equipment mechanics.
+func add_quiet_tool() -> void:
+ if quiet_tool: return
+ quiet_tool = Node3D.new()
+ quiet_tool.position = Vector3(0,-0.30,-0.03)
+ left_elbow.add_child(quiet_tool)
+ var ring := MeshInstance3D.new()
+ var mesh := TorusMesh.new()
+ mesh.inner_radius = 0.075
+ mesh.outer_radius = 0.105
+ mesh.rings = 12
+ mesh.ring_segments = 6
+ ring.mesh = mesh
+ ring.rotation.x = PI / 2.0
+ ring.material_override = _material(Color(0.55,0.64,0.59))
+ quiet_tool.add_child(ring)
+ var grip := _material(Color(0.12,0.18,0.19))
+ for side: float in [-1.0,1.0]:
+  _box(quiet_tool, Vector3(side*0.095,-0.02,0), Vector3(0.045,0.13,0.05), grip)
+ quiet_tool.visible = false
+
+func use_quiet_tool() -> void:
+ quiet_tool_action = 1.0
+
 func fire_weapon() -> void:
  weapon_recoil = 1.0
 
@@ -132,6 +161,7 @@ func animate_motion(delta: float, speed: float) -> void:
  idle_phase += delta * 2.0
  var swing := sin(phase) * minf(gait_speed * 0.16, 0.6)
  weapon_draw = move_toward(weapon_draw, 1.0 if weapon_equipped else 0.0, delta * 3.0)
+ quiet_tool_draw = move_toward(quiet_tool_draw, 1.0 if quiet_tool_equipped else 0.0, delta * 3.0)
  weapon_aim_blend = move_toward(weapon_aim_blend, 1.0 if weapon_aiming and weapon_equipped else 0.0, delta * 4.0)
  torso.rotation.z = sin(idle_phase * 0.5) * 0.008
  torso.rotation.x = sin(idle_phase * 0.5) * 0.008
@@ -162,6 +192,7 @@ func animate_motion(delta: float, speed: float) -> void:
  var left_pose := -swing * 0.7
  if speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
  elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(idle_phase * 0.5) * 0.06
+ left_pose = lerpf(left_pose, 0.40 + quiet_tool_action * 0.35, quiet_tool_draw)
  left_arm.rotation.x = lerp_angle(left_arm.rotation.x, lerpf(left_pose, 1.05, weapon_aim_blend), blend)
  left_arm.rotation.z = lerp_angle(left_arm.rotation.z, -0.20 * weapon_aim_blend, blend)
  var ready_pose := lerpf(0.35, 1.35, weapon_aim_blend)
@@ -171,6 +202,8 @@ func animate_motion(delta: float, speed: float) -> void:
  # Elbows bend subtly during the stride and extend as the device is presented.
  left_elbow.rotation.x = lerp_angle(left_elbow.rotation.x, lerpf(-0.15 - absf(swing) * 0.20, -0.36, weapon_aim_blend), blend)
  right_elbow.rotation.x = lerp_angle(right_elbow.rotation.x, lerpf(-0.15 - absf(swing) * 0.20, -0.12, weapon_draw), blend)
+ if quiet_tool: quiet_tool.visible = quiet_tool_draw > 0.03
+ quiet_tool_action = maxf(0.0, quiet_tool_action - delta * 3.0)
  if weapon:
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72

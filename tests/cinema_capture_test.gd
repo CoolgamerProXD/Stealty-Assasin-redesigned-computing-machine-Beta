@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows", "cinema_city_gameplay", "cinema_mission_selection"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows", "cinema_city_gameplay", "cinema_mission_selection", "cinema_quiet_tool"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -150,6 +150,13 @@ func run() -> void:
  Input.parse_input_event(aim.duplicate())
  for i: int in range(30): await physics_frame
  check(not player.aiming and player.body_mesh.weapon_aim_blend < 0.2 and player.camera.fov > 65, "aim release restores exploration pose and FOV")
+ # Staged equipment visual only; unlock and real Q use are checked separately.
+ var equipped_before := player.equipment.selected
+ player.equipment.selected = "quiet_line"
+ for i: int in range(30): await physics_frame
+ await capture("cinema_quiet_tool")
+ check(player.body_mesh.quiet_tool.visible and player.body_mesh.quiet_tool_draw > 0.9, "selected quiet tool appears on the player's hand")
+ player.equipment.selected = equipped_before
  hotel.queue_free()
  await process_frame
  var initiation: Node3D = load("res://scenes/initiation.tscn").instantiate()

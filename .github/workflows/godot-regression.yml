@@ -136,7 +136,7 @@ jobs:
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for path in sorted(pathlib.Path("visual-test-output").glob("*_target_open_thumb.jpg")):
+          for path in sorted(pathlib.Path("visual-test-output").glob("hotel_target_open_thumb.jpg")):
               encoded = base64.b64encode(path.read_bytes()).decode("ascii")
               for index in range(0, len(encoded), 3000):
                   print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
@@ -161,7 +161,7 @@ jobs:
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for name in ("cinema_hotel_windows", "cinema_upper_gallery", "cinema_hotel_wing"):
+          for name in ("cinema_quiet_tool", "cinema_upper_gallery", "cinema_hotel_wing"):
               path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
               if not path.exists(): continue
               data = base64.b64encode(path.read_bytes()).decode("ascii")

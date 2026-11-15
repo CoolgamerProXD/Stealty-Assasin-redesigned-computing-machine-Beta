@@ -16,6 +16,7 @@ var equipment_icon: Control
 var crosshair: Control
 var shot_audio: AudioStreamPlayer
 var objective_audio: AudioStreamPlayer
+var gadget_audio: AudioStreamPlayer
 var ambience_audio: AudioStreamPlayer
 var last_shot_start: Vector3
 var last_shot_end: Vector3
@@ -628,6 +629,9 @@ func _build_ui() -> void:
  objective_audio.stream = ProceduralSound.tone(440.0, 0.20, 0.05)
  add_child(objective_audio)
  mission.changed.connect(objective_audio.play)
+ gadget_audio = AudioStreamPlayer.new()
+ gadget_audio.stream = ProceduralSound.tone(260.0, 0.12, 0.035)
+ add_child(gadget_audio)
  ambience_audio = AudioStreamPlayer.new()
  ambience_audio.stream = ProceduralSound.ambience("initiation" if mission_id() == "initiation" else "hotel")
  add_child(ambience_audio)
@@ -656,6 +660,8 @@ func _use_equipment() -> void:
     best = distance
   if nearest:
    nearest.incapacitate(12.0)
+   player.body_mesh.use_quiet_tool()
+   gadget_audio.play()
    message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
   else: message = "Quiet Line requires a nearby unobstructed person."
 

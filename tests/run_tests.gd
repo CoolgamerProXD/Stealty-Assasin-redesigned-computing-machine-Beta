@@ -580,6 +580,7 @@ func run() -> void:
  await process_frame
  print("EQUIP_DIAG: gadget selected=", gadget_player.equipment.selected, " stun=", guard.stunned_time, " message=", gadget_world.get("message"))
  check(guard.stunned_time > 0 and gadget_player.equipment.selected == "quiet_line", "gadget input temporarily disables a nearby NPC")
+ check(gadget_player.body_mesh.quiet_tool.visible and gadget_player.body_mesh.quiet_tool_action > 0.0, "selected gadget has a hand-held visual and use pose")
  gadget_world.call("_process", 0.0)
  check(gadget_world.get("hud").text.contains("ADRIAN LOCKE") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
  check(gadget_world.get("equipment_icon").item == "quiet_line", "equipment icon reflects the actual selected item")
