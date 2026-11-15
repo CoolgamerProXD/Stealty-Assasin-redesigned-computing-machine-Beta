@@ -1,6 +1,9 @@
 # Performance
 
 ## Target/Instinct update caveat
+
+CI run 43704290753 (`aaff1c2`) used Godot 4.4.1 on Ubuntu with AMD EPYC 9V45, 4 reported CPUs, ~15.6 GiB RAM and Mesa llvmpipe under Xvfb at 1280×720. The scripted Meridian camera sample of 120 frames measured mean **18.987 ms / 52.67 FPS**, p95 **19.942 ms**, p99 **20.392 ms**; engine clock to first test frame **2,965.374 ms**. Headless 120-frame menu startup process: **1.10 s**, **95,036 KiB** peak RSS. Synthetic CI only: no conclusions about Intel Iris Xe, the cinematic or actual play.
+
 The new moving camera, hit feedback, material overlays, additional NPC and cinematic exterior have not been measured on the target laptop. Any CI software-rendering sample is not a target-hardware benchmark. Renderer comparisons and a human performance pass remain outstanding.
 
 ## Critical gameplay update CI sample

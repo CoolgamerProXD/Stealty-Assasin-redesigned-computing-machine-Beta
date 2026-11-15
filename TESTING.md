@@ -1,6 +1,9 @@
 # Testing
 
 ## Target, aiming and Instinct update
+
+[Actions run 43704290753](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43704290753) on `aaff1c25c89f30c585e2ac02420b6ba4010e244d` passed seven Python checks, official Godot 4.4.1 import and main startup, **126/126 headless behavioral checks**, and **21/21 Xvfb/Compatibility display checks**. The display test sends mouse input, verifies a centered reticle and a camera-ray hit, checks wall and camera-side obstruction, and verifies no firing without aim. The headless test checks Left/Right Ctrl, red discovered targets, yellow nearby but not distant visible intel in both missions, objective gating and old-save migration. Cinematic tests inspect exterior nodes and sample actor/foot positions over the timeline. These do not validate visual composition, real input feel or the complete scene by human observation. Earlier display runs exposed an off-centre font reticle and a faulty obstruction-test setup; the final test uses a geometric reticle and verifies the obstruction with the real spring arm.
+
 The workflow exercises the physical primary target and witness, legacy saves, mouse aim/fire input, centre-ray impact and wall obstruction, hold/release Instinct, target discovery and item proximity in both missions, and cinematic grounding/scene content. Read the Actions result for the exact commit: scripted runtime checks are not a human playthrough or visual-quality signoff. Windows export, physical mouse feel, colour accessibility, real audio review and target laptop performance remain unverified.
 
 ## Current gameplay update
