@@ -1093,6 +1093,20 @@ func run() -> void:
       Input.action_release("move_left")
       Engine.time_scale = 1.0
       check(preview_player.global_position.x < 12.0 and preview_player.global_position.y < 0.4, "mountain terrain is physically walkable back down")
+      preview_player.global_position = Vector3(-9,0.05,-8)
+      preview_player.velocity = Vector3.ZERO
+      await physics_frame
+      Engine.time_scale = 2.0
+      Input.action_press("move_left")
+      await create_timer(6.5).timeout
+      Input.action_release("move_left")
+      print("PREVIEW_ROUTE_DIAG: mountain west slope ", preview_player.global_position)
+      check(preview_player.global_position.x < -23.0 and preview_player.global_position.y > 0.7, "opposite mountain slope is physically walkable uphill")
+      Input.action_press("move_right")
+      await create_timer(6.5).timeout
+      Input.action_release("move_right")
+      Engine.time_scale = 1.0
+      check(preview_player.global_position.x > -12.0 and preview_player.global_position.y < 0.4, "opposite mountain slope is physically walkable back down")
     var exit_event := InputEventAction.new()
     exit_event.action = "release_mouse"
     exit_event.pressed = true
