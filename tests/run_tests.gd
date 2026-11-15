@@ -42,7 +42,8 @@ func run() -> void:
  check(mission.record_clue("ledger") and not mission.record_clue("ledger"), "duplicate clue cannot be recorded")
  check(not mission.extract(), "one unique clue cannot unlock extraction")
  check(mission.record_clue("memo") and not mission.extract(), "two clues alone cannot replace the target objective")
- check(mission.mark_action("interview_ivo") and mission.extract() and mission.extracted and not mission.extract(), "two clues and the witness unlock one extraction")
+ check(mission.mark_action("interview_ivo") and not mission.extract(), "witness and records alone do not satisfy the primary target")
+ check(mission.mark_target("adrian_locke") and mission.extract() and mission.extracted and not mission.extract(), "target, witness and records unlock extraction")
  check(mission.record_clue("archive") and mission.progress_text().contains("3 / 3") and mission.progress_text().contains("Required: 2"), "progress distinguishes available and required after third clue")
  var memory := NpcMemory.new()
  memory.retention_seconds = 2.0
@@ -80,7 +81,7 @@ func run() -> void:
  await physics_frame
  var player: HotelPlayer = world.get("player")
  var npcs: Array[HotelNpc] = world.get("npcs")
- check(player != null and npcs.size() == 3, "hotel creates player and three scheduled NPCs")
+ check(player != null and npcs.size() == 4, "hotel creates player, three existing NPCs and the scheduled target")
  var spawned: Array[Interactable] = world.get("interactables")
  var spawned_ids: Array[String] = []
  for obj: Interactable in spawned:
@@ -231,6 +232,15 @@ func run() -> void:
  check(active_mission.action_complete, "physical Ivo target can be questioned through input")
  question.pressed = false
  Input.parse_input_event(question)
+ player.global_position = objects[4].global_position + Vector3(0, 0.1, 0.5)
+ world.call("_interact_nearest")
+ check(not active_mission.extracted, "witness and records do not replace primary target")
+ var primary: Interactable = objects[6]
+ check(primary.get_parent() is HotelNpc and (primary.get_parent() as HotelNpc).profile.identity == "Adrian Locke", "primary target is a distinct scheduled character")
+ player.global_position = primary.global_position + Vector3(0, 0.1, 0.7)
+ await physics_frame
+ world.call("_interact_nearest")
+ check(active_mission.target_complete, "confronting primary target updates objective")
  player.global_position = objects[4].global_position + Vector3(0, 0.1, 0.5)
  world.call("_interact_nearest")
  check(active_mission.extracted, "world interactions complete mission")

@@ -12,6 +12,9 @@ static func capture(player: HotelPlayer, mission: Mission) -> Dictionary:
   "extracted": mission.extracted,
   "action_complete": mission.action_complete,
   "action_id": mission.required_action,
+  "target_id": mission.primary_target.get("id", ""),
+  "target_complete": mission.target_complete,
+  "target_discovered": mission.target_discovered,
   "equipment": player.equipment.snapshot(),
  }
 
@@ -32,11 +35,18 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
  # A completed legacy Meridian checkpoint pre-dates the new witness objective.
  if mission.required_action == "interview_ivo" and not data.has("action_id") and data.get("extracted", false) == true:
   mission.action_complete = true
+ mission.target_complete = data.get("target_id", "") == mission.primary_target.get("id", "") and data.get("target_complete", false) == true
+ mission.target_discovered = mission.target_complete or data.get("target_discovered", false) == true
+ # A previously completed Meridian save must not become incomplete after adding Locke.
+ if mission.primary_target.get("id") == "adrian_locke" and not data.has("target_id") and data.get("extracted", false) == true:
+  mission.target_complete = true
+  mission.target_discovered = true
  mission.extracted = data.get("extracted", false) == true and mission.can_extract()
  for object: Interactable in objects:
   if object.kind == "clue": object.used = clues.has(object.identifier)
   elif object.kind == "disguise": object.used = player.role == "staff"
   elif object.kind == "target": object.used = mission.action_complete
+  elif object.kind == "primary": object.used = mission.target_complete
   elif object.kind == "robot":
    object.used = mission.action_complete
    continue # The disabled training unit remains visible.

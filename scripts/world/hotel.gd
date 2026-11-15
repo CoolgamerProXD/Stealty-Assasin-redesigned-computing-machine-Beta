@@ -5,6 +5,7 @@ var player: HotelPlayer
 var mission: Mission = Mission.new()
 var interactables: Array[Interactable] = []
 var npcs: Array[HotelNpc] = []
+var primary_npc: HotelNpc
 var hud: Label
 var prompt: Label
 var equipment_hud: Label
@@ -143,6 +144,20 @@ func _build_npcs() -> void:
   npc.position = _vector(record["start"])
   add_child(npc)
   npcs.append(npc)
+ if mission.primary_target.get("id") == "adrian_locke":
+  var data_target: Dictionary = mission.primary_target
+  var profile := NpcProfile.new()
+  profile.identity = str(data_target["name"])
+  profile.occupation = "manager"
+  profile.alertness = 0.7
+  for entry: Dictionary in data_target["schedule"]:
+   profile.schedule.append(ScheduleEntry.new(_vector(entry["destination"]), str(entry["activity"]), float(entry["duration"])))
+  primary_npc = HotelNpc.new()
+  primary_npc.profile = profile
+  primary_npc.player = player
+  primary_npc.position = _vector(data_target["start"])
+  add_child(primary_npc)
+  npcs.append(primary_npc)
 
 func _add_interactable(pos: Vector3, title: String, kind: String, id: String, color: Color) -> void:
  var object := Interactable.new()
@@ -180,6 +195,13 @@ func _build_interactions() -> void:
    var marker := target.get_child(0) as Node3D
    marker.position.y = 2.15
    break
+ if primary_npc:
+  _add_interactable(Vector3.ZERO, "Confront Adrian Locke", "primary", "adrian_locke", Color(0.95, 0.24, 0.20))
+  var target_marker: Interactable = interactables.back()
+  target_marker.reparent(primary_npc, false)
+  target_marker.position = Vector3.ZERO
+  var marker_visual := target_marker.get_child(0) as Node3D
+  marker_visual.position.y = 2.15
 
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()
@@ -282,11 +304,11 @@ func _nearest() -> Interactable:
  var distance := 1.8
  for object: Interactable in interactables:
   var d := player.global_position.distance_to(object.global_position)
-  if object.kind == "target" and object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0: continue
+  if object.kind in ["target", "primary"] and object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0: continue
   if d < distance and object.available(player.role):
    var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, object.global_position + Vector3.UP * 0.4)
    var excluded: Array[RID] = [player.get_rid()]
-   if object.kind == "target" and object.get_parent() is HotelNpc:
+   if object.kind in ["target", "primary"] and object.get_parent() is HotelNpc:
     excluded.append((object.get_parent() as HotelNpc).get_rid())
    query.exclude = excluded
    if get_world_3d().direct_space_state.intersect_ray(query).is_empty():
@@ -312,6 +334,14 @@ func _on_interaction(object: Interactable) -> void:
     if record["id"] == object.identifier:
      message = record["message"]
      break
+  "primary":
+   if object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0:
+    message = "Locke cannot speak while incapacitated. Wait for recovery."
+    return
+   if mission.mark_target(object.identifier):
+    object.used = true
+    object.visible = false
+    message = "Locke: The transfer was authorized. I never saw who collected it."
   "target":
    if object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0:
     message = "Ivo cannot talk while incapacitated. Wait for recovery."
@@ -362,11 +392,12 @@ func _process(_delta: float) -> void:
  var highest := 0.0
  for npc: HotelNpc in npcs: highest = maxf(highest, npc.suspicion)
  var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
- var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "IVO CHEN  /  RECORDS EMPLOYEE"
- var target_state := "COMPLETE" if mission.action_complete else "LOCATE AND INTERACT"
+ var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "ADRIAN LOCKE  /  OPERATIONS DIRECTOR"
+ var target_done := mission.action_complete if mission_id() == "initiation" else mission.target_complete
+ var target_state := "COMPLETE" if target_done else "LOCATE AND INTERACT"
  if mission_id() == "initiation" and not mission.action_complete and get("robot_alert") == true:
   target_state = "SCANNING NEARBY"
- hud.text = title + "\nPRIMARY  /  " + target + "  ·  " + target_state + "\nSECONDARY  /  " + mission.progress_text() + "\nNEXT  /  " + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
+ hud.text = title + "\nPRIMARY  /  " + target + "  ·  " + target_state + "\nSECONDARY  /  " + mission.progress_text() + ("  |  IVO: " + ("QUESTIONED" if mission.action_complete else "QUESTION") if mission_id() == "meridian" else "") + "\nNEXT  /  " + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
  var slots := "1  TRAINING SIDEARM"
  if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"
  equipment_hud.text = "EQUIPMENT\n" + slots + "\nEQUIPPED  /  " + Campaign.item_label(player.equipment.selected).to_upper()

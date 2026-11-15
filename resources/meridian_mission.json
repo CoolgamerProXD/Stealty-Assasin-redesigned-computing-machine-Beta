@@ -32,5 +32,35 @@
       "message": "Terminal: a manager authorized the transfer."
     }
   ],
-  "required_action": "interview_ivo"
+  "required_action": "interview_ivo",
+  "primary_target": {
+    "id": "adrian_locke",
+    "name": "Adrian Locke",
+    "description": "Meridian operations director who authorized the archive transfer.",
+    "start": [
+      9.3,
+      0.05,
+      1.5
+    ],
+    "schedule": [
+      {
+        "destination": [
+          9.5,
+          0,
+          -2
+        ],
+        "activity": "working",
+        "duration": 5
+      },
+      {
+        "destination": [
+          4.5,
+          0,
+          3
+        ],
+        "activity": "waiting",
+        "duration": 4
+      }
+    ]
+  }
 }

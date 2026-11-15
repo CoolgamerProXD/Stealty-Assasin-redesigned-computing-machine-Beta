@@ -2,8 +2,40 @@
   "required_records": 3,
   "required_action": "disable_assessment_unit",
   "records": [
-    {"id":"evaluation", "label":"Read evaluation sheet", "position":[-10,0,-5], "message":"Ruby: Assessment criteria. They test observation, not bravado."},
-    {"id":"sensor_log", "label":"Copy sensor log", "position":[4.5,0,-5], "message":"Ruby: The unit's sensor log. It noticed more than the assessors expected."},
-    {"id":"dispatch", "label":"Retrieve dispatch record", "position":[10,0,5], "message":"Ruby: Dispatch mentions the Covenant. That name wasn't in the briefing."}
-  ]
+    {
+      "id": "evaluation",
+      "label": "Read evaluation sheet",
+      "position": [
+        -10,
+        0,
+        -5
+      ],
+      "message": "Ruby: Assessment criteria. They test observation, not bravado."
+    },
+    {
+      "id": "sensor_log",
+      "label": "Copy sensor log",
+      "position": [
+        4.5,
+        0,
+        -5
+      ],
+      "message": "Ruby: The unit's sensor log. It noticed more than the assessors expected."
+    },
+    {
+      "id": "dispatch",
+      "label": "Retrieve dispatch record",
+      "position": [
+        10,
+        0,
+        5
+      ],
+      "message": "Ruby: Dispatch mentions the Covenant. That name wasn't in the briefing."
+    }
+  ],
+  "primary_target": {
+    "id": "assessment_unit",
+    "name": "Assessment unit",
+    "description": "Moving training target in the assessment chamber."
+  }
 }

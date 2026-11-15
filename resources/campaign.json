@@ -7,7 +7,7 @@
       "name": "01  /  INITIATION",
       "description": "A controlled assessment at the fictional Civic Evaluation Annex.",
       "scene": "res://scenes/initiation.tscn",
-      "briefing": "Ruby: Blackline doesn't hire on a promise. Disable the assessment unit, recover its three records, and leave through the marked exit. Stay observant; the guards are part of the evaluation.",
+      "briefing": "Ruby: Your primary target is the moving assessment unit in the chamber. Disable it, recover three records, and leave through the marked exit. The two guards are part of the evaluation.",
       "debrief": "Ruby: You kept your head. Blackline can use that. The next file is already on your desk.",
       "unlock": "quiet_line"
     },
@@ -16,8 +16,8 @@
       "name": "02  /  THE MERIDIAN",
       "description": "Trace a missing archive through a luxury hotel.",
       "scene": "res://scenes/hotel.tscn",
-      "briefing": "Ruby: Ivo Chen manages the Meridian's records. Find him and ask about the missing archive, then bring back two records. The Covenant is interested too; we don't know why yet.",
-      "debrief": "Ruby: Chen's account and the records point beyond the hotel. The Covenant is not our employer, and I intend to learn who is paying them.",
+      "briefing": "Ruby: Your primary target is Adrian Locke, the Meridian's operations director. Confront him about the archive transfer. Ivo Chen is a records witness: question him and recover two records. The Covenant is interested too; we don't know why yet.",
+      "debrief": "Ruby: Locke's account, Chen's testimony and the records point beyond the hotel. The Covenant is not our employer, and I intend to learn who is paying them.",
       "unlock": ""
     },
     {
@@ -34,7 +34,7 @@
     {
       "id": "training_sidearm",
       "name": "Training sidearm",
-      "description": "Unsuppressed fictional assessment pulse. Five charges; Q uses one.",
+      "description": "Unsuppressed fictional assessment pulse. Five charges. Aim with right mouse; fire with left mouse.",
       "unlock_after": "",
       "missions": [
         "initiation",
