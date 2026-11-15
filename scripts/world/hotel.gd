@@ -218,7 +218,8 @@ func _build_interactions() -> void:
   target_marker.reparent(primary_npc, false)
   target_marker.position = Vector3.ZERO
   var marker_visual := target_marker.get_child(0) as Node3D
-  marker_visual.position.y = 2.15
+  marker_visual.position.y = 2.05
+  marker_visual.scale = Vector3.ONE * 0.35
 
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()

@@ -48,6 +48,7 @@ func run() -> void:
   var target: Node3D = world.get("robot") if id == "initiation" else world.get("primary_npc")
   for npc: HotelNpc in world.get("npcs"):
    npc.set_physics_process(false)
+   if npc != target: npc.global_position = Vector3(-10, 0.05, 5)
   world.set_physics_process(false)
   player.set_physics_process(false)
   player.global_position = Vector3(0.4, 0.05, 0)
