@@ -31,11 +31,14 @@ jobs:
           # Godot 4.4.1's dummy renderer logs a false null-texture error while
           # generating glTF editor previews (upstream godotengine/godot#108994).
           # Import through a real virtual display instead of suppressing errors.
-          if ! command -v xvfb-run >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y xvfb
-          fi
-          xvfb-run -a --server-args="-screen 0 1280x720x24" "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --editor --path . --quit 2>&1 | tee "$RUNNER_TEMP/import.log"
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb mesa-vulkan-drivers libvulkan1
+          # The editor probes Vulkan even for a Compatibility project. Select
+          # Mesa's software Vulkan ICD, while using OpenGL to render the editor.
+          icd="$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' -print -quit)"
+          test -n "$icd"
+          export VK_DRIVER_FILES="$icd" VK_ICD_FILENAMES="$icd"
+          xvfb-run -a --server-args="-screen 0 1280x720x24" "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --rendering-driver opengl3 --editor --path . --quit 2>&1 | tee "$RUNNER_TEMP/import.log"
           if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/import.log"; then exit 1; fi
       - name: Start main scene
         shell: bash
