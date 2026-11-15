@@ -1,5 +1,8 @@
 # Gameplay
 
+## Current target and controls
+Confront Adrian Locke (primary), question Ivo Chen (witness), collect any two records and extract at the Meridian. The Initiation primary remains the assessment unit. Hold right mouse to aim and left-click to fire a center-ray assessment pulse; Q is now only for Quiet Line. Left Ctrl enables Instinct while held. Red is a discovered primary target; yellow marks important, visible, unobstructed items within four metres by default. Highlights are depth-tested. Earlier descriptions below may be historical.
+
 ## Current critical gameplay update
 The Meridian now requires questioning Ivo Chen as well as two records. The assessment unit and witness are displayed in the HUD. The training sidearm has five abstract unsuppressed pulses; Q uses one, nearby NPCs investigate, and a nearby unobstructed unit can be disabled. Select the unlocked Quiet Line in the loadout for Meridian, choose it with 2 and use Q near a person to temporarily incapacitate them. The sidearm remains slot 1. These are simplified prototype interactions rather than ballistic or physical restraint simulations. Ruby's post-Initiation meeting uses timed 3D actor and door movement with subtitles and can be skipped without losing progression. Older descriptions below are historical where they conflict with these rules.
 

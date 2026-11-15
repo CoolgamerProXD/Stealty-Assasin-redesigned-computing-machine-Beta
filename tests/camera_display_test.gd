@@ -82,6 +82,9 @@ func run() -> void:
  player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
  await physics_frame
  check(player.aiming and world.get("crosshair").is_visible_in_tree(), "right mouse input shows aiming crosshair on virtual display")
+ var reticle: Label = world.get("crosshair")
+ var view_center := player.camera.get_viewport().get_visible_rect().size * 0.5
+ check(reticle.get_global_rect().get_center().distance_to(view_center) < 1.0, "displayed crosshair is at the viewport center")
  var fire := InputEventMouseButton.new()
  fire.button_index = MOUSE_BUTTON_LEFT
  fire.pressed = true
@@ -113,6 +116,15 @@ func run() -> void:
  await physics_frame
  await process_frame
  check(not player.aiming and not world.get("crosshair").visible, "right mouse release exits aim on virtual display")
+ fire.pressed = false
+ Input.parse_input_event(fire.duplicate())
+ await process_frame
+ fire.pressed = true
+ Input.parse_input_event(fire.duplicate())
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(player.equipment.charges == 3, "left mouse without aiming does not fire")
  world.queue_free()
  await process_frame
  var initiation: Node = load("res://scenes/initiation.tscn").instantiate()

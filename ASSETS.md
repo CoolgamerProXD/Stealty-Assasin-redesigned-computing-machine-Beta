@@ -1,5 +1,8 @@
 # Assets and dependencies
 
+## Exterior and character refinement
+The Ruby scene's ground, street, buildings, sky and fixtures and the figures' facial, clothing and proportion updates are original procedural Godot geometry/materials. No external assets were imported. These are still low-poly placeholders, not textured production models.
+
 ## Current assets
 
 The player, NPCs and Ruby use original procedural low-poly figures built from individual head, torso, limbs, clothing and accessories with simple joint motion. They remain placeholder-quality, not rigged or textured production characters. Rooms and props use original primitive geometry and materials. The Ruby sequence synthesizes simple tones; there are no recorded effects or voices. No external art or audio was imported. See [THIRD_PARTY_ASSETS.md](THIRD_PARTY_ASSETS.md). Godot 4.4.1 is a separate dependency, not bundled.

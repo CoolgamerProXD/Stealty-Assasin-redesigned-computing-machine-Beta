@@ -35,8 +35,9 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
  # A completed legacy Meridian checkpoint pre-dates the new witness objective.
  if mission.required_action == "interview_ivo" and not data.has("action_id") and data.get("extracted", false) == true:
   mission.action_complete = true
- mission.target_complete = data.get("target_id", "") == mission.primary_target.get("id", "") and data.get("target_complete", false) == true
- mission.target_discovered = mission.target_complete or data.get("target_discovered", false) == true
+ var same_target: bool = data.get("target_id", "") == mission.primary_target.get("id", "")
+ mission.target_complete = same_target and data.get("target_complete", false) == true
+ mission.target_discovered = mission.target_complete or (same_target and data.get("target_discovered", false) == true)
  # A previously completed Meridian save must not become incomplete after adding Locke.
  if mission.primary_target.get("id") == "adrian_locke" and not data.has("target_id") and data.get("extracted", false) == true:
   mission.target_complete = true

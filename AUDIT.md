@@ -1,5 +1,8 @@
 # PROJECT ASSASSIN — audit and stabilisation
 
+## Target, aiming, Instinct and exterior update
+The previous Meridian primary was a witness. The new separate primary is scheduled manager Adrian Locke, tied to the existing archive-transfer story; Ivo remains a witness. Extracting requires the target, witness and two records. The old Q proximity-shot was replaced by camera-centre hitscan with RMB aim and LMB fire; a shot collides with world geometry and can incapacitate characters or disable the assessment unit. Instinct is hold-to-use, proximity-limited for intel and uses visible target discovery and depth-tested material overlays. The Ruby scene now has a sky, ground and low-poly surrounding street/buildings; the original character foundation has facial/clothing and locomotion refinements. The exterior and figures are still procedural, not production assets. The sections below describe previous commits where they conflict.
+
 ## Critical gameplay update
 
 The original HUD was present as a fixed-position plain label, but did not identify a character target or equipment; its visibility in the user's playtest could not be reproduced or diagnosed from source alone. The new HUD uses panels and derives values from mission and equipment state. The old loadout was metadata only; it is now provisioned, controlled and saved in mission. Initiation's moving robot now scans nearby visible players and accepts an assessment pulse or interaction. Meridian's existing employee Ivo Chen is a physical, scheduled records witness, integrated with the mission's required action and checkpoint. Already-extracted legacy saves remain complete; in-progress saves acquire the new objective.

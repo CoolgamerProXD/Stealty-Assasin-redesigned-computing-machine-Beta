@@ -1,5 +1,8 @@
 # Testing
 
+## Target, aiming and Instinct update
+The workflow exercises the physical primary target and witness, legacy saves, mouse aim/fire input, centre-ray impact and wall obstruction, hold/release Instinct, target discovery and item proximity in both missions, and cinematic grounding/scene content. Read the Actions result for the exact commit: scripted runtime checks are not a human playthrough or visual-quality signoff. Windows export, physical mouse feel, colour accessibility, real audio review and target laptop performance remain unverified.
+
 ## Current gameplay update
 
 [Actions run 43702084074](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43702084074), commit `0c1ee7b5605f48edb7a6c64fce2e6b1515a746d2`, passed official Godot 4.4.1 import and startup, six Python data checks, **110/110** headless behavioral checks and **11/11** scripted virtual-display camera/scene checks. The headless suite sends synthetic input for equipment, witness and cinematic skip; it also samples the cinematic timeline directly. It checks migration of completed legacy Meridian saves, replay and equipment persistence through an isolated file. An earlier run failed because synthetic input assertions sampled too early; waiting through a physics frame fixed the test timing, and the reruns passed. No human or Windows playtest was performed.

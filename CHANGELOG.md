@@ -1,5 +1,10 @@
 # Changelog
 
+## Target, aiming and Instinct update (unreleased)
+- Add scheduled Meridian primary target Adrian Locke while retaining Ivo as witness, and migrate completed legacy checkpoints.
+- Add RMB aim, center-ray LMB firing, collision impacts, audio/trace feedback and five-charge enforcement.
+- Add Left Ctrl Instinct with discovered-target and nearby visible-item highlights, and a procedural Ruby exterior and character refinement. See testing notes for verification and limitations.
+
 ## Critical gameplay update (unreleased)
 - Add live mission/equipment HUD, actual selected loadout, five-charge unsuppressed assessment pulses and non-graphic Quiet Line interaction; persist equipment in compatible checkpoints.
 - Add Ivo Chen as the Meridian's physical witness objective; assessment unit now reacts to proximity. Preserve previously completed Meridian checkpoints.

@@ -1,5 +1,8 @@
 # Architecture
 
+## Target/aim/Instinct integration
+Mission configuration has a separate primary-target definition and completion/discovery flags; the Meridian manager is an independently scheduled HotelNpc while Ivo remains a witness. SessionSnapshot stores target state and migrates previously completed saves. The existing player pivot/spring arm interpolates to aim and sends a fire signal; the world casts from the camera's screen-centre ray, applies obstruction/impact results, feedback and ammo. Instinct uses configurable world exports, view/LOS discovery and depth-tested material overlays, not global x-ray. The cinematic remains an independent scripted timeline with procedural exterior geometry.
+
 ## Critical gameplay update
 `MissionEquipment` owns deployment slots, selection and five-charge state; the world handles use and NPC reactions. `SessionSnapshot` stores it and validates optional items against campaign unlocks on restore. The HUD is composed by the mission world and reads live mission, NPC and equipment state. The Meridian witness is the existing Ivo Chen NPC with a moving child interactable; both missions use `Mission.required_action` and the same snapshot. Old completed Meridian saves receive the witness flag during migration. `StylizedPerson` supplies original articulated procedural visuals without changing CharacterBody3D or the spring arm. `ruby_meeting.gd` is a separate timeline-driven 3D sequence with procedural tones; campaign completion is persisted before entry. Historical sections below may describe earlier versions.
 

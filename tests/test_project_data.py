@@ -60,6 +60,22 @@ class PopulationDataTests(unittest.TestCase):
             for cx, cz, sx, sz in [(-5, -4.8, 4, 1), (-5, 3.5, 2.4, 1), (4.5, -5, 2.2, 1), (9.5, -5, 2.5, 1)]:
                 self.assertFalse(abs(x - cx) < sx / 2 and abs(z - cz) < sz / 2)
 
+    def test_primary_target_data_and_routes(self):
+        meridian = json.loads((ROOT / "resources/meridian_mission.json").read_text())
+        target = meridian["primary_target"]
+        self.assertEqual(target["id"], "adrian_locke")
+        self.assertNotIn(target["name"], [person["identity"] for person in self.people])
+        self.assertTrue(target["description"] and target["schedule"])
+        for x, y, z in [target["start"]] + [entry["destination"] for entry in target["schedule"]]:
+            self.assertLessEqual(abs(x), 11.0)
+            self.assertLessEqual(abs(z), 7.0)
+            for boundary in (2.0, 7.0):
+                if abs(x - boundary) < 0.5:
+                    self.assertTrue(2.35 <= abs(z) <= 3.65)
+        initiation = json.loads((ROOT / "resources/initiation_mission.json").read_text())
+        self.assertEqual(initiation["primary_target"]["id"], "assessment_unit")
+        self.assertEqual(initiation["required_action"], "disable_assessment_unit")
+
     def test_main_scene_and_script_exist(self):
         self.assertIn('run/main_scene="res://scenes/main_menu.tscn"', (ROOT / "project.godot").read_text())
         self.assertIn('res://scripts/world/hotel.gd', (ROOT / "scenes/hotel.tscn").read_text())
