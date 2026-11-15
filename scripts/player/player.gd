@@ -15,6 +15,7 @@ var pivot: Node3D
 var camera: Camera3D
 var arm: SpringArm3D
 var aiming: bool = false
+var instinct_active: bool = false
 var body_mesh: StylizedPerson
 var crouching: bool = false
 var collision_shape: CollisionShape3D
@@ -57,10 +58,13 @@ func _unhandled_input(event: InputEvent) -> void:
   pivot.rotation.x = clampf(pivot.rotation.x - event.relative.y * mouse_sensitivity, -0.95, 0.55)
  if event.is_action_pressed("release_mouse"):
   aiming = false
+  instinct_active = false
   Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
   return
+ if event.is_action_pressed("instinct"): instinct_active = true
+ if event.is_action_released("instinct"): instinct_active = false
  if event.is_action_pressed("aim") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED: aiming = true
  if event.is_action_released("aim"): aiming = false
  if event.is_action_pressed("fire") and aiming and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED: fire_requested.emit()

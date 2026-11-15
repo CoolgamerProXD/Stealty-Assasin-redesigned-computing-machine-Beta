@@ -74,6 +74,6 @@ jobs:
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print(f"::notice title={name}::{text}")
               for line in lines:
-                  if re.match(r"^(RESULT:|CAMERA RESULT:|DISPLAY_METRIC:|DISPLAY_STARTUP:)", line):
+                  if re.match(r"^(RESULT:|CAMERA RESULT:|DISPLAY_METRIC:|DISPLAY_STARTUP:|FAIL:|CAMERA FAIL:|SCRIPT ERROR|ERROR:|EQUIP_DIAG:)", line):
                       print(f"::notice title={name} summary::{line.replace('%', '%25')}")
           PYCODE

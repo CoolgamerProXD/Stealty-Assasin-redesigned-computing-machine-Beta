@@ -60,7 +60,7 @@ func run() -> void:
  var mean: float = total / samples.size()
  print("DISPLAY_METRIC: frames=%d mean_ms=%.3f p95_ms=%.3f p99_ms=%.3f mean_fps=%.2f" % [samples.size(), mean, samples[113], samples[118], 1000.0 / maxf(mean, 0.001)])
  var hotel_hud: Label = world.get("hud")
- check(hotel_hud.is_visible_in_tree() and hotel_hud.text.contains("IVO CHEN"), "Meridian target HUD is visible in rendered scene")
+ check(hotel_hud.is_visible_in_tree() and hotel_hud.text.contains("ADRIAN LOCKE"), "Meridian target HUD is visible in rendered scene")
  check(player.body_mesh.is_visible_in_tree() and player.body_mesh.get_child_count() > 8, "articulated player visuals are present in rendered scene")
  world.queue_free()
  await process_frame

@@ -11,6 +11,14 @@ var prompt: Label
 var equipment_hud: Label
 var crosshair: Label
 var shot_audio: AudioStreamPlayer
+var instinct_label: Label
+var instinct_strength: float = 0.0
+var instinct_red: StandardMaterial3D
+var instinct_yellow: StandardMaterial3D
+@export var instinct_item_range: float = 4.0
+@export var instinct_target_range: float = 16.0
+@export var instinct_target_color: Color = Color(1.0, 0.08, 0.05)
+@export var instinct_item_color: Color = Color(1.0, 0.82, 0.05)
 var message: String = ""
 
 func mission_id() -> String:
@@ -41,6 +49,7 @@ func _ready() -> void:
  _build_npcs()
  _build_interactions()
  _build_ui()
+ _setup_instinct()
  if Campaign.active_mission == mission_id():
   player.mouse_sensitivity = float(Campaign.settings["sensitivity"])
   var pause := preload("res://scripts/ui/pause_menu.gd").new()
@@ -269,6 +278,13 @@ func _build_ui() -> void:
  crosshair.offset_bottom = 20
  crosshair.visible = false
  overlay.add_child(crosshair)
+ instinct_label = Label.new()
+ instinct_label.text = "INSTINCT"
+ instinct_label.position = Vector2(20, 230)
+ instinct_label.add_theme_font_size_override("font_size", 15)
+ instinct_label.modulate = Color(0.95, 0.82, 0.5)
+ instinct_label.visible = false
+ overlay.add_child(instinct_label)
  shot_audio = AudioStreamPlayer.new()
  shot_audio.stream = ProceduralSound.tone(180.0, 0.12, 0.14)
  add_child(shot_audio)
@@ -359,6 +375,48 @@ func _clear_reach(point: Vector3, maximum: float, excluded: RID = RID()) -> bool
  query.exclude = exclusions
  return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
+func _setup_instinct() -> void:
+ instinct_red = _highlight_material(instinct_target_color)
+ instinct_yellow = _highlight_material(instinct_item_color)
+
+func _highlight_material(color: Color) -> StandardMaterial3D:
+ var material := StandardMaterial3D.new()
+ material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ material.albedo_color = Color(color.r, color.g, color.b, 0.0)
+ return material
+
+func _overlay_recursive(node: Node, material: Material) -> void:
+ if node is MeshInstance3D: (node as MeshInstance3D).material_overlay = material
+ for child: Node in node.get_children(): _overlay_recursive(child, material)
+
+func _target_node() -> Node3D:
+ if mission_id() == "initiation": return get("robot") as Node3D
+ return primary_npc
+
+func _update_instinct(delta: float) -> void:
+ var target := _target_node()
+ if target and not mission.target_discovered:
+  var point := target.global_position + Vector3.UP
+  var excluded: RID = primary_npc.get_rid() if primary_npc else RID()
+  var screen := player.camera.unproject_position(point)
+  var bounds := player.camera.get_viewport().get_visible_rect()
+  if not player.camera.is_position_behind(point) and bounds.has_point(screen) and _clear_reach(target.global_position, instinct_target_range, excluded):
+   mission.target_discovered = true
+ instinct_strength = move_toward(instinct_strength, 1.0, delta * 5.0) if player.instinct_active else 0.0
+ instinct_label.visible = player.instinct_active
+ instinct_red.albedo_color.a = instinct_strength * 0.7
+ instinct_yellow.albedo_color.a = instinct_strength * 0.7
+ if target:
+  var target_done := mission.action_complete if mission_id() == "initiation" else mission.target_complete
+  var can_highlight := player.instinct_active and mission.target_discovered and not target_done
+  var visual: Node = primary_npc.person if primary_npc else target
+  _overlay_recursive(visual, instinct_red if can_highlight else null)
+ for object: Interactable in interactables:
+  if object.kind not in ["clue", "disguise"]: continue
+  var eligible := player.instinct_active and not object.used and _clear_reach(object.global_position, instinct_item_range)
+  _overlay_recursive(object, instinct_yellow if eligible else null)
+
 func _nearest() -> Interactable:
  var best: Interactable = null
  var distance := 1.8
@@ -447,6 +505,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(_delta: float) -> void:
  if player == null or hud == null: return
+ _update_instinct(_delta)
  var area := AccessRules.area_at(player.global_position)
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0

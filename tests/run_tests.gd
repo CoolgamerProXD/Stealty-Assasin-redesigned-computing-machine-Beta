@@ -333,7 +333,7 @@ func run() -> void:
  print("EQUIP_DIAG: gadget selected=", gadget_player.equipment.selected, " stun=", guard.stunned_time, " message=", gadget_world.get("message"))
  check(guard.stunned_time > 0 and gadget_player.equipment.selected == "quiet_line", "gadget input temporarily disables a nearby NPC")
  gadget_world.call("_process", 0.0)
- check(gadget_world.get("hud").text.contains("IVO CHEN") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
+ check(gadget_world.get("hud").text.contains("ADRIAN LOCKE") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
  var gadget_snapshot := SessionSnapshot.capture(gadget_player, gadget_world.get("mission"))
  var equipment_save := "user://assassin_equipment_test_%d.json" % Time.get_ticks_usec()
  check(SaveStore.write(equipment_save, gadget_snapshot), "equipment checkpoint writes to disk")
