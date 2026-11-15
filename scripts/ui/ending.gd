@@ -5,6 +5,7 @@ var skip: Button
 
 func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+ theme = BlacklineTheme.create()
  var bg := ColorRect.new()
  bg.color = Color(0.035, 0.055, 0.07)
  bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

@@ -2,6 +2,7 @@ class_name StylizedPerson
 extends Node3D
 ## Original low-poly procedural character. Limbs are animated independent nodes.
 var role: String = "visitor"
+var appearance_seed: int = 0
 var left_leg: Node3D
 var right_leg: Node3D
 var left_arm: Node3D
@@ -18,17 +19,22 @@ var phase: float = 0.0
 var clothing: StandardMaterial3D
 
 func _ready() -> void:
- var skin := _material(Color(0.68, 0.46, 0.34))
- var dark := _material(Color(0.12, 0.13, 0.15))
+ var skin_variants: Array[Color] = [Color(0.68, 0.46, 0.34), Color(0.46, 0.29, 0.23), Color(0.76, 0.57, 0.46), Color(0.56, 0.39, 0.30)]
+ var hair_variants: Array[Color] = [Color(0.12, 0.13, 0.15), Color(0.23, 0.15, 0.12), Color(0.10, 0.09, 0.08)]
+ var skin := _material(skin_variants[absi(appearance_seed) % skin_variants.size()])
+ var dark := _material(hair_variants[absi(appearance_seed) % hair_variants.size()])
  clothing = _material(_role_color())
  var trousers := _material(Color(0.16, 0.18, 0.20))
  torso = _box(self, Vector3(0, 1.22, 0), Vector3(0.48, 0.60, 0.24), clothing)
+ torso.mesh = _jacket_mesh()
  _box(self, Vector3(0, 0.91, 0), Vector3(0.42, 0.16, 0.23), trousers)
  _box(self, Vector3(0, 1.56, 0), Vector3(0.14, 0.12, 0.14), skin)
  var head := MeshInstance3D.new()
  var sphere := SphereMesh.new()
  sphere.radius = 0.15
  sphere.height = 0.33
+ sphere.radial_segments = 16
+ sphere.rings = 8
  head.mesh = sphere
  head.position = Vector3(0, 1.73, 0)
  head.material_override = skin
@@ -42,6 +48,11 @@ func _ready() -> void:
  # Lapels, collar and belt establish clothed silhouettes instead of a capsule.
  _box(self, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70)))
  _box(self, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark)
+ # Visible jacket seams, collar and a small lapel accent give the silhouette
+ # structure without introducing any imported assets.
+ for x: float in [-0.17, 0.17]:
+  _box(self, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark)
+ _box(self, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin)
  left_leg = _limb(Vector3(-0.12, 0.88, 0), Vector3(0.16, 0.76, 0.18), trousers)
  right_leg = _limb(Vector3(0.12, 0.88, 0), Vector3(0.16, 0.76, 0.18), trousers)
  _box(left_leg, Vector3(0, -0.82, -0.06), Vector3(0.18, 0.12, 0.30), dark)
@@ -51,6 +62,7 @@ func _ready() -> void:
  _box(left_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
  _box(right_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
  if role == "security":
+  _box(self, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65)))
   _box(self, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
  if role == "ruby":
   _box(self, Vector3(0, 1.61, 0.12), Vector3(0.29, 0.48, 0.09), dark)
@@ -112,6 +124,20 @@ func animate_motion(delta: float, speed: float) -> void:
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
+
+func _jacket_mesh() -> ArrayMesh:
+ # Tapered shoulders and waist, flat normals: original low-poly tailoring.
+ var points: Array[Vector3] = [
+  Vector3(-0.20, -0.30, -0.12), Vector3(0.20, -0.30, -0.12),
+  Vector3(0.25, 0.30, -0.12), Vector3(-0.25, 0.30, -0.12),
+  Vector3(-0.20, -0.30, 0.12), Vector3(0.20, -0.30, 0.12),
+  Vector3(0.25, 0.30, 0.12), Vector3(-0.25, 0.30, 0.12)]
+ var faces := PackedInt32Array([0, 2, 1, 0, 3, 2, 5, 6, 4, 6, 7, 4, 4, 3, 0, 4, 7, 3, 1, 2, 5, 2, 6, 5, 3, 7, 2, 7, 6, 2, 4, 0, 5, 0, 1, 5])
+ var surface := SurfaceTool.new()
+ surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+ for index: int in faces: surface.add_vertex(points[index])
+ surface.generate_normals()
+ return surface.commit()
 
 func _material(color: Color) -> StandardMaterial3D:
  var mat := StandardMaterial3D.new()

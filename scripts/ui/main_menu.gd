@@ -4,12 +4,12 @@ var notice: String = ""
 
 func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+ theme = BlacklineTheme.create()
  _build_shell()
  _home()
 
 func _build_shell() -> void:
- var backdrop := ColorRect.new()
- backdrop.color = Color(0.045, 0.065, 0.08)
+ var backdrop := preload("res://scripts/ui/menu_backdrop.gd").new()
  backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  add_child(backdrop)
  var stripe := ColorRect.new()
@@ -28,6 +28,12 @@ func _build_shell() -> void:
  subtitle.add_theme_font_size_override("font_size", 16)
  subtitle.modulate = Color(0.78, 0.67, 0.52)
  add_child(subtitle)
+ var footer := Label.new()
+ footer.text = "OPERATIONS DIVISION     /     SECURE CHANNEL"
+ footer.position = Vector2(112, 635)
+ footer.add_theme_font_size_override("font_size", 13)
+ footer.modulate = Color(0.55, 0.65, 0.64)
+ add_child(footer)
  panel = VBoxContainer.new()
  panel.position = Vector2(575, 110)
  panel.custom_minimum_size = Vector2(590, 0)

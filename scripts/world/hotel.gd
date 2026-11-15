@@ -235,6 +235,7 @@ func _build_ui() -> void:
  var canvas := CanvasLayer.new()
  add_child(canvas)
  var overlay := Control.new()
+ overlay.theme = BlacklineTheme.create()
  overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
  canvas.add_child(overlay)

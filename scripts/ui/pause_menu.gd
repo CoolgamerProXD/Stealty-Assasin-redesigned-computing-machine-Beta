@@ -8,6 +8,7 @@ func _ready() -> void:
  process_mode = Node.PROCESS_MODE_ALWAYS
  layer = 10
  root = Control.new()
+ root.theme = BlacklineTheme.create()
  root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  root.visible = false
  add_child(root)

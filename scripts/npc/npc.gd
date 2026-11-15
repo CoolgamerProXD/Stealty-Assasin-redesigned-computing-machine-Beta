@@ -29,6 +29,7 @@ func _ready() -> void:
  add_child(collision)
  person = StylizedPerson.new()
  person.role = profile.occupation
+ person.appearance_seed = profile.identity.hash()
  add_child(person)
  agent = NavigationAgent3D.new()
  agent.path_desired_distance = 0.35
