@@ -1,5 +1,9 @@
 # Performance
 
+## Absolute Cinema sample
+Actions run 43711656513, commit `2c94538`, Linux GitHub VM (AMD EPYC 9V74, four reported CPUs, 15.6 GiB), 1280×720 Xvfb, Godot 4.4.1 Compatibility with Mesa llvmpipe: scripted Meridian camera, 120 sampled frames, mean **57.415 ms / 17.42 FPS**, p95 **59.315 ms**, p99 **60.797 ms**. This includes the first dressing and practical-light pass. It is a software-rendered VM result, not the Windows/Iris Xe target, not a complete route and not a renderer comparison. Practical lights and fine detail can be disabled with LOW. No claim of reaching 30–60 FPS on target hardware is possible without a laptop measurement.
+
+
 ## 2026-11 gameplay repair sample
 Actions run 43706258205, commit `ffc7b7d`, Godot 4.4.1 Compatibility, 1280×720 Xvfb/Mesa llvmpipe, Linux VM with AMD EPYC 9V74 and 4 reported CPUs: the scripted Meridian camera sample (120 frames after warm-up) measured mean **55.778 ms / 17.93 FPS**, p95 **63.221 ms**, p99 **64.829 ms**; first test process frame **1204.345 ms**. Default MEDIUM enables shadows and 85% 3D scale. This software-rendered CI sample is slower than earlier unshadowed samples and is not representative of Intel Iris Xe, Windows, a complete gameplay route, or a renderer comparison. LOW disables these shadows and lowers scale; it has not been benchmarked on the laptop. The 30–60 FPS target remains unverified.
 

@@ -1,5 +1,8 @@
 # Gameplay
 
+The shoulder and FOV interpolate during aim, and the sidearm's procedural pose draws, raises, recoils and lowers with the selected equipment. The fixed five-charge assessment device does not reload. Visible incapacitated people can prompt nearby NPC investigations; use actual cover rather than relying on crouch alone. The HUD's local-alert wording is not a guarantee that no other NPC can see you.
+
+
 ## Current target and controls
 Confront or pulse-tag Adrian Locke (primary), question Ivo Chen (witness), collect any two records and extract at the Meridian. The Initiation primary remains the assessment unit. Hold right mouse to aim and left-click to fire a center-ray assessment pulse; Q is now only for Quiet Line. Left Ctrl enables Instinct while held. Red is the briefing-identified primary target, including through walls; yellow marks important, visible, unobstructed items within four metres by default. Yellow item overlays remain depth-tested and never reveal items through walls. Earlier descriptions below may be historical.
 

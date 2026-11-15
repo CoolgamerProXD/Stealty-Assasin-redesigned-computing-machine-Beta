@@ -11,3 +11,6 @@ Audit tooling: `gdcorrect` 0.2.0 was run externally as an offline static checker
 
 ## Gameplay repair additions
 The assessment-unit parts and hand-attached sidearm/flash are original procedural geometry and materials, with no external models, animations or textures. These are deliberately simple, not production character assets.
+
+## Absolute Cinema iteration
+Original batched procedural dressing, character tailoring, UI geometry and synthesized gameplay sounds were created in project scripts. They have no external art/audio source. Furniture is visual-only and the low-poly figures are not professionally authored skinned models.

@@ -1,5 +1,8 @@
 # NPC simulation
 
+A throttled local observation pass lets an NPC notice an incapacitated person only within range, field of view and unobstructed physics line of sight. That observer records a disturbance and investigates; there is no global broadcast. Player sight aims at a point derived from the actual capsule stance, so solid low cover can block a crouched silhouette while an exposed crouched player remains detectable. Schedule states also drive simple idle gestures; these are not simulated conversations.
+
+
 ## Target and shooting
 Adrian Locke is a separate manager with an authored schedule and the existing local perception/response system. A training pulse temporarily incapacitates a struck NPC; nearby NPCs hear the pulse and investigate its origin. The target must be conscious for confrontation; a successful training pulse independently completes the primary target objective. Quiet Line does not. NPC suspicion, route state and incapacitation remain transient on load.
 

@@ -1,5 +1,9 @@
 # PROJECT ASSASSIN — audit and stabilisation
 
+## Absolute Cinema iteration
+The core layout and mission/save paths are preserved. Batched original environmental dressing adds hotel reception/lounge, corridor trim, access signage, workstation and archive cues; the annex gains cooler panels, lanes and equipment. Non-colliding dressing does not constitute a finished hotel simulation. NPC sight now targets player stance, and a throttled LOS check discovers nearby incapacitated NPCs without global sharing. The player has smoothed FOV/shoulder and procedural draw/aim/holster poses, with synthesized steps, ambience and mission feedback. UI uses a shared palette. Reflection scaling, authored character assets, real doors, NPC dialogue, full social simulation and production-quality animation remain open. Visual checks are automated captures, not human quality approval.
+
+
 ## 2026-11 gameplay repair status
 The red overlay is verified by automated Compatibility-rendered wall, movement and release image comparisons in both missions; it is not a human playtest. A pulse on Locke now completes his objective, while Ivo remains a separate required witness. The assessment unit has additional robot-like parts and the player has an original simple hand-attached sidearm with aim, recoil and flash. LOW/MEDIUM/HIGH change viewport scale, shadows and MSAA; FPS is optional and persisted. Reflections, detail levels, full animation, realistic art and target hardware validation remain unfinished. No new third-party assets were used. See TESTING.md for the precise run and limitations.
 

@@ -7,3 +7,5 @@ Godot 4.4.1 is an external tool/runtime and is not included in the repository; i
 The subsequent target, exterior, facial and clothing refinements also use only original procedural geometry and Godot-generated sky/materials. No additional third-party assets or licences were introduced.
 
 The gameplay repair adds only original procedural meshes; no third-party art, audio, textures or animations were imported.
+
+Absolute Cinema iteration: no additional third-party art, audio, models or fonts; all new material is project-generated. The Windows workflow downloads official Godot engine and export templates and verifies against the release SHA-512 list.

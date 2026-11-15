@@ -1,5 +1,9 @@
 # Architecture
 
+## Environment and local reactions
+`EnvironmentDressing` builds two color-instanced box batches and non-shadowing practical lights on top of unchanged collision/navigation layouts. LOW disables practicals and fine detail; MEDIUM enables practicals; HIGH includes fine detail. `DisturbanceSystem` periodically tests each conscious observer's range, facing and physics line of sight to incapacitated NPCs. Only the seeing NPC stores and investigates the observation. `HotelPlayer` retains the spring arm, with interpolated FOV/shoulder and hand-attached procedural weapon blending; objective and movement cues use original synthesized sound.
+
+
 ## Target/aim/Instinct integration
 Mission configuration has a separate primary-target definition and completion/discovery flags; the Meridian manager is an independently scheduled HotelNpc while Ivo remains a witness. SessionSnapshot stores target state and migrates previously completed saves. The existing player pivot/spring arm interpolates to aim and sends a fire signal; the world casts from the camera's screen-centre ray, applies obstruction/impact results, feedback and ammo. Instinct uses a no-depth-test red material overlay on the briefing-identified primary's actual visual meshes, and separate configurable proximity/view/LOS-limited yellow item overlays. Other NPCs are not highlighted. The cinematic remains an independent scripted timeline with procedural exterior geometry.
 

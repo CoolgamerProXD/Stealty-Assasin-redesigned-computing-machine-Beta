@@ -100,6 +100,20 @@ func run() -> void:
  await process_frame
  await physics_frame
  var player: HotelPlayer = world.get("player")
+ var fine_detail: MultiMeshInstance3D = world.get_node("EnvironmentDressing/FineDetail")
+ var practicals := get_nodes_in_group("quality_practicals")
+ var old_quality: String = settings_service.settings["graphics"]
+ settings_service.settings["graphics"] = "LOW"
+ settings_service.apply_settings()
+ check(not fine_detail.visible and practicals.size() > 0 and not (practicals[0] as Light3D).visible, "LOW hides fine decoration and practical lights")
+ settings_service.settings["graphics"] = "MEDIUM"
+ settings_service.apply_settings()
+ check(not fine_detail.visible and (practicals[0] as Light3D).visible, "MEDIUM enables practical lights")
+ settings_service.settings["graphics"] = "HIGH"
+ settings_service.apply_settings()
+ check(fine_detail.visible and (practicals[0] as Light3D).visible, "HIGH enables fine decoration and practical lights")
+ settings_service.settings["graphics"] = old_quality
+ settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
  check(player != null and npcs.size() == 4, "hotel creates player, three existing NPCs and the scheduled target")
  var spawned: Array[Interactable] = world.get("interactables")

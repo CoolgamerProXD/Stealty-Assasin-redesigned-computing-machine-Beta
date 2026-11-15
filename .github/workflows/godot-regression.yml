@@ -148,3 +148,65 @@ jobs:
               data = base64.b64encode(path.read_bytes()).decode("ascii")
               for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
           PYCODE
+
+  windows:
+    if: contains(github.event.head_commit.message, '[windows]')
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Download and verify official Godot and export template
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = 'https://github.com/godotengine/godot-builds/releases/download/4.4.1-stable'
+          $engine = 'Godot_v4.4.1-stable_win64.exe.zip'
+          $templates = 'Godot_v4.4.1-stable_export_templates.tpz'
+          foreach ($file in @('SHA512-SUMS.txt', $engine, $templates)) {
+            & curl.exe --fail --location --retry 3 --output "$env:RUNNER_TEMP\$file" "$base/$file"
+            if ($LASTEXITCODE -ne 0) { throw "Download failed: $file" }
+          }
+          foreach ($file in @($engine, $templates)) {
+            $line = Get-Content "$env:RUNNER_TEMP\SHA512-SUMS.txt" | Where-Object { $_.Contains($file) } | Select-Object -First 1
+            if (!$line) { throw "No official hash found for $file" }
+            $expected = ($line -split '\s+')[0]
+            $actual = (Get-FileHash "$env:RUNNER_TEMP\$file" -Algorithm SHA512).Hash
+            if ($actual -ne $expected) { throw "SHA512 mismatch: $file" }
+          }
+          Expand-Archive "$env:RUNNER_TEMP\$engine" "$env:RUNNER_TEMP\godot"
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $destination = Join-Path $env:APPDATA 'Godot\export_templates\4.4.1.stable'
+          New-Item -ItemType Directory -Force $destination | Out-Null
+          $archive = [System.IO.Compression.ZipFile]::OpenRead("$env:RUNNER_TEMP\$templates")
+          try {
+            $entry = $archive.GetEntry('templates/windows_release_x86_64.exe')
+            if (!$entry) { throw 'Windows release template missing' }
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, (Join-Path $destination 'windows_release_x86_64.exe'), $true)
+          } finally { $archive.Dispose() }
+      - name: Import and export
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $godot = "$env:RUNNER_TEMP\godot\Godot_v4.4.1-stable_win64_console.exe"
+          & $godot --version
+          & $godot --headless --editor --path . --quit
+          if ($LASTEXITCODE -ne 0) { throw 'Import failed' }
+          New-Item -ItemType Directory -Force 'build/windows' | Out-Null
+          & $godot --headless --path . --export-release Windows "$env:GITHUB_WORKSPACE\build\windows\PROJECT_ASSASSIN.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Export failed' }
+      - name: Launch exported build headlessly
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $path = "$env:GITHUB_WORKSPACE\build\windows"
+          $process = Start-Process "$path\PROJECT_ASSASSIN.exe" -WorkingDirectory $path -ArgumentList @('--headless', '--quit-after', '120', '--log-file', "$path\smoke.log") -PassThru
+          if (!$process.WaitForExit(90000)) { $process.Kill(); throw 'Exported build timed out' }
+          if ($process.ExitCode -ne 0) { throw "Exported build exited $($process.ExitCode)" }
+          if (!(Test-Path "$path\smoke.log")) { throw 'No smoke log produced' }
+          Get-Content "$path\smoke.log"
+          if (Select-String -Path "$path\smoke.log" -Pattern 'SCRIPT ERROR|ERROR:') { throw 'Exported build logged errors' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: project-assassin-windows-smoke-tested
+          path: build/windows/*
+          if-no-files-found: error

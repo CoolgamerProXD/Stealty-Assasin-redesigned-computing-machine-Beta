@@ -137,6 +137,7 @@ func _physics_process(delta: float) -> void:
  else: velocity.y = -0.1
  move_and_slide()
  if person:
+  person.idle_activity = state
   person.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
   if velocity.length_squared() > 0.1:
    person.rotation.y = lerp_angle(person.rotation.y, atan2(-velocity.x, -velocity.z), 1.0 - exp(-delta * 8.0))

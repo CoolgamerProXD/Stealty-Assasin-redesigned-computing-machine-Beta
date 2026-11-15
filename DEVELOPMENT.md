@@ -1,5 +1,8 @@
 # Development status
 
+The current work preserves the navigation and collision layout and batches optional architectural dressing into MultiMeshes. The Windows export preset can be used with official 4.4.1 templates; the opt-in CI Windows job performs only a headless launch. No external assets were added. Keep objective/save migrations backward-compatible and verify scene/render behavior in addition to parsing.
+
+
 ## Campaign expansion status
 The entry scene is now the main menu. To develop the two greyboxes directly, run `scenes/initiation.tscn` or `scenes/hotel.tscn`; campaign completion transitions and pause integration are enabled when the campaign launches them. The existing player and NPC capsule models and spring-arm controller are retained. Crouch modifies their dimensions/eye pivot, not the basic controller. The additional content is an incremental foundation; see README for missing deliverables.
 
