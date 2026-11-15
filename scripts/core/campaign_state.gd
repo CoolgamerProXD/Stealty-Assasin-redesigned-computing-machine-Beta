@@ -1,0 +1,84 @@
+extends Node
+## Campaign data is deliberately separate from each mission's existing save file.
+const CAMPAIGN_PATH := "user://blackline_campaign.json"
+const SETTINGS_PATH := "user://blackline_settings.json"
+var progress: CampaignProgress = CampaignProgress.new()
+var active_mission: String = ""
+var load_checkpoint: bool = false
+var ending: Dictionary = {}
+var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8}
+
+func _ready() -> void:
+ var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
+ if not progress.configure(data):
+  push_error("Invalid campaign data")
+  return
+ progress.restore(SaveStore.read(CAMPAIGN_PATH))
+ _load_settings()
+
+func persist() -> bool:
+ return SaveStore.write(CAMPAIGN_PATH, progress.snapshot())
+
+func checkpoint_path(id: String) -> String:
+ if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
+ if id == "initiation": return "user://initiation_save.json"
+ return ""
+
+func has_checkpoint(id: String) -> bool:
+ var path := checkpoint_path(id)
+ return not path.is_empty() and not SaveStore.read(path).is_empty()
+
+func begin(id: String, resume: bool = false) -> bool:
+ if not progress.is_unlocked(id): return false
+ var entry := progress.mission(id)
+ if entry.is_empty() or not ResourceLoader.exists(str(entry["scene"])): return false
+ if resume and not has_checkpoint(id): return false
+ var old_last := progress.last_mission
+ progress.last_mission = id
+ if not persist():
+  progress.last_mission = old_last
+  return false
+ active_mission = id
+ load_checkpoint = resume
+ get_tree().change_scene_to_file(str(entry["scene"]))
+ return true
+
+func complete(id: String, count: int) -> bool:
+ if id != active_mission: return false
+ var already := progress.completed.has(id)
+ if not progress.mark_complete(id): return false
+ if not persist():
+  if not already: progress.completed.erase(id)
+  return false
+ var entry := progress.mission(id)
+ ending = {"id": id, "name": entry.get("name", id), "records": count, "debrief": entry.get("debrief", ""), "unlock": entry.get("unlock", "") if not already else ""}
+ return true
+
+func item_label(id: String) -> String:
+ for entry: Dictionary in progress.equipment:
+  if entry["id"] == id: return str(entry.get("name", id))
+ return id
+
+func _load_settings() -> void:
+ var data := SaveStore.read(SETTINGS_PATH)
+ var resolution: Variant = data.get("resolution", "1280x720")
+ if resolution is String and resolution in ["1280x720", "1600x900"]: settings["resolution"] = resolution
+ var fullscreen: Variant = data.get("fullscreen", false)
+ if fullscreen is bool: settings["fullscreen"] = fullscreen
+ var sensitivity: Variant = data.get("sensitivity", 0.0025)
+ if (sensitivity is int or sensitivity is float) and is_finite(float(sensitivity)): settings["sensitivity"] = clampf(float(sensitivity), 0.001, 0.006)
+ var volume: Variant = data.get("volume", 0.8)
+ if (volume is int or volume is float) and is_finite(float(volume)): settings["volume"] = clampf(float(volume), 0.0, 1.0)
+ apply_settings()
+
+func apply_settings() -> void:
+ var master := AudioServer.get_bus_index("Master")
+ if master >= 0: AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, float(settings["volume"]))))
+ if DisplayServer.get_name() != "headless":
+  DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if settings["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED)
+  var size := Vector2i(1600, 900) if settings["resolution"] == "1600x900" else Vector2i(1280, 720)
+  if not settings["fullscreen"]: DisplayServer.window_set_size(size)
+
+func save_settings() -> bool:
+ apply_settings()
+ return SaveStore.write(SETTINGS_PATH, settings)

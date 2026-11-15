@@ -257,5 +257,48 @@ func run() -> void:
  check(active_mission.clues.size() == before_duplicate, "repeated collection does not duplicate progress")
  world.queue_free()
  await process_frame
+ var campaign := CampaignProgress.new()
+ var campaign_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
+ check(campaign.configure(campaign_data), "campaign data loads")
+ check(campaign.is_unlocked("initiation") and not campaign.is_unlocked("meridian") and not campaign.is_unlocked("future"), "campaign starts in chronological order")
+ check(not campaign.item_unlocked("quiet_line") and not campaign.select_item("quiet_line"), "locked equipment cannot be selected")
+ check(campaign.mark_complete("initiation") and campaign.is_unlocked("meridian") and campaign.item_unlocked("quiet_line"), "completion unlocks Meridian and quiet line")
+ check(campaign.select_item("quiet_line") and campaign.item_allowed("quiet_line", "meridian") and not campaign.item_allowed("quiet_line", "initiation"), "equipment restrictions enforced by campaign data")
+ var campaign_copy := CampaignProgress.new()
+ campaign_copy.configure(campaign_data)
+ campaign_copy.restore(campaign.snapshot())
+ check(campaign_copy.completed.has("initiation") and campaign_copy.selected == "quiet_line" and campaign_copy.is_unlocked("initiation"), "campaign progress and replay survive restore")
+ campaign_copy.restore({"completed": ["meridian"], "selected": "quiet_line"})
+ check(campaign_copy.completed.is_empty() and campaign_copy.selected == "training_sidearm", "out-of-order save cannot bypass unlocks")
+ var initiation_scene: PackedScene = load("res://scenes/initiation.tscn")
+ var initiation: Node = initiation_scene.instantiate()
+ root.add_child(initiation)
+ await process_frame
+ await physics_frame
+ var init_mission: Mission = initiation.get("mission")
+ var init_player: HotelPlayer = initiation.get("player")
+ var init_objects: Array[Interactable] = initiation.get("interactables")
+ var init_npcs: Array[HotelNpc] = initiation.get("npcs")
+ check(init_mission.configured and init_npcs.size() == 2, "Initiation spawns configured mission and exactly two guards")
+ var start_guard := init_npcs[0].global_position
+ await create_timer(2.0).timeout
+ check(init_npcs[0].global_position.distance_to(start_guard) > 0.2, "Initiation guard follows its route")
+ for obj: Interactable in init_objects:
+  if obj.kind == "clue": initiation.call("_on_interaction", obj)
+ check(init_mission.clues.size() == 3 and not init_mission.can_extract(), "three records alone cannot complete assessment")
+ var before_robot := SessionSnapshot.capture(init_player, init_mission)
+ for obj: Interactable in init_objects:
+  if obj.kind == "robot": initiation.call("_on_interaction", obj)
+ check(init_mission.action_complete and init_mission.can_extract(), "assessment unit and three unique records unlock exit")
+ var after_robot := SessionSnapshot.capture(init_player, init_mission)
+ SessionSnapshot.restore(before_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"))
+ check(not init_mission.action_complete and not init_mission.can_extract(), "snapshot restores active unit")
+ SessionSnapshot.restore(after_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"))
+ check(init_mission.action_complete and init_mission.clues.size() == 3 and init_mission.can_extract(), "snapshot restores disabled unit and all records")
+ for obj: Interactable in init_objects:
+  if obj.kind == "extract": initiation.call("_on_interaction", obj)
+ check(init_mission.extracted, "Initiation exit completes only after objectives")
+ initiation.queue_free()
+ await process_frame
  print("RESULT: %d checks, %d failures" % [checks, failures.size()])
  quit(0 if failures.is_empty() else 1)

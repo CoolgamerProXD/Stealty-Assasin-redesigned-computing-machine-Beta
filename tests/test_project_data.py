@@ -61,7 +61,7 @@ class PopulationDataTests(unittest.TestCase):
                 self.assertFalse(abs(x - cx) < sx / 2 and abs(z - cz) < sz / 2)
 
     def test_main_scene_and_script_exist(self):
-        self.assertIn('run/main_scene="res://scenes/hotel.tscn"', (ROOT / "project.godot").read_text())
+        self.assertIn('run/main_scene="res://scenes/main_menu.tscn"', (ROOT / "project.godot").read_text())
         self.assertIn('res://scripts/world/hotel.gd', (ROOT / "scenes/hotel.tscn").read_text())
         self.assertTrue((ROOT / "scripts/world/hotel.gd").is_file())
 

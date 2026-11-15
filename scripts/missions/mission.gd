@@ -9,6 +9,8 @@ var required_records: int = 0
 var clues: Array[String] = []
 var extracted: bool = false
 var configured: bool = false
+var required_action: String = ""
+var action_complete: bool = false
 
 func configure(data: Variant) -> bool:
  configured = false
@@ -16,9 +18,13 @@ func configure(data: Variant) -> bool:
  required_records = 0
  clues.clear()
  extracted = false
+ required_action = ""
+ action_complete = false
  if not data is Dictionary: return false
  var raw_records: Variant = data.get("records")
  var raw_required: Variant = data.get("required_records")
+ var action: Variant = data.get("required_action", "")
+ if not action is String: return false
  if not raw_records is Array or raw_records.is_empty(): return false
  if not (raw_required is int or raw_required is float): return false
  var threshold := float(raw_required)
@@ -40,6 +46,7 @@ func configure(data: Variant) -> bool:
   checked.append(record.duplicate(true))
  available_records = checked
  required_records = int(threshold)
+ required_action = action
  configured = true
  return true
 
@@ -54,8 +61,14 @@ func record_clue(id: String) -> bool:
  changed.emit()
  return true
 
+func mark_action(id: String) -> bool:
+ if not configured or required_action.is_empty() or id != required_action or action_complete: return false
+ action_complete = true
+ changed.emit()
+ return true
+
 func can_extract() -> bool:
- return configured and clues.size() >= required_records
+ return configured and clues.size() >= required_records and (required_action.is_empty() or action_complete)
 
 func extract() -> bool:
  if extracted or not can_extract(): return false
@@ -73,4 +86,6 @@ func objective_text() -> String:
  if not configured: return "Mission unavailable: invalid record configuration."
  if extracted: return "Investigation complete."
  if can_extract(): return "Evidence secured. Return to the exit."
+ if not required_action.is_empty() and not action_complete:
+  return "Disable the assessment unit and collect %d different records." % required_records
  return "Collect %d different records, then leave." % required_records

@@ -10,9 +10,10 @@ static func capture(player: HotelPlayer, mission: Mission) -> Dictionary:
   "role": player.role,
   "clues": mission.clues.duplicate(),
   "extracted": mission.extracted,
+  "action_complete": mission.action_complete,
  }
 
-static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, objects: Array[Interactable]) -> void:
+static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, objects: Array[Interactable], position_validator: Callable = Callable()) -> void:
  var role: Variant = data.get("role", "visitor")
  player.set_disguise(role if role is String and role in KNOWN_ROLES else "visitor")
  var clues: Array[String] = []
@@ -23,17 +24,22 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
    if clue is String and mission.has_record(clue) and not clues.has(clue) and player.inventory.add(clue):
     clues.append(clue)
  mission.clues = clues
+ mission.action_complete = not mission.required_action.is_empty() and data.get("action_complete", false) == true
  mission.extracted = data.get("extracted", false) == true and mission.can_extract()
  for object: Interactable in objects:
   if object.kind == "clue": object.used = clues.has(object.identifier)
   elif object.kind == "disguise": object.used = player.role == "staff"
+  elif object.kind == "robot":
+   object.used = mission.action_complete
+   continue # The disabled training unit remains visible.
   else: continue
   object.visible = not object.used
  var position_data: Variant = data.get("position", [])
  if position_data is Array and position_data.size() == 3:
   if _number(position_data[0]) and _number(position_data[1]) and _number(position_data[2]):
    var p := Vector3(float(position_data[0]), float(position_data[1]), float(position_data[2]))
-   if HotelLayout.is_safe_player_position(p):
+   var safe: bool = bool(position_validator.call(p)) if position_validator.is_valid() else HotelLayout.is_safe_player_position(p)
+   if safe:
     player.global_position = p
     player.velocity = Vector3.ZERO
  mission.changed.emit()

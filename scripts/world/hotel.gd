@@ -9,8 +9,18 @@ var hud: Label
 var prompt: Label
 var message: String = ""
 
+func mission_id() -> String:
+ return "meridian"
+
+func mission_path() -> String:
+ return "res://resources/meridian_mission.json"
+
+func safe_position(pos: Vector3) -> bool:
+ return HotelLayout.is_safe_player_position(pos)
+
 func _ready() -> void:
- var mission_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/meridian_mission.json"))
+ save_path = Campaign.checkpoint_path(mission_id())
+ var mission_data: Variant = JSON.parse_string(FileAccess.get_file_as_string(mission_path()))
  if not mission.configure(mission_data):
   push_error("Invalid or missing Meridian mission configuration")
  _build_environment()
@@ -20,13 +30,21 @@ func _ready() -> void:
   mission.configure(null)
  if mission.configured:
   for record: Dictionary in mission.available_records:
-   if not HotelLayout.is_safe_player_position(_vector(record["position"])):
+   if not safe_position(_vector(record["position"])):
     push_error("Mission record is outside the playable floor or inside a partition")
     mission.configure(null)
     break
  _build_npcs()
  _build_interactions()
  _build_ui()
+ if Campaign.active_mission == mission_id():
+  player.mouse_sensitivity = float(Campaign.settings["sensitivity"])
+  var pause := preload("res://scripts/ui/pause_menu.gd").new()
+  pause.world = self
+  add_child(pause)
+  if Campaign.load_checkpoint:
+   load_game()
+   Campaign.load_checkpoint = false
 
 func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void:
  var holder: Node3D = StaticBody3D.new() if solid else Node3D.new()
@@ -187,22 +205,32 @@ func _on_interaction(object: Interactable) -> void:
    message = "Staff uniform acquired. Staff area access granted; secure area remains restricted."
   "extract":
    if mission.extracted: message = "Investigation already complete."
-   elif mission.extract(): message = "INVESTIGATION COMPLETE — you left with the evidence."
+   elif mission.can_extract():
+    if Campaign.active_mission == mission_id():
+     if Campaign.complete(mission_id(), mission.clues.size()):
+      mission.extract()
+      get_tree().change_scene_to_file("res://scenes/ending.tscn")
+     else: message = "Could not save campaign progress. Try again."
+    elif mission.extract(): message = "INVESTIGATION COMPLETE — you left with the evidence."
    else: message = mission.objective_text()
 
+func save_game() -> void:
+ if SaveStore.write(save_path, SessionSnapshot.capture(player, mission)):
+  message = "Progress saved."
+ else:
+  message = "Save failed. Check storage permissions."
+
+func load_game() -> void:
+ var data := SaveStore.read(save_path)
+ if data.is_empty():
+  message = "No valid compatible save found."
+ else:
+  SessionSnapshot.restore(data, player, mission, interactables, safe_position)
+  message = "Progress loaded. NPCs continue their current routines."
+
 func _unhandled_input(event: InputEvent) -> void:
- if event.is_action_pressed("save_game"):
-  if SaveStore.write(save_path, SessionSnapshot.capture(player, mission)):
-   message = "Progress saved."
-  else:
-   message = "Save failed. Check storage permissions."
- elif event.is_action_pressed("load_game"):
-  var data := SaveStore.read(save_path)
-  if data.is_empty():
-   message = "No valid compatible save found."
-  else:
-   SessionSnapshot.restore(data, player, mission, interactables)
-   message = "Progress loaded. NPCs continue their current routines."
+ if event.is_action_pressed("save_game"): save_game()
+ elif event.is_action_pressed("load_game"): load_game()
 
 
 func _process(_delta: float) -> void:
@@ -211,6 +239,7 @@ func _process(_delta: float) -> void:
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0
  for npc: HotelNpc in npcs: highest = maxf(highest, npc.suspicion)
- hud.text = "THE MERIDIAN  /  MISSING ARCHIVE\n%s  ·  %s (%s)  ·  Awareness %.0f%%\n%s\n%s\n%s" % [player.role.to_upper(), area.to_upper(), access, highest, mission.progress_text(), mission.objective_text(), message]
+ var title := "INITIATION  /  ASSESSMENT" if mission_id() == "initiation" else "THE MERIDIAN  /  MISSING ARCHIVE"
+ hud.text = title + "\n%s  ·  %s (%s)  ·  Awareness %.0f%%\n%s\n%s\n%s" % [player.role.to_upper(), area.to_upper(), access, highest, mission.progress_text(), mission.objective_text(), message]
  var nearest := _nearest()
- prompt.text = ("E  " + nearest.label + "\n" if nearest else "") + "WASD move  ·  mouse look  ·  Shift run  ·  C crouch  ·  F5 save  ·  F9 load  ·  Esc release mouse"
+ prompt.text = ("E  " + nearest.label + "\n" if nearest else "") + "WASD move  ·  mouse look  ·  Shift run  ·  C crouch  ·  F5 save  ·  F9 load  ·  Esc pause"

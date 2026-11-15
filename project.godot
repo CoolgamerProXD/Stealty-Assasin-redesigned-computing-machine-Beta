@@ -3,8 +3,11 @@ config_version=5
 
 [application]
 config/name="PROJECT ASSASSIN"
-run/main_scene="res://scenes/hotel.tscn"
+run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.4", "GL Compatibility")
+
+[autoload]
+Campaign="*res://scripts/core/campaign_state.gd"
 
 [display]
 window/size/viewport_width=1280
