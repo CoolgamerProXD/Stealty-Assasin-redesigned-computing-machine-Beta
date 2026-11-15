@@ -1,10 +1,10 @@
 # Second-pass local routes
 
-Two Meridian wing visitors use a dedicated ground-floor navigation strip, away from the restaurant furniture. An upstairs visitor stands idle; no cross-floor connection is claimed. Locke stays in the suite and mission completion/persistence remains separate from these background actors. City and Ngong Ping previews each use a few deterministic floor-local visitor routes within the open central space, without story behavior or simulation of a real crowd. Station NPCs keep their scripted local schedules. NPC knowledge remains local; these additions do not share observations globally.
+Two Meridian wing visitors use a dedicated ground-floor navigation strip, away from the restaurant furniture. An upstairs visitor walks a separate clear gallery route; no cross-floor connection is claimed. Locke stays in the suite and mission completion/persistence remains separate from these background actors. City and Ngong Ping previews each use a few deterministic floor-local visitor routes within the open central space, without story behavior or simulation of a real crowd. Station passengers use short, separated local routes; no crowd simulation or complete obstacle-aware station navmesh is claimed. NPC knowledge remains local; these additions do not share observations globally.
 
 # Meridian upper floor
 
-Adrian Locke has one long-duration stationary schedule in his upper private suite. The original ground-floor agents retain their local routines. An upper navigation region supports the stationary target, but cross-floor NPC routing and collision-aware pathfinding around all new furniture are not implemented. Completed targets remain terminal and checkpointed; ordinary temporary incapacitation still expires.
+Adrian Locke has one long-duration stationary schedule in his upper private suite. The original ground-floor agents retain their local routines. An upper navigation region supports the stationary target and one gallery guest, but cross-floor NPC routing and collision-aware pathfinding around all new furniture are not implemented. Completed targets remain terminal and checkpointed; ordinary temporary incapacitation still expires.
 
 # NPC simulation
 

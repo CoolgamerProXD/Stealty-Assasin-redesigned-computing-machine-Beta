@@ -895,7 +895,10 @@ func run() -> void:
   if chosen:
    var bounds := chosen.get_global_rect()
    var viewport_bounds := root.get_visible_rect()
+   if not viewport_bounds.encloses(bounds): print("MENU_BOUNDS_DIAG: ", preview_name, " ", bounds, " viewport=", viewport_bounds)
    check(viewport_bounds.encloses(bounds), preview_name + " preview button lies within the viewport")
+   var back: Button = menu.get("panel").get_child(menu.get("panel").get_child_count() - 1)
+   check(back.text == "BACK" and viewport_bounds.encloses(back.get_global_rect()), preview_name + " selection Back button lies within the viewport")
    chosen.pressed.emit()
    await process_frame
    await process_frame
@@ -908,7 +911,23 @@ func run() -> void:
     await create_timer(0.5).timeout
     Input.action_release("move_forward")
     check(preview_player.global_position.distance_to(before_preview) > 0.2, preview_name + " preview supports player movement")
-    if preview_name != "TUNG CHUNG":
+    if preview_name == "TUNG CHUNG":
+     var station_npcs: Array[HotelNpc] = preview.get("npcs")
+     var exclusions: Array[RID] = [preview_player.get_rid()]
+     for person: HotelNpc in station_npcs: exclusions.append(person.get_rid())
+     var station_routes_clear := true
+     for person: HotelNpc in station_npcs:
+      var first: Vector3 = person.profile.schedule[0].destination + Vector3.UP * 0.8
+      var second: Vector3 = person.profile.schedule[1].destination + Vector3.UP * 0.8
+      var station_query := PhysicsRayQueryParameters3D.create(first, second)
+      station_query.exclude = exclusions
+      if not person.get_world_3d().direct_space_state.intersect_ray(station_query).is_empty(): station_routes_clear = false
+     check(station_routes_clear, "station scripted routes avoid solid architecture")
+     var passenger: HotelNpc = station_npcs[0]
+     var passenger_start := passenger.global_position
+     await create_timer(0.8).timeout
+     check(passenger.global_position.distance_to(passenger_start) > 0.2, "station passenger advances along a local route")
+    else:
      var preview_npcs: Array[HotelNpc] = preview.get("npcs")
      check(preview_npcs.size() >= 3, preview_name + " preview includes local visitors")
      var visitor := preview_npcs[0]

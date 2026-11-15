@@ -49,6 +49,7 @@ func _build_shell() -> void:
  add_child(panel)
 
 func _clear() -> void:
+ panel.add_theme_constant_override("separation", 10)
  for child: Node in panel.get_children():
   panel.remove_child(child)
   child.queue_free()
@@ -89,6 +90,8 @@ func _home() -> void:
 
 func _missions() -> void:
  _clear()
+ # Five entries plus descriptions and Back must fit the 720p design canvas.
+ panel.add_theme_constant_override("separation", 3)
  _text("MISSION SELECTION", 30)
  for entry: Dictionary in Campaign.progress.missions:
   var id := str(entry["id"])

@@ -13,7 +13,7 @@ func _ready() -> void:
  _start_ambience("station")
  _station()
  player = HotelPlayer.new()
- player.position = Vector3(-17, 0.05, 8)
+ player.position = Vector3(-19, 0.05, 4)
  add_child(player)
  player.mouse_sensitivity = float(Campaign.settings["sensitivity"])
  player.interaction_requested.connect(_interact)
@@ -172,7 +172,9 @@ func _population() -> void:
   profile.identity = "Passenger %02d" % i
   profile.occupation = "employee" if i % 5 == 0 else "civilian"
   var start := Vector3(-17 + float(i % 7) * 5.5, 0.05, -3.0 + float(i / 7) * 11.5)
-  var end := Vector3(clampf(start.x + (4.0 if i % 2 == 0 else -4.0), -19, 19), 0.05, start.z)
+  # Keep adjacent local routines disjoint so passengers do not walk
+  # directly into each other on the broad, unbaked station navmesh.
+  var end := Vector3(clampf(start.x + (1.7 if i % 2 == 0 else -1.7), -19, 19), 0.05, start.z)
   profile.schedule.append(ScheduleEntry.new(end, "waiting" if i % 3 == 0 else "conversing", 3.0 + float(i % 4)))
   profile.schedule.append(ScheduleEntry.new(start, "idle", 2.0 + float(i % 3)))
   var npc := HotelNpc.new()
@@ -181,8 +183,8 @@ func _population() -> void:
   add_child(npc)
   npc.person.clothing.albedo_color = coats[i % coats.size()]
   npcs.append(npc)
- robber = _target("Station suspect", "manager", Vector3(-11,0.05,-2), Vector3(-5,0.05,-4))
- operative = _target("Unidentified operative", "security", Vector3(10,0.05,-3), Vector3(15,0.05,4))
+ robber = _target("Station suspect", "manager", Vector3(-12,0.05,-5), Vector3(-7,0.05,-5))
+ operative = _target("Unidentified operative", "security", Vector3(10,0.05,-5), Vector3(15,0.05,-5))
 
 func _target(identity: String, role: String, start: Vector3, end: Vector3) -> HotelNpc:
  var profile := NpcProfile.new()
