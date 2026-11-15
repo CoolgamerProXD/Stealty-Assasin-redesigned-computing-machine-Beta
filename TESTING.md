@@ -1,6 +1,11 @@
 # Testing
 
-## Latest completed automated runs
+## Hong Kong checkpoint verification
+[Run 43713502699](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43713502699), code commit `721dd32`, passed official Godot 4.4.1 import and startup, 7 Python data checks, 153 behavioral checks, 24 virtual-display camera checks, 15 rendered checks and 7 cinematic/UI checks. Windows export and a headless executable launch passed. The target test fires an actual center ray at the physical Meridian NPC, advances beyond the old recovery timer, rejects repeated completion and restores both completed and earlier checkpoints. The station check confirms scene creation, physical character distinction, an NPC route and proximity observation; it does not prove a complete mission. Captures use scripted cameras and placement. There is no human playtest. Full PNGs and the Windows executable are Actions artifacts.
+
+The HIGH lobby probe experiment failed the luminance guard and was removed; this run measured fixed-view LOW 0.3070 and HIGH 0.2031 mean luminance, above the guard but still noticeably darker. Review lighting on real displays. Run 43713502699 precedes the additional temporary-recovery and single-event checks added afterward; use the latest Actions run to verify those.
+
+## Earlier automated runs
 [43712369756](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43712369756), commit `20be69e`: official Godot 4.4.1 import/startup, 7 Python data tests, **142 behavioral**, **23 camera**, **14 rendered-image**, and **6 cinematic/UI checks** passed. The render test samples a wall and measures visible pixel differences between LOW/HIGH. Full-resolution PNGs are in its `instinct-rendered-comparisons` artifact. Fixed camera captures and a staged debrief are not an interactive route or visual-quality signoff. A separate earlier [Windows run 43712027930](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43712027930), commit `46aed8c`, exported and headlessly launched the Windows executable, with a downloadable build artifact; it did not exercise interactive Windows graphics or user hardware.
 
 

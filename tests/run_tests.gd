@@ -63,7 +63,12 @@ func run() -> void:
  check(not mission.extract(), "one unique clue cannot unlock extraction")
  check(mission.record_clue("memo") and not mission.extract(), "two clues alone cannot replace the target objective")
  check(mission.mark_action("interview_ivo") and not mission.extract(), "witness and records alone do not satisfy the primary target")
- check(mission.mark_target("adrian_locke") and mission.extract() and mission.extracted and not mission.extract(), "target, witness and records unlock extraction")
+ var target_events := [0]
+ mission.changed.connect(func() -> void: target_events[0] += 1)
+ var first_target := mission.mark_target("adrian_locke")
+ var duplicate_target := mission.mark_target("adrian_locke")
+ check(first_target and not duplicate_target and target_events[0] == 1, "target completion emits exactly one change")
+ check(mission.extract() and mission.extracted and not mission.extract(), "target, witness and records unlock extraction")
  check(mission.record_clue("archive") and mission.progress_text().contains("3 / 3") and mission.progress_text().contains("Required: 2"), "progress distinguishes available and required after third clue")
  var memory := NpcMemory.new()
  memory.retention_seconds = 2.0
@@ -490,6 +495,8 @@ func run() -> void:
  check(not gadget_player.equipment.available.has("quiet_line"), "checkpoint cannot grant a locked gadget")
  for suffix: String in ["", ".bak", ".tmp"]:
   if FileAccess.file_exists(equipment_save + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(equipment_save + suffix))
+ guard._physics_process(13.0)
+ check(guard.stunned_time == 0.0 and guard.state == "returning" and not guard.objective_completed, "ordinary temporary incapacitation recovers without completing an objective")
  # Fire through the actual center-ray path at the physical Meridian target.
  for person: HotelNpc in gadget_npcs: person.collision_layer = 0
  locke.collision_layer = 1

@@ -1,3 +1,7 @@
+# Hong Kong preview sample
+
+Run [43713502699](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43713502699), `721dd32`, Godot 4.4.1 Compatibility at 1280×720 on Xvfb/Mesa llvmpipe, Linux AMD EPYC 9V45 VM, 4 reported CPUs and ~15.6 GiB RAM. Fixed station view, 15 warmup and 60 sample frames: LOW 19.006 ms mean / 20.634 ms p95 (52.62 FPS); MEDIUM 49.401 / 51.895 ms (20.24 FPS); HIGH 53.293 / 55.947 ms (18.76 FPS). This is a short software-rendered scene sample, not an interactive route or the target Windows Iris Xe device. The blockout is not optimized or a finished level.
+
 # Current lighting note
 
 The experimental HIGH lobby reflection probe was removed after a rendered regression showed near-black lobby surfaces. The measurements below are historical and include the probe; they do not benchmark the current build or the Tung Chung preview. Target Iris Xe performance is unmeasured.

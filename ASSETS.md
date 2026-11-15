@@ -1,5 +1,7 @@
 # Assets and dependencies
 
+The fictional Tung Chung preview uses original primitive geometry, shared procedural materials and existing generated people; it does not contain copied station plans, external signs, models or textures. The train is a static exterior and the escalator is scenic.
+
 ## Exterior and character refinement
 The Ruby scene's ground, street, buildings, sky and fixtures and the figures' facial, clothing and proportion updates are original procedural Godot geometry/materials. No external assets were imported. These are still low-poly placeholders, not textured production models.
 
