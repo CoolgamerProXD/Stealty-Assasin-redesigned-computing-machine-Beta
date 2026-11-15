@@ -442,9 +442,9 @@ func run() -> void:
  check(init_mission.action_complete and init_player.equipment.charges == 4, "center-camera shot hits assessment unit and spends one charge")
  for i: int in range(5):
   fire_event.pressed = false
-  Input.parse_input_event(fire_event)
+  Input.parse_input_event(fire_event.duplicate())
   fire_event.pressed = true
-  Input.parse_input_event(fire_event)
+  Input.parse_input_event(fire_event.duplicate())
   await process_frame
   await physics_frame
  initiation.call("_process", 0.0)

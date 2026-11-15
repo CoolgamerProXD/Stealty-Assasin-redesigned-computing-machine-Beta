@@ -85,7 +85,8 @@ func _ready() -> void:
 
 func _build_exterior() -> void:
  # Continuous grade at y=0; the door threshold and both actors share this plane.
- _box(Vector3(0, -0.20, -19), Vector3(60, 0.38, 38), Color(0.28, 0.31, 0.29))
+ var ground := _box(Vector3(0, -0.20, -19), Vector3(60, 0.38, 38), Color(0.28, 0.31, 0.29))
+ ground.name = "ExteriorGround"
  _box(Vector3(0, -0.01, -11.5), Vector3(60, 0.02, 5), Color(0.19, 0.22, 0.23))
  _box(Vector3(0, 0.005, -8.6), Vector3(60, 0.03, 0.25), Color(0.52, 0.53, 0.47))
  _box(Vector3(0, 0.005, -14.4), Vector3(60, 0.03, 0.25), Color(0.52, 0.53, 0.47))
@@ -96,7 +97,8 @@ func _build_exterior() -> void:
  for i: int in range(5):
   var x := -20.0 + float(i) * 10.0
   var height := 6.0 + float(i % 3) * 2.0
-  _box(Vector3(x, height * 0.5, -24), Vector3(8.5, height, 7), Color(0.34 + float(i % 2) * 0.05, 0.38, 0.39))
+  var building := _box(Vector3(x, height * 0.5, -24), Vector3(8.5, height, 7), Color(0.34 + float(i % 2) * 0.05, 0.38, 0.39))
+  building.name = "BackgroundBuilding%d" % i
   for floor_index: int in range(1, 4):
    _box(Vector3(x, float(floor_index) * 1.5, -20.45), Vector3(6.2, 0.75, 0.05), Color(0.20, 0.31, 0.35))
  for x: float in [-8.5, 8.5]:

@@ -60,14 +60,15 @@ func _unhandled_input(event: InputEvent) -> void:
   aiming = false
   instinct_active = false
   Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
- if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+ var mouse_ready := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless"
+ if event is InputEventMouseButton and event.pressed and not mouse_ready:
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
   return
  if event.is_action_pressed("instinct"): instinct_active = true
  if event.is_action_released("instinct"): instinct_active = false
- if event.is_action_pressed("aim") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED: aiming = true
+ if event.is_action_pressed("aim") and mouse_ready: aiming = true
  if event.is_action_released("aim"): aiming = false
- if event.is_action_pressed("fire") and aiming and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED: fire_requested.emit()
+ if event.is_action_pressed("fire") and aiming and mouse_ready: fire_requested.emit()
  if event.is_action_pressed("interact"):
   interaction_requested.emit()
  if event.is_action_pressed("equip_primary"): equipment_selected.emit(0)

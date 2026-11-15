@@ -75,6 +75,12 @@ func run() -> void:
  root.add_child(cinematic)
  for i: int in range(10): await process_frame
  check(cinematic.get("camera").is_current() and cinematic.get("ruby").is_visible_in_tree(), "Ruby scene has active camera and visible character")
+ check(cinematic.has_node("ExteriorGround") and cinematic.has_node("BackgroundBuilding0") and cinematic.has_node("BackgroundBuilding4"), "cinematic renders exterior ground and surrounding architecture")
+ var grounded := true
+ for moment: float in [0.0, 3.0, 6.0, 10.0]:
+  cinematic.call("_apply_timeline", moment, 0.0)
+  if absf(cinematic.get("actor").position.y) > 0.001 or absf(cinematic.get("ruby").position.y) > 0.001: grounded = false
+ check(grounded, "cinematic actor roots remain on ground plane through timeline")
  cinematic.call("_apply_timeline", 10.0, 0.0)
  check(cinematic.get("subtitles").text.contains("RUBY"), "Ruby subtitles appear on cinematic timeline")
  cinematic.queue_free()
