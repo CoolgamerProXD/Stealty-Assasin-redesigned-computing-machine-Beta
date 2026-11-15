@@ -1,3 +1,7 @@
+# Second-pass sourcing
+
+No third-party models, textures, animations, audio samples, or fonts were imported in the second pass. Added geometry, character posing and synthesized footstep are project-authored procedural work. Historical research links are design references, not included assets.
+
 # Third-party assets and attribution
 
 No third-party models, textures, animations, sounds, fonts or other art assets have been imported for this update. No Sketchfab/Kenney/Poly Haven/OpenGameArt licence is being asserted. The articulated low-poly people, furnishings, interface and cinematic geometry/materials are generated from original code in this repository. The simple cinematic hum, door tone and footstep-like tones are synthesized by `scripts/audio/procedural_sound.gd`, rather than sampled from a recording. Their quality and attribution should not be confused with a professional commercial asset pack.

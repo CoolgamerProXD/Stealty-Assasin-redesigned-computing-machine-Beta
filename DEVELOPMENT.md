@@ -1,3 +1,7 @@
+# Second-pass development notes
+
+Preserve the existing mission/save contract and keep new routes within their dedicated floor-local navigation regions. `EnvironmentDressing` and preview `DistrictDetails` batch colorized decorative geometry; do not assume that a visible prop has collision. The stance rig uses torso translation and knee joints driven by the current physical stance, with footsteps derived from the same gait phase. Synthetic CI capture scenes use staged cameras; overhead plans deliberately hide roof/slab visuals. Run the full Godot suite and Windows export when changing these systems, and playtest on actual target hardware before making quality or performance claims.
+
 # Quality-overhaul checkpoint
 
 Run the three previews from Mission Selection. The city and mountain previews are rough static procedural environments without populations; the station retains its agents. Meridian keeps original coordinates and adds a two-floor extension. New architectural detail still needs art, collision, accessibility, navigation and target-device performance review. The ground footprint is ~3.5x the original; combined gross floor area ~7x.

@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -74,6 +74,9 @@ func run() -> void:
  camera.global_position = Vector3(-39.5,5.2,-6.8)
  camera.look_at(Vector3(-38,4.6,-9),Vector3.UP)
  await capture("cinema_hotel_upper")
+ camera.global_position = Vector3(-13.0,5.3,0)
+ camera.look_at(Vector3(8,4.8,0),Vector3.UP)
+ await capture("cinema_upper_gallery")
  # Remove only the decorative ceiling for an overhead upper-floor plan view.
  var hidden_roofs: Array[Node3D] = []
  for child: Node in hotel.get_children():
@@ -85,6 +88,14 @@ func run() -> void:
  camera.projection = Camera3D.PROJECTION_ORTHOGONAL
  camera.size = 72
  await capture("cinema_hotel_footprint")
+ # Hide upper slabs only for a staged architectural plan, then restore them.
+ var hidden_upper: Array[Node3D] = []
+ for child: Node in hotel.get_children():
+  if child is Node3D and is_equal_approx(child.position.y, 3.45):
+   child.visible = false
+   hidden_upper.append(child)
+ await capture("cinema_lower_plan")
+ for slab: Node3D in hidden_upper: slab.visible = true
  camera.projection = Camera3D.PROJECTION_PERSPECTIVE
  for roof: Node3D in hidden_roofs: roof.visible = true
  camera.global_position = Vector3(-5,1.4,-2.2)
@@ -114,7 +125,11 @@ func run() -> void:
  await capture("cinema_weapon_idle")
  Input.action_press("crouch")
  for i: int in range(30): await physics_frame
+ camera.global_position = player.global_position + Vector3(2.8,1.4,3.2)
+ camera.look_at(player.global_position + Vector3.UP * 0.75, Vector3.UP)
+ camera.make_current()
  await capture("cinema_player_crouch")
+ player.camera.make_current()
  check(player.body_mesh.crouch_amount > 0.9 and player.body_mesh.left_knee.rotation.x < -1.0, "crouch pose bends rather than compressing the whole model")
  Input.action_release("crouch")
  for i: int in range(30): await physics_frame

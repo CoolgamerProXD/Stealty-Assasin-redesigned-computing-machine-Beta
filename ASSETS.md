@@ -1,3 +1,7 @@
+# Second-pass original assets
+
+Additional Meridian architectural details, guest-room furnishings, city facades and market accents, mountain path details, and station details are procedural project-authored geometry. New footfall is synthesized deterministically from code, not sampled audio. Character knees and stance are procedural; no external animations or models were imported. Many details are visual only; collision is intentionally limited to selected structural furniture and station fixtures. No claim is made that these are production-quality art.
+
 # Quality-overhaul materials
 
 The expanded hotel, city, station and respectful abstract mountain landmark use original procedural meshes and materials. Files and terminal-like pickups are generated meshes, not imported assets. The HUD uses original shapes and typography; no commercial artwork was copied. The previews are blockouts, not licensed representations or finished art.

@@ -156,7 +156,7 @@ jobs:
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for name in ("cinema_player_crouch", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city"):
+          for name in ("cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_city", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_ngong_ping"):
               path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
               if not path.exists(): continue
               data = base64.b64encode(path.read_bytes()).decode("ascii")

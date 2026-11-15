@@ -1,3 +1,7 @@
+## Second-pass prototype status
+
+The Meridian west wing has additional original architectural dressing and a small floor-local population. Articulated crouch and gait-synchronized synthesized steps replace vertical character squashing; the three independent map previews have additional public-space detail and visitors. These remain low-poly procedural prototypes, not completed AAA levels, and NPCs do not navigate between hotel floors. See `TESTING.md` for automated coverage and limitations, and `PERFORMANCE.md` for explicitly labelled software-rendered samples. A human playthrough and Windows/Iris Xe benchmarking are still needed.
+
 # PROJECT ASSASSIN
 
 An offline Godot 4.4.1 stealth-sandbox prototype. BLACKLINE is the player's employer; Ruby is the handler and the Covenant is a separate organization. The playable content is **01 Initiation** and the optional legacy **The Meridian**. Mission Selection also offers three clearly labelled Hong Kong map previews, not completed campaign missions.

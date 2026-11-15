@@ -1,3 +1,9 @@
+# Second-pass architecture notes
+
+`EnvironmentDressing` instances original box details into shared core and HIGH-only batches; geometry is visual and does not imply collision. Existing restaurant tables, lounge seating, room beds, walls, floors and ramp have colliders, but most added small props and decoration do not. `WestWingNavigation` covers a deliberately clear ground-floor strip used by two scheduled visitors. A third stands upstairs; the original routes and the disconnected upstairs target remain separate. The preview districts use their existing local NPC agents on short floor-local paths; accents are a color-instanced batch. No global, cross-level or cross-district navigation is implied.
+
+`StylizedPerson` separates the upper body from hips, with two simple knee joints. Player stance drives torso and knee offsets while the original collision capsule and ceiling clearance check remain authoritative. Step events follow visual gait phase. This is an approximate procedural pose, not inverse kinematics or a new animation asset pipeline. The synthesized footfall is generated in code.
+
 # Two-floor hotel and selectable previews
 
 The hotel builds a connected western extension plus upper slabs and a physical ramp, leaving the original mission coordinates intact. Upper areas contain a suite and guest rooms; the target's long-duration schedule stays in the suite. Existing NPC navmesh remains on the original level; the independent upper region is not a connected cross-floor route. Save validation permits the added volume but does not fully model all new interior walls. The ground-level footprint is about 3.5x the former layout; summing the two gross floor plates gives about 7x, before subtracting walls and stairwell. The map remains procedural and partially visual-only. The three previews have their own scenes and return to the map selector; no mission or save state is faked.

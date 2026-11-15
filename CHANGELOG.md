@@ -1,3 +1,10 @@
+# Second pass — incremental prototype improvements
+
+- Expanded original batched Meridian wing dressing, guest-room and suite details, and floor-local hotel routines. The public wing routes are on a dedicated ground-floor navigation region; there is no cross-floor NPC routing. Locke remains in the upstairs suite. Much of the decorative furniture remains non-colliding and the hotel is still a procedural prototype, not a finished luxury environment.
+- Reworked the procedural figures into an upper-body group and hinged knees; crouching now lowers the torso and bends the legs instead of scaling the figure vertically. Steps use a synthesized transient synchronized to gait phase. This is not motion-captured or a production animation set.
+- Added static facade/market and mountain-path detail, a few local visitors on open routes, and added collision to selected station columns and the information counter. The three locations remain independent exploration previews, not completed missions.
+- Added automated local-route, crouch posture and staged capture coverage. Actual human playtesting and target-device measurement remain outstanding.
+
 # Quality overhaul
 
 - Added separately playable, labelled station, city and Ngong Ping exploration scenes to Mission Selection; Escape returns to the selector without changing campaign progression.

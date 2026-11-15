@@ -1,3 +1,9 @@
+# Second-pass gameplay notes
+
+The Meridian west wing has two additional locally scheduled people and one stationary upstairs guest. There is no NPC route between floors; Locke is still in the suite. Restaurant tables, seating and beds have selected collision, while many decorative details are not solid. The lobby and original mission positions are retained. Player crouch is represented by bent knees and a lowered torso, while the existing capsule/ceiling clearance rules determine physical stance. Sounds and poses remain stylized approximations.
+
+The city and mountain scenes have a few moving public-space visitors, while the station retains its scheduled crowd; all three are separately selectable exploration previews, not playable campaign assignments. Their routes and geography are fictional. The statue is a static landmark, not a target. No preview unlocks campaign progress.
+
 # Meridian and map previews — current
 
 Use Mission Selection to open any of the three separate map previews; Escape returns to Mission Selection. They do not start campaign missions or save story progress. Meridian retains its objectives, witness, target-state and save paths. The west ramp connects the original lobby to two storeys of added space; Adrian remains in the upper private suite. The central top HUD shows mission guidance, bottom-left reports only actual local access/awareness, bottom-right reports selected equipment and real charges, and contextual interaction appears top-left. There is no health system or radar.

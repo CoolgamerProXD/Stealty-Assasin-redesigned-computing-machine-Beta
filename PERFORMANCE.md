@@ -1,3 +1,7 @@
+# Second-pass synthetic sample
+
+Actions [43763906406](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43763906406), `71a7e2b`, Godot 4.4.1 Compatibility, 1280×720 Xvfb/Mesa llvmpipe on a Linux AMD EPYC 9V74 VM with four reported CPUs: fixed Meridian view, 15 warmup and 60 sampled frames per preset, LOW mean 19.706 ms (50.75 FPS), MEDIUM 63.519 ms (15.74 FPS), HIGH 74.837 ms (13.36 FPS). The station sample was LOW 22.295 ms (44.85 FPS), MEDIUM 60.593 ms (16.50 FPS), HIGH 65.816 ms (15.19 FPS). These short, noisy software-rendered samples are not measurements on the Windows Iris Xe target, an interactive route, or comparisons of Forward+, Mobile and Compatibility. Target 30–60 FPS remains unverified; more culling/optimization and hardware tests are needed.
+
 # Expanded hotel sample
 
 Run [43762584461](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43762584461), commit `38da17a`, measured a fixed Meridian view with 15 warm-up and 60 sample frames in Godot 4.4.1 Compatibility, 1280×720, Xvfb/Mesa llvmpipe on a 4-CPU AMD EPYC 9V74 Linux VM: LOW 20.016 ms mean (49.96 FPS), MEDIUM 63.291 ms (15.80 FPS), HIGH 74.557 ms (13.41 FPS). These noisy software-rendered numbers are not Windows/Iris Xe performance, not a complete route, and do not guarantee the target 30–60 FPS. More batching, floor visibility culling and target-device testing are needed.

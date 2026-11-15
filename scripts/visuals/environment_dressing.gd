@@ -251,6 +251,20 @@ func _hotel_wing() -> void:
    _part(Vector3(x,6.60,side*3.91),Vector3(1.50,0.09,0.12),walnut)
    _part(Vector3(x+1.15,5.45,side*3.89),Vector3(0.32,0.22,0.04),bronze)
    _part(Vector3(x,3.69,side*5.8),Vector3(3.5,0.03,3.4),Color(0.42,0.32,0.27),true)
+ # Room numbers and furnishings establish the upstairs accommodation wing.
+ for room_index: int in range(4):
+  var x: float = [-9.0,-3.0,3.0,9.0][room_index]
+  for side: float in [-1.0,1.0]:
+   var room_id := 201 + room_index * 2 + (1 if side > 0.0 else 0)
+   _sign(str(room_id), Vector3(x+1.15,5.45,side*3.85), Color(0.13,0.11,0.09), 0.0 if side < 0.0 else PI)
+   _part(Vector3(x,4.74,side*7.35),Vector3(3.1,1.3,0.12),walnut)
+   _part(Vector3(x,4.73,side*7.28),Vector3(2.85,1.03,0.04),Color(0.43,0.34,0.28))
+   _part(Vector3(x-1.65,4.01,side*6.7),Vector3(0.58,0.82,0.6),walnut)
+   _part(Vector3(x-1.65,4.53,side*6.7),Vector3(0.30,0.23,0.3),Color(0.84,0.75,0.59))
+   _part(Vector3(x+2.3,5.1,side*5.1),Vector3(0.08,1.3,1.5),bronze)
+   _part(Vector3(x+2.24,5.1,side*5.1),Vector3(0.04,1.1,1.3),Color(0.22,0.32,0.33))
+ _sign("DINING  /  LOUNGE",Vector3(-19,2.65,-7.8),Color(0.92,0.79,0.56))
+ _sign("GUEST ROOMS  /  PRIVATE SUITE",Vector3(-13.0,6.55,-1.5),Color(0.92,0.79,0.56),-PI / 2)
  # Locke's private suite: bed headboard, art, nightstands and warm reading lamps.
  _part(Vector3(-38,4.75,-12.12),Vector3(4.2,1.5,0.16),walnut)
  _part(Vector3(-38,4.70,-12.01),Vector3(3.8,1.15,0.06),Color(0.38,0.31,0.26))
