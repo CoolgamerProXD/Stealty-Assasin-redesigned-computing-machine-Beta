@@ -42,6 +42,24 @@ class PopulationDataTests(unittest.TestCase):
                     if abs(x - boundary) < 0.5:
                         self.assertTrue(2.35 <= abs(z) <= 3.65)
 
+    def test_record_configuration_is_consistent_and_accessible_by_layout(self):
+        mission = json.loads((ROOT / "resources/meridian_mission.json").read_text())
+        records = mission["records"]
+        ids = [record["id"] for record in records]
+        self.assertEqual(ids, ["ledger", "memo", "archive"])
+        self.assertEqual(len(set(ids)), 3)
+        self.assertEqual(mission["required_records"], 2)
+        self.assertLessEqual(mission["required_records"], len(ids))
+        for record in records:
+            self.assertTrue(record["label"] and record["message"])
+            x, y, z = record["position"]
+            self.assertTrue(-11.0 < x < 11.0 and y == 0 and -7.0 < z < 7.0)
+            for boundary in (2.0, 7.0):
+                self.assertGreater(abs(x - boundary), 0.5)
+            # Record markers must not be inside the visual counter/table footprints.
+            for cx, cz, sx, sz in [(-5, -4.8, 4, 1), (-5, 3.5, 2.4, 1), (4.5, -5, 2.2, 1), (9.5, -5, 2.5, 1)]:
+                self.assertFalse(abs(x - cx) < sx / 2 and abs(z - cz) < sz / 2)
+
     def test_main_scene_and_script_exist(self):
         self.assertIn('run/main_scene="res://scenes/hotel.tscn"', (ROOT / "project.godot").read_text())
         self.assertIn('res://scripts/world/hotel.gd', (ROOT / "scenes/hotel.tscn").read_text())

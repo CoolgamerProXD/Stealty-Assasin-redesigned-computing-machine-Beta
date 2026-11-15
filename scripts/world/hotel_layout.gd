@@ -20,3 +20,11 @@ static func navigation_mesh() -> NavigationMesh:
    # Counter-clockwise when viewed from above; normals point upward.
    mesh.add_polygon(PackedInt32Array([a, a + width, a + width + 1, a + 1]))
  return mesh
+
+static func is_safe_player_position(point: Vector3) -> bool:
+ if not point.is_finite() or absf(point.x) > 11.0 or point.y < 0.0 or point.y > 3.0 or absf(point.z) > 7.0:
+  return false
+ for boundary: float in [2.0, 7.0]:
+  if absf(point.x - boundary) < 0.44 and not (absf(point.z) >= 2.35 and absf(point.z) <= 3.65):
+   return false
+ return true

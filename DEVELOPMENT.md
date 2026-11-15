@@ -13,3 +13,7 @@ Next: run and fix headless tests on a real Godot build; playtest in editor on Wi
 ## Continuation — 2026-11-15
 
 Added two physical partitions with alternate openings, a corresponding hand-authored navigation grid and line-of-sight checks for interaction selection. Added F5/F9 mission snapshots with validation and a previous-save backup. Expanded planned Godot tests for real navigation, physics occlusion, interaction reachability and save recovery. These changes remain pending Godot runtime verification. The source build was restarted outside the repository.
+
+## Audit and stabilisation — 2026-11-15
+
+Moved the three record definitions and unchanged two-record requirement into one validated mission configuration. The HUD now separates collected, available and required counts; extraction gives an accurate already-completed message. Collection and restoration check the same IDs and inventory capacity. Invalid configurations fail closed, and saved player positions inside partitions are rejected. NPC memory expiry no longer allocates a filtered array every physics tick. Expanded headless tests are present but not runtime-verified; see AUDIT.md and TESTING.md.

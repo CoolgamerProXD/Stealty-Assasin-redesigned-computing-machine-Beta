@@ -12,3 +12,8 @@ func add(item_id: String) -> bool:
 
 func has_item(item_id: String) -> bool:
  return items.has(item_id)
+
+func clear() -> void:
+ if items.is_empty(): return
+ items.clear()
+ changed.emit()

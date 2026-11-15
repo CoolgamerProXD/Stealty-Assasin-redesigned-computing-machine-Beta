@@ -7,7 +7,7 @@ Godot 4.4.1, GDScript, Compatibility renderer initially. `scenes/hotel.tscn` is 
 - `stealth/access.gd`: role/zone permission separate from awareness. Current zone assignment is positional, not scene-authored.
 - `disguise/disguise.gd`: resource foundation; current prototype switches a role and capsule material directly on player.
 - `interactions/interactable.gd`: shared availability and activation signal. Composition root dispatches clue, uniform and extraction events.
-- `inventory/inventory.gd`, `missions/mission.gd`: independent RefCounted logic; mission tracks unique records and extraction.
+- `resources/meridian_mission.json` supplies record identities, positions, text and the required count; `missions/mission.gd` validates it and owns available records, unique progress, objective text and extraction. The hotel spawns markers from the same data; the save snapshot filters against it. `inventory/inventory.gd` tracks carried records separately and prevents counting an uncollected item if capacity is exhausted.
 - `save/save_store.gd`: versioned JSON file with temporary writes and previous-save backup. `save/session_snapshot.gd` validates and restores mission clues, disguise, player position and marker state; the hotel binds F5/F9. NPC state and settings are not saved.
 - `tests/run_tests.gd`: headless behavioral checks, including world interactions and movement.
 

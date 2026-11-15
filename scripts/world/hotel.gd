@@ -1,18 +1,29 @@
 extends Node3D
 ## Original greybox: The Meridian Hotel, after a missing archive incident.
-const SAVE_PATH: String = "user://meridian_save.json"
+var save_path: String = "user://meridian_save.json"
 var player: HotelPlayer
 var mission: Mission = Mission.new()
 var interactables: Array[Interactable] = []
 var npcs: Array[HotelNpc] = []
 var hud: Label
 var prompt: Label
-var message: String = "Find two records about the missing archive, then leave."
-var message_timer: float = 0.0
+var message: String = ""
 
 func _ready() -> void:
+ var mission_data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/meridian_mission.json"))
+ if not mission.configure(mission_data):
+  push_error("Invalid or missing Meridian mission configuration")
  _build_environment()
  _build_player()
+ if mission.configured and mission.required_records > player.inventory.capacity:
+  push_error("Mission requires more records than the inventory can hold")
+  mission.configure(null)
+ if mission.configured:
+  for record: Dictionary in mission.available_records:
+   if not HotelLayout.is_safe_player_position(_vector(record["position"])):
+    push_error("Mission record is outside the playable floor or inside a partition")
+    mission.configure(null)
+    break
  _build_npcs()
  _build_interactions()
  _build_ui()
@@ -121,9 +132,8 @@ func _add_interactable(pos: Vector3, title: String, kind: String, id: String, co
  interactables.append(object)
 
 func _build_interactions() -> void:
- _add_interactable(Vector3(-5, 0, -3.6), "Read guest ledger", "clue", "ledger", Color(0.9, 0.72, 0.34))
- _add_interactable(Vector3(4.5, 0, -4), "Read staff memo", "clue", "memo", Color(0.9, 0.72, 0.34))
- _add_interactable(Vector3(9.5, 0, -4), "Inspect archive terminal", "clue", "archive", Color(0.9, 0.72, 0.34))
+ for record: Dictionary in mission.available_records:
+  _add_interactable(_vector(record["position"]), record["label"], "clue", record["id"], Color(0.9, 0.72, 0.34))
  _add_interactable(Vector3(-1, 0, 5.5), "Change into staff uniform", "disguise", "staff", Color(0.3, 0.6, 0.85))
  _add_interactable(Vector3(-10, 0, 5.5), "Leave hotel", "extract", "exit", Color(0.4, 0.8, 0.5))
 
@@ -159,32 +169,35 @@ func _interact_nearest() -> void:
 func _on_interaction(object: Interactable) -> void:
  match object.kind:
   "clue":
-   mission.record_clue(object.identifier)
-   player.inventory.add(object.identifier)
+   if not mission.has_record(object.identifier) or mission.clues.has(object.identifier): return
+   if not player.inventory.has_item(object.identifier) and not player.inventory.add(object.identifier):
+    message = "Inventory full. The record was not collected."
+    return
+   if not mission.record_clue(object.identifier): return
    object.used = true
    object.visible = false
-   match object.identifier:
-    "ledger": message = "Ledger: a courier checked in under a false name."
-    "memo": message = "Memo: the archive was moved before the night shift."
-    "archive": message = "Terminal: a manager authorized the transfer."
+   for record: Dictionary in mission.available_records:
+    if record["id"] == object.identifier:
+     message = record["message"]
+     break
   "disguise":
    player.set_disguise("staff")
    object.used = true
    object.visible = false
    message = "Staff uniform acquired. Staff area access granted; secure area remains restricted."
   "extract":
-   if mission.extract(): message = "INVESTIGATION COMPLETE — you left with the evidence."
-   else: message = "Gather at least two different records before leaving."
- message_timer = 7.0
+   if mission.extracted: message = "Investigation already complete."
+   elif mission.extract(): message = "INVESTIGATION COMPLETE — you left with the evidence."
+   else: message = mission.objective_text()
 
 func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("save_game"):
-  if SaveStore.write(SAVE_PATH, SessionSnapshot.capture(player, mission)):
+  if SaveStore.write(save_path, SessionSnapshot.capture(player, mission)):
    message = "Progress saved."
   else:
    message = "Save failed. Check storage permissions."
  elif event.is_action_pressed("load_game"):
-  var data := SaveStore.read(SAVE_PATH)
+  var data := SaveStore.read(save_path)
   if data.is_empty():
    message = "No valid compatible save found."
   else:
@@ -192,13 +205,12 @@ func _unhandled_input(event: InputEvent) -> void:
    message = "Progress loaded. NPCs continue their current routines."
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
  if player == null or hud == null: return
- message_timer = maxf(0.0, message_timer - delta)
  var area := AccessRules.area_at(player.global_position)
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0
  for npc: HotelNpc in npcs: highest = maxf(highest, npc.suspicion)
- hud.text = "THE MERIDIAN  /  MISSING ARCHIVE\n%s  ·  %s (%s)  ·  Awareness %.0f%%\nRecords: %d / 2\n%s" % [player.role.to_upper(), area.to_upper(), access, highest, mission.clues.size(), message]
+ hud.text = "THE MERIDIAN  /  MISSING ARCHIVE\n%s  ·  %s (%s)  ·  Awareness %.0f%%\n%s\n%s\n%s" % [player.role.to_upper(), area.to_upper(), access, highest, mission.progress_text(), mission.objective_text(), message]
  var nearest := _nearest()
  prompt.text = ("E  " + nearest.label + "\n" if nearest else "") + "WASD move  ·  mouse look  ·  Shift run  ·  C crouch  ·  F5 save  ·  F9 load  ·  Esc release mouse"
