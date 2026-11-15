@@ -8,9 +8,19 @@ var right_door: Node3D
 var camera: Camera3D
 var subtitles: Label
 var finished: bool = false
+var ambience: AudioStreamPlayer
+var effects: AudioStreamPlayer
+var door_played: bool = false
+var last_step: int = -1
 
 func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+ ambience = AudioStreamPlayer.new()
+ ambience.stream = ProceduralSound.tone(55.0, 1.0, 0.06, true)
+ add_child(ambience)
+ ambience.play()
+ effects = AudioStreamPlayer.new()
+ add_child(effects)
  var environment := WorldEnvironment.new()
  var atmosphere := Environment.new()
  atmosphere.background_mode = Environment.BG_COLOR
@@ -82,7 +92,16 @@ func _process(delta: float) -> void:
  if finished: return
  time += delta
  _apply_timeline(time, delta)
- if time >= 19.0: _finish()
+ if time >= 1.0 and not door_played:
+  door_played = true
+  effects.stream = ProceduralSound.tone(120.0, 0.55, 0.10)
+  effects.play()
+ var step := int((time - 1.6) * 1.5)
+ if time > 1.6 and time < 8.0 and step != last_step:
+  last_step = step
+  effects.stream = ProceduralSound.tone(75.0, 0.08, 0.08)
+  effects.play()
+ if time >= 22.0: _finish()
 
 func _apply_timeline(t: float, delta: float) -> void:
  var doors := clampf((t - 1.0) / 2.0, 0.0, 1.0)
@@ -100,8 +119,9 @@ func _apply_timeline(t: float, delta: float) -> void:
   camera.look_at(Vector3(0.7, 1.2, -3.8), Vector3.UP)
  if t < 8.0: subtitles.text = "ASSESSMENT COMPLETE  /  CIVIC EVALUATION ANNEX"
  elif t < 12.0: subtitles.text = "RUBY: You noticed the missing piece. Most people only count the locks."
- elif t < 16.0: subtitles.text = "RUBY: I'm Ruby. From now on, I handle your assignments for Blackline."
- else: subtitles.text = "RUBY: The Meridian is waiting. Let's find out who moved the archive."
+ elif t < 15.0: subtitles.text = "RUBY: I'm Ruby. From now on, I handle your assignments for Blackline."
+ elif t < 18.0: subtitles.text = "AGENT: And the name in the dispatch? The Covenant?"
+ else: subtitles.text = "RUBY: A question worth keeping. First, the Meridian. Let's find that archive."
 
 func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("release_mouse"): _finish()

@@ -59,7 +59,25 @@ func run() -> void:
  samples.sort()
  var mean: float = total / samples.size()
  print("DISPLAY_METRIC: frames=%d mean_ms=%.3f p95_ms=%.3f p99_ms=%.3f mean_fps=%.2f" % [samples.size(), mean, samples[113], samples[118], 1000.0 / maxf(mean, 0.001)])
+ var hotel_hud: Label = world.get("hud")
+ check(hotel_hud.is_visible_in_tree() and hotel_hud.text.contains("IVO CHEN"), "Meridian target HUD is visible in rendered scene")
+ check(player.body_mesh.is_visible_in_tree() and player.body_mesh.get_child_count() > 8, "articulated player visuals are present in rendered scene")
  world.queue_free()
+ await process_frame
+ var initiation: Node = load("res://scenes/initiation.tscn").instantiate()
+ root.add_child(initiation)
+ for i: int in range(10): await process_frame
+ check(initiation.get("hud").is_visible_in_tree() and initiation.get("hud").text.contains("ASSESSMENT UNIT"), "Initiation target HUD is visible in rendered scene")
+ check(initiation.get("npcs")[0].person.is_visible_in_tree(), "guard visual is present in rendered scene")
+ initiation.queue_free()
+ await process_frame
+ var cinematic: Node = load("res://scenes/ruby_meeting.tscn").instantiate()
+ root.add_child(cinematic)
+ for i: int in range(10): await process_frame
+ check(cinematic.get("camera").is_current() and cinematic.get("ruby").is_visible_in_tree(), "Ruby scene has active camera and visible character")
+ cinematic.call("_apply_timeline", 10.0, 0.0)
+ check(cinematic.get("subtitles").text.contains("RUBY"), "Ruby subtitles appear on cinematic timeline")
+ cinematic.queue_free()
  await process_frame
  print("CAMERA RESULT: %d checks, %d failures" % [checks, failures])
  quit(0 if failures == 0 else 1)
