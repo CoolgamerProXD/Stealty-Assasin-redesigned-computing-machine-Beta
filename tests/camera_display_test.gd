@@ -110,6 +110,21 @@ func run() -> void:
  await physics_frame
  await process_frame
  check(target.stunned_time == 0.0 and player.equipment.charges == 3, "solid partition blocks center shot before target")
+ fire.pressed = false
+ Input.parse_input_event(fire.duplicate())
+ await process_frame
+ # Simulate a shoulder camera clipped to the far side of the partition.
+ player.global_position = Vector3(1.2, 0.05, 0)
+ player.camera.global_position = Vector3(2.7, 1.5, 0)
+ target.global_position = Vector3(4.2, 0.05, 0)
+ player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
+ await physics_frame
+ fire.pressed = true
+ Input.parse_input_event(fire.duplicate())
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(target.stunned_time == 0.0 and player.equipment.charges == 3 and str(world.get("message")).contains("obstructed"), "camera across wall cannot shoot through player obstruction")
  right.pressed = false
  Input.parse_input_event(right.duplicate())
  await process_frame
