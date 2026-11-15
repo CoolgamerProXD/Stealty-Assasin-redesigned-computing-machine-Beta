@@ -17,3 +17,7 @@ Added two physical partitions with alternate openings, a corresponding hand-auth
 ## Audit and stabilisation — 2026-11-15
 
 Moved the three record definitions and unchanged two-record requirement into one validated mission configuration. The HUD now separates collected, available and required counts; extraction gives an accurate already-completed message. Collection and restoration check the same IDs and inventory capacity. Invalid configurations fail closed, and saved player positions inside partitions are rejected. NPC memory expiry no longer allocates a filtered array every physics tick. Expanded headless tests are present but not runtime-verified; see AUDIT.md and TESTING.md.
+
+## Runtime regression — 2026-11-15
+
+Official Godot 4.4.1 CI run 43699069502 passed 63 headless behavioral checks and five automated camera checks on Xvfb. A corrupt-save log-spam defect was fixed without changing player, NPC, camera, scene or hotel files. A human Windows playtest and target performance measurements remain outstanding; see TESTING.md and PERFORMANCE.md. Earlier session entries are historical.

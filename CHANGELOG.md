@@ -18,3 +18,9 @@
 - Centralized and validated three-record / two-required mission data; aligned spawning, collection, HUD, extraction and save restoration.
 - Prevented false repeat-extraction instructions and rejected invalid saved positions inside partitions.
 - Expanded regression scenarios and reduced NPC memory-array churn. Godot runtime testing remains pending.
+
+## Runtime regression — 2026-11-15
+
+- Added official Godot 4.4.1 import, headless gameplay, virtual-display camera and timing checks to CI.
+- Fixed expected malformed-save recovery emitting engine error logs; kept backup recovery behavior.
+- Added schedule-recovery, interaction-input, camera and timing regression checks. Player, NPC and hotel presentation remain unchanged.
