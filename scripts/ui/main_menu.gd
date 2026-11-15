@@ -78,6 +78,7 @@ func _home() -> void:
  var last := Campaign.progress.last_mission
  _button("CONTINUE  /  LOAD CHECKPOINT", func() -> void: _start(last, true), last.is_empty() or not Campaign.has_checkpoint(last))
  _button("MISSION SELECTION", _missions)
+ _button("TUNG CHUNG  /  EARLY MAP PREVIEW", func() -> void: get_tree().change_scene_to_file("res://scenes/tung_chung_preview.tscn"))
  _button("LOADOUT", _loadout)
  _button("SETTINGS", _settings)
  _button("EXIT GAME", func() -> void: get_tree().quit())

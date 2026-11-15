@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -110,6 +110,14 @@ func run() -> void:
  await capture("cinema_initiation")
  check(init_cam.current and initiation.get("npcs").size() == 2, "Initiation camera renders scene with exactly two guards")
  initiation.queue_free()
+ await process_frame
+ var station: Node3D = load("res://scenes/tung_chung_preview.tscn").instantiate()
+ root.add_child(station)
+ for i: int in range(10): await physics_frame
+ var station_cam := shot_camera(station, Vector3(-18, 3.0, 7.0), Vector3(0, 1.6, -4.0))
+ await capture("cinema_tung_chung")
+ check(station_cam.current and station.get("npcs").size() == 16, "station preview renders with scheduled physical population")
+ station.queue_free()
  await process_frame
  var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
  root.add_child(menu)

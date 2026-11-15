@@ -490,12 +490,13 @@ func run() -> void:
  # Fire through the actual center-ray path at the physical Meridian target.
  for person: HotelNpc in gadget_npcs: person.collision_layer = 0
  locke.collision_layer = 1
- locke.global_position = Vector3(-8, 0.05, 0)
- gadget_player.global_position = Vector3(-8, 0.05, 3)
+ locke.global_position = Vector3(-4, 0.05, 0)
+ gadget_player.global_position = Vector3(-4, 0.05, -3)
+ gadget_player.rotation.y = PI
  gadget_player.equipment.configure(campaign, "meridian")
  gadget_player.equipment.selected = "training_sidearm"
  gadget_player.aiming = true
- await physics_frame
+ for i: int in range(5): await physics_frame
  gadget_player.camera.look_at(locke.global_position + Vector3.UP, Vector3.UP)
  gadget_world.call("_fire")
  print("EQUIP_DIAG: locke-shot message=", gadget_world.get("message"), " camera=", gadget_player.camera.global_position, " target=", locke.global_position, " charge=", gadget_player.equipment.charges)
@@ -511,6 +512,22 @@ func run() -> void:
  locke._physics_process(100.0)
  check(locke.objective_completed and locke.completed_incapacitated and locke.state == "objective_completed", "checkpoint restores permanent incapacitated pose and objective")
  gadget_world.queue_free()
+ await process_frame
+ var station: Node3D = load("res://scenes/tung_chung_preview.tscn").instantiate()
+ root.add_child(station)
+ await process_frame
+ await physics_frame
+ var station_people: Array[HotelNpc] = station.get("npcs")
+ var station_player: HotelPlayer = station.get("player")
+ var suspect: HotelNpc = station.get("robber")
+ check(station_people.size() == 16 and suspect != station.get("operative"), "station preview creates two distinct physical characters and fourteen passengers")
+ var station_start := station_people[0].global_position
+ await create_timer(1.5).timeout
+ check(station_people[0].global_position.distance_to(station_start) > 0.1, "station passenger follows a navigation schedule")
+ station_player.global_position = suspect.global_position + Vector3(0, 0, 1)
+ station.call("_interact")
+ check(str(station.get("message")).contains("suspect"), "station preview observes physical suspect nearby")
+ station.queue_free()
  await process_frame
  var initiation_scene: PackedScene = load("res://scenes/initiation.tscn")
  var initiation: Node = initiation_scene.instantiate()

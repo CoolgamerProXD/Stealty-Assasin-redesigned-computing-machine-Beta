@@ -37,7 +37,7 @@ func is_unlocked(id: String) -> bool:
 
 func next_mission() -> String:
  for entry: Dictionary in missions:
-  if not completed.has(entry["id"]) and is_unlocked(entry["id"]): return entry["id"]
+  if not entry.get("optional", false) and not completed.has(entry["id"]) and is_unlocked(entry["id"]): return entry["id"]
  return ""
 
 func mark_complete(id: String) -> bool:
