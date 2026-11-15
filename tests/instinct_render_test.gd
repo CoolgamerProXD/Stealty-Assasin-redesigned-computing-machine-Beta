@@ -36,6 +36,16 @@ func red_stats(image: Image) -> Vector2:
     sum += x
  return Vector2(count, sum / maxf(count, 1))
 
+func average_luminance(image: Image) -> float:
+ var total := 0.0
+ var count := 0
+ for y: int in range(int(image.get_height() * 0.3), int(image.get_height() * 0.8), 8):
+  for x: int in range(int(image.get_width() * 0.3), int(image.get_width() * 0.7), 8):
+   var c := image.get_pixel(x, y)
+   total += 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
+   count += 1
+ return total / maxf(count, 1)
+
 func differing_pixels(a: Image, b: Image) -> int:
  var count := 0
  for y: int in range(int(a.get_height() * 0.28), int(a.get_height() * 0.8), 6):
@@ -124,6 +134,10 @@ func run() -> void:
      var difference := differing_pixels(low_image, preset_image)
      print("VISUAL_METRIC: low_high_pixel_difference=", difference)
      check(difference > 20, "LOW and HIGH visibly alter the rendered scene")
+     var low_luma := average_luminance(low_image)
+     var high_luma := average_luminance(preset_image)
+     print("VISUAL_METRIC: lobby_luma low=%.4f high=%.4f" % [low_luma, high_luma])
+     check(high_luma > low_luma * 0.65, "HIGH lobby retains readable ambient lighting")
    service.settings = old_settings
    service.apply_settings()
   world.queue_free()

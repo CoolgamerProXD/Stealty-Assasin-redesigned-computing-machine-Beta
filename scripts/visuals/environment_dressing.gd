@@ -157,6 +157,11 @@ func _hotel() -> void:
  probe.position = Vector3(-5, 1.45, 0)
  probe.size = Vector3(13, 3, 15)
  probe.update_mode = ReflectionProbe.UPDATE_ONCE
+ # An indoor probe must not replace the scene ambient with its near-black
+ # captured background. Keep a deliberate warm fill inside the lobby.
+ probe.ambient_mode = ReflectionProbe.AMBIENT_COLOR
+ probe.ambient_color = Color(0.73, 0.70, 0.64)
+ probe.ambient_color_energy = 0.9
  probe.enable_shadows = false
  probe.add_to_group("quality_reflections")
  probe.visible = Campaign.settings["graphics"] == "HIGH"
