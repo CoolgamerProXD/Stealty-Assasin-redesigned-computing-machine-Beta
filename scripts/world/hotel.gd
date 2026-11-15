@@ -366,7 +366,7 @@ func _process(_delta: float) -> void:
  var target_state := "COMPLETE" if mission.action_complete else "LOCATE AND INTERACT"
  if mission_id() == "initiation" and not mission.action_complete and get("robot_alert") == true:
   target_state = "SCANNING NEARBY"
- hud.text = title + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + mission.progress_text() + "\n" + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
+ hud.text = title + "\nPRIMARY  /  " + target + "  ·  " + target_state + "\nSECONDARY  /  " + mission.progress_text() + "\nNEXT  /  " + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
  var slots := "1  TRAINING SIDEARM"
  if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"
  equipment_hud.text = "EQUIPMENT\n" + slots + "\nEQUIPPED  /  " + Campaign.item_label(player.equipment.selected).to_upper()

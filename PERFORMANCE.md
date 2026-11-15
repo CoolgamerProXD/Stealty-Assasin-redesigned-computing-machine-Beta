@@ -1,5 +1,8 @@
 # Performance
 
+## Critical gameplay update CI sample
+Actions run 43702084074 (`0c1ee7b`) used Godot 4.4.1, Linux GitHub VM with AMD EPYC 9V74, 4 reported CPUs and ~15.6 GiB RAM, Xvfb 1280×720 and Mesa llvmpipe Compatibility software rendering. The scripted Meridian camera sample of 120 frames measured mean **22.495 ms / 44.45 FPS**, p95 **23.614 ms**, p99 **26.099 ms**; first test frame was **5,032.842 ms** on the engine clock. The headless 120-frame menu process took **1.10 s**, peak **94,428 KiB**. These are synthetic CI measurements, not the Windows/Iris Xe target. Full gameplay, Initiation, cutscene and target-hardware performance are not benchmarked. Renderer comparisons are still outstanding.
+
 ## Campaign expansion caveat
 
 CI run 43700503344 (`a6c6ca9`): Ubuntu VM, AMD EPYC 9V74, 4 reported CPUs, ~15.6 GiB RAM; 1280×720 Xvfb, Godot 4.4.1 Compatibility, Mesa llvmpipe. Scripted Meridian camera: 120 samples, mean 22.160 ms (45.13 FPS), p95 24.501 ms, p99 25.423 ms; peak RSS 300,348 KiB, first test frame 2,468.572 ms. Headless menu 120-frame process: 1.10 s and 94,760 KiB peak RSS. These are software-rendered synthetic CI measurements, not user-device results.
