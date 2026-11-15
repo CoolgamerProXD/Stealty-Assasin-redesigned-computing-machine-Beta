@@ -115,6 +115,28 @@ func _hotel() -> void:
    _part(Vector3(x - 0.22, 2.45, z), Vector3(0.08, 0.30, 1.70), DARK if x > 2 else WOOD)
  _sign("STAFF ONLY", Vector3(1.75, 2.45, -3), Color(0.73, 0.85, 0.82), -PI / 2)
  _sign("SECURE ARCHIVE", Vector3(6.75, 2.45, -3), Color(0.93, 0.65, 0.40), -PI / 2)
+ # Continuous mouldings and framed wall bays communicate the corridor rather
+ # than changing the physical openings that navigation and cover rely on.
+ for x: float in [1.86, 2.14, 6.86, 7.14]:
+  for z: float in [-6.0, 0.0, 6.0]:
+   _part(Vector3(x, 0.50, z), Vector3(0.035, 0.90, 3.75), Color(0.22, 0.24, 0.22) if x > 2 else WOOD)
+   _part(Vector3(x, 0.98, z), Vector3(0.055, 0.05, 3.75), BRASS if x < 3 else Color(0.40, 0.51, 0.49))
+   _part(Vector3(x, 2.55, z), Vector3(0.045, 0.05, 3.75), BRASS if x < 3 else Color(0.40, 0.51, 0.49))
+   for dz: float in [-1.45, 1.45]:
+    _part(Vector3(x, 1.75, z + dz), Vector3(0.055, 1.45, 0.05), BRASS if x < 3 else TEAL, true)
+ # Framed abstract artwork and floor borders provide landmarks in the lobby.
+ for x: float in [-9.0, -1.5]:
+  _part(Vector3(x, 1.75, 7.76), Vector3(1.7, 1.2, 0.08), BRASS)
+  _part(Vector3(x, 1.75, 7.70), Vector3(1.56, 1.06, 0.05), Color(0.12, 0.23, 0.25))
+  _part(Vector3(x - 0.2, 1.78, 7.66), Vector3(0.18, 0.75, 0.025), Color(0.70, 0.51, 0.31), true)
+ for z: float in [-2.7, 2.7]:
+  _part(Vector3(-5, 0.045, z), Vector3(9.8, 0.01, 0.045), BRASS)
+ for x: float in [-9.8, -0.2]:
+  _part(Vector3(x, 0.045, 0), Vector3(0.045, 0.01, 5.4), BRASS)
+ # Exit landmark on the outer wall, not a new interactive collision.
+ _part(Vector3(-11.82, 1.4, 5.5), Vector3(0.06, 2.7, 1.5), DARK)
+ _part(Vector3(-11.76, 1.4, 5.5), Vector3(0.05, 2.5, 1.3), Color(0.24, 0.28, 0.27))
+ _sign("EXIT", Vector3(-11.68, 2.65, 5.5), Color(0.77, 0.85, 0.70), PI / 2)
  # Staff workstations and archive shelving, away from door openings.
  for x: float in [4.5, 9.5]:
   _part(Vector3(x, 1.02, -5), Vector3(2.25, 0.08, 1.05), Color(0.58, 0.59, 0.53))
@@ -150,5 +172,12 @@ func _annex() -> void:
   _part(Vector3(x, 1.0, -7), Vector3(2.6, 0.08, 1.1), Color(0.53, 0.56, 0.53))
   _part(Vector3(x, 1.25, -7.3), Vector3(0.7, 0.42, 0.08), DARK)
   _part(Vector3(x, 1.26, -7.25), Vector3(0.58, 0.31, 0.02), TEAL)
+ for x: float in [2.14, 6.86, 7.14]:
+  for z: float in [-7.0, 0.0, 7.0]:
+   _part(Vector3(x, 0.48, z), Vector3(0.04, 0.80, 3.7), Color(0.20, 0.27, 0.27))
+   _part(Vector3(x, 0.92, z), Vector3(0.06, 0.05, 3.7), Color(0.46, 0.62, 0.60))
+ _part(Vector3(-14.82, 1.4, 7), Vector3(0.06, 2.7, 1.5), DARK)
+ _part(Vector3(-14.76, 1.4, 7), Vector3(0.05, 2.5, 1.3), TEAL)
+ _sign("EXIT", Vector3(-14.68, 2.65, 7), Color(0.77, 0.85, 0.70), PI / 2)
  for x: float in [-9.0, -3.0, 4.5, 10.5]:
   _lamp(Vector3(x, 2.6, 0), Color(0.66, 0.84, 0.90), 0.35, 6.0)
