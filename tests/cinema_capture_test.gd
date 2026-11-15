@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows", "cinema_city_gameplay"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -179,8 +179,18 @@ func run() -> void:
   if preview_name == "hong_kong":
    var camera_query := PhysicsRayQueryParameters3D.create(scenery_cam.global_position, Vector3(0,2.5,-20))
    print("CITY_VIEW_DIAG: ", scenery.get_world_3d().direct_space_state.intersect_ray(camera_query))
+   for holder: Node in scenery.get_children():
+    for visual: Node in holder.get_children():
+     if visual is MeshInstance3D:
+      var bounds: AABB = visual.global_transform * visual.get_aabb()
+      if bounds.intersects_segment(scenery_cam.global_position, Vector3(0,2.5,-20)):
+       print("CITY_OCCLUDER: ", holder.name, " bounds=", bounds)
   await capture("cinema_city" if preview_name == "hong_kong" else "cinema_ngong_ping")
   check(scenery_cam.current and scenery.get("player") != null, preview_name + " preview renders with player")
+  if preview_name == "hong_kong":
+   var preview_player: HotelPlayer = scenery.get("player")
+   preview_player.camera.make_current()
+   await capture("cinema_city_gameplay")
   scenery.queue_free()
   await process_frame
  var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
