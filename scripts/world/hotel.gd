@@ -370,16 +370,20 @@ func _fire() -> void:
  query.exclude = [player.get_rid()]
  query.collide_with_areas = true
  var hit := get_world_3d().direct_space_state.intersect_ray(query)
+ var confirmed_hit := false
  if not hit.is_empty():
   end = hit["position"]
   _impact_flash(end)
   var collider: Object = hit["collider"]
   if collider is Area3D and collider.get_parent() is Interactable:
    var object := collider.get_parent() as Interactable
-   if object.kind == "robot" and not object.used: _on_interaction(object)
+   if object.kind == "robot" and not object.used:
+    _on_interaction(object)
+    confirmed_hit = true
    else: message = "Assessment pulse hit an inactive unit."
   elif collider is HotelNpc:
    var npc := collider as HotelNpc
+   confirmed_hit = true
    npc.stunned_time = 12.0
    npc.set_state("disabled")
    if npc == primary_npc and mission.mark_target(str(mission.primary_target.get("id", ""))):
@@ -391,6 +395,7 @@ func _fire() -> void:
    else: message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
   else: message = "Assessment pulse struck a surface."
  else: message = "Assessment pulse discharged."
+ if confirmed_hit: crosshair.call("confirm_hit")
  for npc: HotelNpc in npcs:
   if npc.stunned_time <= 0 and npc.global_position.distance_to(player.global_position) < 9.0:
    npc.observe_trespass(player.global_position)

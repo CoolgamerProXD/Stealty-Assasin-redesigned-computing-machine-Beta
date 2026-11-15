@@ -4,7 +4,8 @@
 - Added batched original hotel and annex dressing, practical lights and high-only fine detail.
 - Added stance-derived sight rays, local disturbance discovery and simple scheduled activity gestures.
 - Smoothed shoulder/FOV and weapon draw/aim/holster blending; added synthesized steps, ambience, UI and objective cues.
-- Added shared Blackline UI styling, expanded rendered capture automation, and a Windows export/smoke job.
+- Added shared Blackline UI styling, hit confirmation, smoother Ruby camera transitions, expanded rendered capture automation, and a Windows export/smoke job.
+- HIGH uses FXAA and a single static lobby reflection probe; LOW omits the probe, practical lights and fine dressing.
 - Remains a low-poly prototype; no claim of AAA art, a human playtest or target-laptop performance.
 
 

@@ -1,5 +1,9 @@
 # Testing
 
+## Latest completed automated runs
+[43712369756](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43712369756), commit `20be69e`: official Godot 4.4.1 import/startup, 7 Python data tests, **142 behavioral**, **23 camera**, **14 rendered-image**, and **6 cinematic/UI checks** passed. The render test samples a wall and measures visible pixel differences between LOW/HIGH. Full-resolution PNGs are in its `instinct-rendered-comparisons` artifact. Fixed camera captures and a staged debrief are not an interactive route or visual-quality signoff. A separate earlier [Windows run 43712027930](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43712027930), commit `46aed8c`, exported and headlessly launched the Windows executable, with a downloadable build artifact; it did not exercise interactive Windows graphics or user hardware.
+
+
 ## Absolute Cinema automated coverage
 The Godot 4.4.1 suite adds solid low-cover standing/crouched perception and blocked/unblocked disturbance-discovery checks; the capture suite records fixed views of the lobby, corridor, annex, Adrian, NPC motion, player idle/aim, graphics settings and a **staged** debrief. Existing rendered image comparisons cover through-wall Instinct and quality presets. These are scripted captures and do not establish full playability, visual quality, physical input feel or audio quality. The Windows job in the regression workflow runs only on a push whose commit message contains `[windows]`; it downloads official Godot 4.4.1 and export templates, exports and launches the executable headlessly. A successful Windows job is a smoke test, not an interactive Windows playthrough.
 
@@ -7,7 +11,7 @@ The Godot 4.4.1 suite adds solid low-cover standing/crouched perception and bloc
 ## 2026-11 repair: automated evidence
 Actions [43706258205](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43706258205), commit `ffc7b7d`, passed Godot 4.4.1 import/startup, 7 Python data checks, **135 behavioral**, **23 virtual-display camera**, and **13 rendered-image checks**. The latter use a fixed camera and collision ray to confirm a real partition between camera and target, compare red pixels with Instinct off/on, move the target and compare its red centroid, check beyond 16 metres, and check release. Both missions are tested. PNGs for wall comparisons, quality presets, aim and Ruby are in the `instinct-rendered-comparisons` Actions artifact. Preset tests exercise persisted values, viewport scales and the FPS label; images were captured, not a full visual-quality or performance signoff. The camera input test checks shooting Locke completes the objective, camera-ray alignment and obstruction. Earlier behavioral coverage checks the unit disable, three records, two guards, Ivo, extraction, save/load and Ruby skip. The test sets target locations and uses synthetic input, not an end-to-end human route.
 
-Wall images were pixel-analyzed; ceilings, doors, color accessibility, physical input feel, visual animation quality and all presets on the intended device still require manual verification. Windows export and target hardware measurements have not been performed. No external art was imported.
+Wall images were pixel-analyzed; ceilings, doors, color accessibility, physical input feel, visual animation quality and all presets on the intended device still require manual verification. At that older checkpoint Windows export and target hardware measurements had not been performed. No external art was imported.
 
 
 ## Target, aiming and Instinct update

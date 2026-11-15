@@ -1,5 +1,9 @@
 # Performance
 
+## Preset comparison after FXAA change
+Actions [43712369756](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43712369756), commit `20be69e`, 1280×720 Xvfb / Godot 4.4.1 Compatibility / Mesa llvmpipe on a Linux AMD EPYC 9V45 VM, 4 reported CPUs and ~15.6 GiB RAM. Fixed Meridian corridor, 15 warm-up plus 60 sample frames per preset: LOW mean **16.616 ms (60.18 FPS)**, p95 **18.261 ms**; MEDIUM **45.013 ms (22.22 FPS)**, p95 **46.042 ms**; HIGH **51.413 ms (19.45 FPS)**, p95 **52.422 ms**. These are short, noisy software-rendered CI samples, not laptop GPU measurements or complete mission routes. HIGH uses FXAA instead of 2× MSAA, full-scale rendering, shadowless static lobby reflections, optional detail and practical lights. An earlier MSAA run used a different VM and cannot be treated as a controlled hardware comparison.
+
+
 ## Absolute Cinema sample
 Actions run 43711656513, commit `2c94538`, Linux GitHub VM (AMD EPYC 9V74, four reported CPUs, 15.6 GiB), 1280×720 Xvfb, Godot 4.4.1 Compatibility with Mesa llvmpipe: scripted Meridian camera, 120 sampled frames, mean **57.415 ms / 17.42 FPS**, p95 **59.315 ms**, p99 **60.797 ms**. This includes the first dressing and practical-light pass. It is a software-rendered VM result, not the Windows/Iris Xe target, not a complete route and not a renderer comparison. Practical lights and fine detail can be disabled with LOW. No claim of reaching 30–60 FPS on target hardware is possible without a laptop measurement.
 
@@ -21,11 +25,11 @@ Actions run 43702084074 (`0c1ee7b`) used Godot 4.4.1, Linux GitHub VM with AMD E
 
 CI run 43700503344 (`a6c6ca9`): Ubuntu VM, AMD EPYC 9V74, 4 reported CPUs, ~15.6 GiB RAM; 1280×720 Xvfb, Godot 4.4.1 Compatibility, Mesa llvmpipe. Scripted Meridian camera: 120 samples, mean 22.160 ms (45.13 FPS), p95 24.501 ms, p99 25.423 ms; peak RSS 300,348 KiB, first test frame 2,468.572 ms. Headless menu 120-frame process: 1.10 s and 94,760 KiB peak RSS. These are software-rendered synthetic CI measurements, not user-device results.
 
-The historical results below apply to earlier Meridian builds, not the expanded campaign or target Windows/Iris Xe hardware. Main-menu startup and a scripted Meridian camera sample on a CI VM do not measure Initiation or establish playable FPS. Forward+, Mobile and Compatibility have not been benchmarked on the target machine; do not infer a winner. That early version had no graphics presets; the current version has basic scaling/shadow/MSAA presets. Compatibility remains provisional.
+The historical results below apply to earlier Meridian builds, not the expanded campaign or target Windows/Iris Xe hardware. Main-menu startup and a scripted Meridian camera sample on a CI VM do not measure Initiation or establish playable FPS. Forward+, Mobile and Compatibility have not been benchmarked on the target machine; do not infer a winner. That early version had no graphics presets; the current version has basic scaling/shadow/FXAA presets. Compatibility remains provisional.
 
 No representative target-laptop FPS, memory, renderer comparison or load-time benchmark has been measured. The development workspace is a Debian 12 sandbox with 2 reported CPUs and 3.8 GiB RAM, not the specified Windows 11 / Iris Xe laptop. Target Windows version and actual hardware configuration were not inspectable. Goals of 720p, 30–60 FPS and 20–40 NPCs are unverified.
 
-Compatibility is a provisional conservative starting point, **not a benchmark-based selection**. Shadows are disabled, lighting is simple, geometry/materials are primitive, navigation uses a small manually tiled mesh and NPC vision runs every 0.4 seconds. There are only three NPCs and no simulation LOD or quality presets.
+Historical early build note: Compatibility was selected provisionally, not by target-hardware benchmark. The current build has basic quality presets and a small population, but still lacks simulation LOD and target-device renderer comparisons.
 
 On the target laptop, use the same representative scene and camera for Forward+, Mobile and Compatibility. Warm up, then record frame time median, 95th/99th percentiles, FPS, memory, renderer, resolution, power profile, NPC count and build version. Capture a repeatable route and scale population to 20 and 40 before selecting the renderer or optimization. Do not infer target results from headless execution.
 

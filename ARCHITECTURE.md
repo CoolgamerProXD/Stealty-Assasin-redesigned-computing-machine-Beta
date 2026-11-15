@@ -1,7 +1,7 @@
 # Architecture
 
 ## Environment and local reactions
-`EnvironmentDressing` builds two color-instanced box batches and non-shadowing practical lights on top of unchanged collision/navigation layouts. LOW disables practicals and fine detail; MEDIUM enables practicals; HIGH includes fine detail. `DisturbanceSystem` periodically tests each conscious observer's range, facing and physics line of sight to incapacitated NPCs. Only the seeing NPC stores and investigates the observation. `HotelPlayer` retains the spring arm, with interpolated FOV/shoulder and hand-attached procedural weapon blending; objective and movement cues use original synthesized sound.
+`EnvironmentDressing` builds two color-instanced box batches and non-shadowing practical lights on top of unchanged collision/navigation layouts. LOW disables practicals and fine detail; MEDIUM enables practicals; HIGH includes fine detail, FXAA and a single static lobby reflection probe. `DisturbanceSystem` periodically tests each conscious observer's range, facing and physics line of sight to incapacitated NPCs. Only the seeing NPC stores and investigates the observation. `HotelPlayer` retains the spring arm, with interpolated FOV/shoulder and hand-attached procedural weapon blending; objective and movement cues use original synthesized sound.
 
 
 ## Target/aim/Instinct integration
