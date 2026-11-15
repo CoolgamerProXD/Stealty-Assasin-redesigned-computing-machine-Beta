@@ -884,11 +884,18 @@ func run() -> void:
   await process_frame
   var menu: Node = current_scene
   menu.call("_missions")
+  # Let the container lay out before checking that the actual button is on
+  # screen; emitting a signal alone cannot prove mouse reachability.
+  await process_frame
+  await process_frame
   var chosen: Button = null
   for child: Node in menu.get("panel").get_children():
    if child is Button and child.text.contains(preview_name): chosen = child
   check(chosen != null and not chosen.disabled, preview_name + " preview button is clickable")
   if chosen:
+   var bounds := chosen.get_global_rect()
+   var viewport_bounds := root.get_visible_rect()
+   check(viewport_bounds.encloses(bounds), preview_name + " preview button lies within the viewport")
    chosen.pressed.emit()
    await process_frame
    await process_frame
@@ -913,6 +920,14 @@ func run() -> void:
      for actor: HotelNpc in preview_npcs: excludes.append(actor.get_rid())
      query.exclude = excludes
      check(visitor.get_world_3d().direct_space_state.intersect_ray(query).is_empty(), preview_name + " scripted route remains free of solid architecture")
+     var all_routes_clear := true
+     for person: HotelNpc in preview_npcs:
+      var route_start: Vector3 = person.profile.schedule[0].destination + Vector3.UP * 0.8
+      var route_end: Vector3 = person.profile.schedule[1].destination + Vector3.UP * 0.8
+      var route_query := PhysicsRayQueryParameters3D.create(route_start, route_end)
+      route_query.exclude = excludes
+      if not person.get_world_3d().direct_space_state.intersect_ray(route_query).is_empty(): all_routes_clear = false
+     check(all_routes_clear, preview_name + " all scripted visitor routes remain clear of solid scenery")
      if preview_name == "HONG KONG":
       preview_player.global_position = Vector3(8.4,0.05,0)
       preview_player.rotation.y = 0

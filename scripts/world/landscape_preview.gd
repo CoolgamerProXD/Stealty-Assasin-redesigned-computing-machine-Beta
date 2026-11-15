@@ -196,6 +196,36 @@ func _ground(color: Color) -> void:
  for x: float in [-45.0,45.0]: _box(Vector3(x,2,0),Vector3(0.3,4,90),color.darkened(0.2),true)
  for z: float in [-45.0,45.0]: _box(Vector3(0,2,z),Vector3(90,4,0.3),color.darkened(0.2),true)
 
+# Parked street vehicles are fictional low-poly props, not controllable. Their
+# simple body collider is outside all public-space NPC routes and the ramp.
+func _parked_car(x: float, z: float, paint: Color) -> void:
+ var dark := Color(0.11,0.15,0.16)
+ _box(Vector3(x,0.48,z),Vector3(2.25,0.72,4.1),paint,true)
+ _accent(Vector3(x,1.03,z-0.15),Vector3(1.90,0.65,2.0),paint.darkened(0.08))
+ _accent(Vector3(x,1.05,z-1.17),Vector3(1.67,0.43,0.035),Color(0.28,0.42,0.45))
+ _accent(Vector3(x,1.05,z+0.87),Vector3(1.67,0.43,0.035),Color(0.28,0.42,0.45))
+ for side: float in [-1.0,1.0]:
+  _accent(Vector3(x+side*1.14,1.06,z-0.15),Vector3(0.04,0.40,1.75),Color(0.25,0.38,0.41))
+  for dz: float in [-1.3,1.3]:
+   _accent(Vector3(x+side*1.14,0.30,z+dz),Vector3(0.22,0.54,0.70),dark)
+ for dx: float in [-0.78,0.78]:
+  _accent(Vector3(x+dx,0.55,z-2.07),Vector3(0.30,0.17,0.04),Color(0.93,0.82,0.57))
+  _accent(Vector3(x+dx,0.55,z+2.07),Vector3(0.30,0.17,0.04),Color(0.68,0.16,0.12))
+
+func _parked_bus(x: float, z: float) -> void:
+ var red := Color(0.58,0.20,0.16)
+ var glass := Color(0.23,0.36,0.39)
+ _box(Vector3(x,1.76,z),Vector3(2.4,3.5,7.2),red,true)
+ for side: float in [-1.0,1.0]:
+  for y: float in [1.35,2.75]:
+   for dz: float in [-2.7,-1.35,0.0,1.35,2.7]:
+    _accent(Vector3(x+side*1.21,y,z+dz),Vector3(0.04,0.8,1.1),glass)
+  for dz: float in [-2.2,2.2]:
+   _accent(Vector3(x+side*1.22,0.35,z+dz),Vector3(0.25,0.66,0.85),Color(0.10,0.12,0.13))
+ _accent(Vector3(x,2.55,z-3.61),Vector3(2.0,0.75,0.04),glass)
+ _accent(Vector3(x,1.18,z-3.61),Vector3(2.0,0.75,0.04),glass)
+ _accent(Vector3(x,3.20,z-3.63),Vector3(1.7,0.20,0.04),Color(0.90,0.74,0.43))
+
 func _city() -> void:
  _ground(Color(0.34,0.36,0.36))
  var road := Color(0.20,0.23,0.25)
@@ -232,6 +262,23 @@ func _city() -> void:
    for dx: float in [-2.3,0.0,2.3]:
     _accent(Vector3(x+dx,h+extra_height*0.55,z+3.43),Vector3(1.2,extra_height*0.6,0.04),glass)
  _city_walkway()
+ # Parked cars, a double-decker and crossings make the public street legible.
+ # Their bodies are solid and lie beyond the short central visitor routes.
+ _parked_car(-8.9,20,Color(0.67,0.18,0.15))
+ _parked_car(8.9,-18,Color(0.38,0.43,0.42))
+ _parked_bus(-9.2,-27)
+ for z: float in [-5.8,5.8]:
+  for x: float in [-4.5,-3.0,-1.5,0.0,1.5,3.0,4.5]:
+   _accent(Vector3(x,0.075,z),Vector3(0.75,0.02,1.25),Color(0.78,0.76,0.67))
+ # A layered skyline is scenic outside the walkable boundary, not interiors.
+ for i: int in range(13):
+  var x := -45.0 + float(i)*7.5
+  var h := 10.0 + float((i*11)%7)*1.3
+  _accent(Vector3(x,h*0.5,-49),Vector3(6.8,h,3.0),Color(0.20+float(i%3)*0.025,0.28,0.31))
+  for y: float in [4.0,7.0,10.0]:
+   if y < h - 0.5:
+    for dx: float in [-2.0,0.0,2.0]:
+     _accent(Vector3(x+dx,y,-47.47),Vector3(0.7,0.9,0.05),Color(0.52,0.54,0.45))
  # Market stalls, pedestrian streets and waterfront promenade.
  for x: float in [-30.0,-24.0,-18.0,-12.0]:
   _box(Vector3(x,0.55,8),Vector3(3.8,1.1,1.8),Color(0.38,0.25,0.17),true)

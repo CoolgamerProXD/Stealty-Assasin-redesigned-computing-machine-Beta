@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows", "cinema_city_gameplay"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows", "cinema_city_gameplay", "cinema_mission_selection"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -187,6 +187,8 @@ func run() -> void:
  var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
  root.add_child(menu)
  await process_frame
+ menu.call("_missions")
+ await capture("cinema_mission_selection")
  menu.call("_settings")
  await capture("cinema_graphics_settings")
  check(menu.get("panel").get_child_count() > 0, "settings panel opens from main menu")

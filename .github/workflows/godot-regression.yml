@@ -182,7 +182,7 @@ jobs:
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for name in ("cinema_city_gameplay", "cinema_city", "cinema_ngong_ping"):
+          for name in ("cinema_city_gameplay", "cinema_city"):
               path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
               if not path.exists(): continue
               data = base64.b64encode(path.read_bytes()).decode("ascii")
@@ -195,10 +195,11 @@ jobs:
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          path = pathlib.Path("visual-test-output/cinema_hotel_upper_thumb.jpg")
-          if path.exists():
+          for name in ("cinema_hotel_upper", "cinema_ngong_ping", "cinema_mission_selection"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
               data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_cinema_hotel_upper_{i // 3000}::{data[i:i+3000]}")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
           PYCODE
 
   windows:
