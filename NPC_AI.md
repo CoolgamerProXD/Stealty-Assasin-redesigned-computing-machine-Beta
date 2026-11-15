@@ -1,7 +1,7 @@
 # NPC simulation
 
 ## Target and shooting
-Adrian Locke is a separate manager with an authored schedule and the existing local perception/response system. A training pulse temporarily incapacitates a struck NPC; nearby NPCs hear the pulse and investigate its origin. The target must be conscious for confrontation. NPC suspicion, route state and incapacitation remain transient on load.
+Adrian Locke is a separate manager with an authored schedule and the existing local perception/response system. A training pulse temporarily incapacitates a struck NPC; nearby NPCs hear the pulse and investigate its origin. The target must be conscious for confrontation; a successful training pulse independently completes the primary target objective. Quiet Line does not. NPC suspicion, route state and incapacitation remain transient on load.
 
 ## Critical gameplay update
 A nearby unsuppressed training pulse causes NPCs to investigate the player's position. Quiet Line temporarily disables a nearby unobstructed NPC for 12 seconds, after which it returns toward its schedule. Incapacitation and other NPC state are not saved. The assessment unit scans nearby unobstructed players and slows its patrol; it does not conduct a full guard-like investigation.

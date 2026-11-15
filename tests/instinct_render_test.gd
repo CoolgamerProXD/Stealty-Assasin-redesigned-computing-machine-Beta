@@ -83,6 +83,20 @@ func run() -> void:
   var released := await capture(id + "_wall_released")
   var d := red_stats(released)
   check(d.x < c.x - 20, id + " release clears the through-wall silhouette")
+  if id == "hotel":
+   # Save actual rendered preset comparisons with the HUD and physical actor.
+   camera.global_position = Vector3(-4, 2.2, 4)
+   camera.look_at(player.global_position + Vector3.UP, Vector3.UP)
+   var service: Node = root.get_node("Campaign")
+   var old_settings: Dictionary = service.settings.duplicate(true)
+   service.settings["show_fps"] = true
+   for quality: String in ["LOW", "MEDIUM", "HIGH"]:
+    service.settings["graphics"] = quality
+    service.apply_settings()
+    var preset_image := await capture("hotel_preset_" + quality.to_lower())
+    check(not preset_image.is_empty() and world.get("fps_label").visible and world.get("fps_label").text.contains("FPS"), quality + " renders with FPS counter")
+   service.settings = old_settings
+   service.apply_settings()
   world.queue_free()
   await process_frame
  print("VISUAL RESULT: %d checks, %d failures" % [checks, failures])

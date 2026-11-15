@@ -1,5 +1,12 @@
 # Changelog
 
+## Gameplay repair (2026-11)
+- Briefing-known primary targets use a red no-depth-test mesh overlay; visible nearby relevant items remain yellow.
+- A pulse on Adrian completes the primary objective; added simple hand-mounted sidearm poses and flash and more assessment-unit parts.
+- Added persisted viewport quality presets and FPS toggle, compacted HUD, and automated rendered wall comparisons in CI.
+- Production art, comprehensive preset scaling and physical-device playtesting remain outstanding.
+
+
 ## Target, aiming and Instinct update (unreleased)
 - Add scheduled Meridian primary target Adrian Locke while retaining Ivo as witness, and migrate completed legacy checkpoints.
 - Add RMB aim, center-ray LMB firing, collision impacts, audio/trace feedback and five-charge enforcement.

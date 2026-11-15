@@ -5,3 +5,5 @@ No third-party models, textures, animations, sounds, fonts or other art assets h
 Godot 4.4.1 is an external tool/runtime and is not included in the repository; its licences are available at https://godotengine.org/license/. When importing any third-party asset later, record its exact source URL, author, licence and version, attribution, modifications and redistribution conditions here before including it. Downloadability alone is not a licence.
 
 The subsequent target, exterior, facial and clothing refinements also use only original procedural geometry and Godot-generated sky/materials. No additional third-party assets or licences were introduced.
+
+The gameplay repair adds only original procedural meshes; no third-party art, audio, textures or animations were imported.

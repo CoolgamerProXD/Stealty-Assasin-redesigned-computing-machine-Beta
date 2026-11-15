@@ -15,6 +15,26 @@ func check(condition: bool, description: String) -> void:
   printerr("FAIL: ", description)
 
 func run() -> void:
+ var settings_service: Node = root.get_node("Campaign")
+ var settings_backup: Dictionary = settings_service.settings.duplicate(true)
+ var settings_path_backup: String = settings_service.settings_path
+ var isolated_settings := "user://assassin_settings_test_%d.json" % Time.get_ticks_usec()
+ settings_service.settings_path = isolated_settings
+ for quality: String in ["LOW", "MEDIUM", "HIGH"]:
+  settings_service.settings["graphics"] = quality
+  settings_service.settings["show_fps"] = true
+  check(settings_service.save_settings(), quality + " graphics settings save")
+  var scale: float = root.scaling_3d_scale
+  check(is_equal_approx(scale, 0.7 if quality == "LOW" else (0.85 if quality == "MEDIUM" else 1.0)), quality + " applies viewport render scale")
+  settings_service.settings["graphics"] = "MEDIUM"
+  settings_service.settings["show_fps"] = false
+  settings_service._load_settings()
+  check(settings_service.settings["graphics"] == quality and settings_service.settings["show_fps"], quality + " and FPS setting persist")
+ settings_service.settings = settings_backup
+ settings_service.settings_path = settings_path_backup
+ settings_service.apply_settings()
+ for suffix: String in ["", ".bak", ".tmp"]:
+  if FileAccess.file_exists(isolated_settings + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(isolated_settings + suffix))
  check(AccessRules.can_enter("visitor", "public"), "visitor may enter public")
  check(not AccessRules.can_enter("visitor", "staff"), "visitor denied staff")
  check(AccessRules.can_enter("staff", "staff"), "staff granted staff")

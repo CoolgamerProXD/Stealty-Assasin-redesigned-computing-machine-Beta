@@ -15,6 +15,9 @@ func check(condition: bool, description: String) -> void:
   printerr("CAMERA FAIL: ", description)
 
 func run() -> void:
+ var screenshot_dir := OS.get_environment("TEST_SCREENSHOT_DIR")
+ if screenshot_dir.is_empty(): screenshot_dir = ProjectSettings.globalize_path("res://visual-test-output")
+ DirAccess.make_dir_recursive_absolute(screenshot_dir)
  var scene: PackedScene = load("res://scenes/hotel.tscn")
  var world: Node = scene.instantiate()
  root.add_child(world)
@@ -82,6 +85,8 @@ func run() -> void:
  player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
  await physics_frame
  check(player.aiming and world.get("crosshair").is_visible_in_tree(), "right mouse input shows aiming crosshair on virtual display")
+ await RenderingServer.frame_post_draw
+ root.get_texture().get_image().save_png(screenshot_dir.path_join("hotel_aim_gameplay.png"))
  var reticle: Control = world.get("crosshair")
  var view_center := player.camera.get_viewport().get_visible_rect().size * 0.5
  print("CAMERA_DIAG: rect=", reticle.get_global_rect(), " parent_size=", reticle.get_parent().size, " viewport=", view_center, " anchors=", reticle.anchor_left, ",", reticle.anchor_top)
@@ -167,6 +172,9 @@ func run() -> void:
  check(grounded, "cinematic actor roots remain on ground plane through timeline")
  cinematic.call("_apply_timeline", 10.0, 0.0)
  check(cinematic.get("subtitles").text.contains("RUBY"), "Ruby subtitles appear on cinematic timeline")
+ await process_frame
+ await RenderingServer.frame_post_draw
+ root.get_texture().get_image().save_png(screenshot_dir.path_join("ruby_meeting.png"))
  cinematic.queue_free()
  await process_frame
  print("CAMERA RESULT: %d checks, %d failures" % [checks, failures])

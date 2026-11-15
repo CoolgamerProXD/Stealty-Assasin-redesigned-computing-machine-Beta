@@ -3,6 +3,7 @@ extends Node
 const CAMPAIGN_PATH := "user://blackline_campaign.json"
 const SETTINGS_PATH := "user://blackline_settings.json"
 var campaign_path: String = CAMPAIGN_PATH
+var settings_path: String = SETTINGS_PATH
 var progress: CampaignProgress = CampaignProgress.new()
 var active_mission: String = ""
 var load_checkpoint: bool = false
@@ -61,7 +62,7 @@ func item_label(id: String) -> String:
  return id
 
 func _load_settings() -> void:
- var data := SaveStore.read(SETTINGS_PATH)
+ var data := SaveStore.read(settings_path)
  var resolution: Variant = data.get("resolution", "1280x720")
  if resolution is String and resolution in ["1280x720", "1600x900"]: settings["resolution"] = resolution
  var fullscreen: Variant = data.get("fullscreen", false)
@@ -93,4 +94,4 @@ func apply_settings() -> void:
 
 func save_settings() -> bool:
  apply_settings()
- return SaveStore.write(SETTINGS_PATH, settings)
+ return SaveStore.write(settings_path, settings)
