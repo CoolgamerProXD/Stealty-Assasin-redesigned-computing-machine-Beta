@@ -1,5 +1,9 @@
 # Performance
 
+## 2026-11 gameplay repair sample
+Actions run 43706258205, commit `ffc7b7d`, Godot 4.4.1 Compatibility, 1280×720 Xvfb/Mesa llvmpipe, Linux VM with AMD EPYC 9V74 and 4 reported CPUs: the scripted Meridian camera sample (120 frames after warm-up) measured mean **55.778 ms / 17.93 FPS**, p95 **63.221 ms**, p99 **64.829 ms**; first test process frame **1204.345 ms**. Default MEDIUM enables shadows and 85% 3D scale. This software-rendered CI sample is slower than earlier unshadowed samples and is not representative of Intel Iris Xe, Windows, a complete gameplay route, or a renderer comparison. LOW disables these shadows and lowers scale; it has not been benchmarked on the laptop. The 30–60 FPS target remains unverified.
+
+
 ## Target/Instinct update caveat
 
 CI run 43704290753 (`aaff1c2`) used Godot 4.4.1 on Ubuntu with AMD EPYC 9V45, 4 reported CPUs, ~15.6 GiB RAM and Mesa llvmpipe under Xvfb at 1280×720. The scripted Meridian camera sample of 120 frames measured mean **18.987 ms / 52.67 FPS**, p95 **19.942 ms**, p99 **20.392 ms**; engine clock to first test frame **2,965.374 ms**. Headless 120-frame menu startup process: **1.10 s**, **95,036 KiB** peak RSS. Synthetic CI only: no conclusions about Intel Iris Xe, the cinematic or actual play.
@@ -13,7 +17,7 @@ Actions run 43702084074 (`0c1ee7b`) used Godot 4.4.1, Linux GitHub VM with AMD E
 
 CI run 43700503344 (`a6c6ca9`): Ubuntu VM, AMD EPYC 9V74, 4 reported CPUs, ~15.6 GiB RAM; 1280×720 Xvfb, Godot 4.4.1 Compatibility, Mesa llvmpipe. Scripted Meridian camera: 120 samples, mean 22.160 ms (45.13 FPS), p95 24.501 ms, p99 25.423 ms; peak RSS 300,348 KiB, first test frame 2,468.572 ms. Headless menu 120-frame process: 1.10 s and 94,760 KiB peak RSS. These are software-rendered synthetic CI measurements, not user-device results.
 
-The historical results below apply to earlier Meridian builds, not the expanded campaign or target Windows/Iris Xe hardware. Main-menu startup and a scripted Meridian camera sample on a CI VM do not measure Initiation or establish playable FPS. Forward+, Mobile and Compatibility have not been benchmarked on the target machine; do not infer a winner. No scalable graphics-quality presets have been added. Compatibility remains provisional.
+The historical results below apply to earlier Meridian builds, not the expanded campaign or target Windows/Iris Xe hardware. Main-menu startup and a scripted Meridian camera sample on a CI VM do not measure Initiation or establish playable FPS. Forward+, Mobile and Compatibility have not been benchmarked on the target machine; do not infer a winner. That early version had no graphics presets; the current version has basic scaling/shadow/MSAA presets. Compatibility remains provisional.
 
 No representative target-laptop FPS, memory, renderer comparison or load-time benchmark has been measured. The development workspace is a Debian 12 sandbox with 2 reported CPUs and 3.8 GiB RAM, not the specified Windows 11 / Iris Xe laptop. Target Windows version and actual hardware configuration were not inspectable. Goals of 720p, 30–60 FPS and 20–40 NPCs are unverified.
 

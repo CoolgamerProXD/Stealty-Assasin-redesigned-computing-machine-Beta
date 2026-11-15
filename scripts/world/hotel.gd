@@ -8,6 +8,7 @@ var npcs: Array[HotelNpc] = []
 var primary_npc: HotelNpc
 var hud: Label
 var prompt: Label
+var prompt_panel: PanelContainer
 var equipment_hud: Label
 var crosshair: Control
 var shot_audio: AudioStreamPlayer
@@ -259,6 +260,7 @@ func _build_ui() -> void:
  equipment_hud.add_theme_font_size_override("font_size", 17)
  right.add_child(equipment_hud)
  var bottom := PanelContainer.new()
+ prompt_panel = bottom
  bottom.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
  bottom.offset_left = 20
  bottom.offset_right = 850
@@ -573,3 +575,4 @@ func _process(_delta: float) -> void:
  crosshair.visible = player.aiming
  var nearest := _nearest()
  prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message
+ prompt_panel.visible = not prompt.text.strip_edges().is_empty()
