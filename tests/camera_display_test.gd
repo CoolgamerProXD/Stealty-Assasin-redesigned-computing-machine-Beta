@@ -168,7 +168,7 @@ func run() -> void:
   cinematic.call("_apply_timeline", moment, 0.0)
   if absf(cinematic.get("actor").position.y) > 0.001 or absf(cinematic.get("ruby").position.y) > 0.001: grounded = false
   for figure: StylizedPerson in [cinematic.get("actor"), cinematic.get("ruby")]:
-   var shoe := figure.left_leg.get_child(1) as MeshInstance3D
+   var shoe := figure.left_knee.get_child(1) as MeshInstance3D
    if shoe.global_position.y - 0.06 < -0.01: grounded = false
  check(grounded, "cinematic actor roots remain on ground plane through timeline")
  cinematic.call("_apply_timeline", 10.0, 0.0)

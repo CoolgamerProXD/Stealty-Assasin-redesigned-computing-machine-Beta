@@ -21,7 +21,7 @@ var crouching: bool = false
 var collision_shape: CollisionShape3D
 var stance_height: float = 1.8
 var camera_kick: float = 0.0
-var footstep_clock: float = 0.0
+var last_footstep_index: int = 0
 var footsteps: AudioStreamPlayer3D
 
 func _ready() -> void:
@@ -51,7 +51,7 @@ func _ready() -> void:
  camera.current = true
  camera.fov = 68.0
  footsteps = AudioStreamPlayer3D.new()
- footsteps.stream = ProceduralSound.tone(90.0, 0.07, 0.035)
+ footsteps.stream = ProceduralSound.footstep()
  footsteps.max_distance = 6.0
  add_child(footsteps)
  pivot.rotation.x = -0.22
@@ -109,7 +109,7 @@ func _physics_process(delta: float) -> void:
  var capsule := collision_shape.shape as CapsuleShape3D
  capsule.height = stance_height
  collision_shape.position.y = stance_height * 0.5
- body_mesh.scale.y = stance_height / 1.8
+ body_mesh.crouch_amount = clampf((1.8 - stance_height) / 0.65, 0.0, 1.0)
  body_mesh.weapon_equipped = equipment.selected == "training_sidearm"
  body_mesh.weapon_aiming = aiming and body_mesh.weapon_equipped
  pivot.position.y = 1.5 * stance_height / 1.8
@@ -127,13 +127,12 @@ func _physics_process(delta: float) -> void:
  elif aiming:
   body_mesh.rotation.y = lerp_angle(body_mesh.rotation.y, 0.0, 1.0 - exp(-delta * 12.0))
  body_mesh.animate_motion(delta, moving_speed)
- if is_on_floor() and moving_speed > 0.5:
-  footstep_clock -= delta
-  if footstep_clock <= 0.0:
-   footsteps.pitch_scale = 0.85 if crouching else (1.15 if moving_speed > 3.3 else 1.0)
-   footsteps.play()
-   footstep_clock = clampf(PI / (2.6 * moving_speed), 0.27, 0.85)
- else: footstep_clock = minf(footstep_clock, 0.1)
+ # Trigger steps from the same phase driving the legs, not a separate timer.
+ var step_index := floori(body_mesh.phase / PI)
+ if is_on_floor() and moving_speed > 0.5 and step_index != last_footstep_index:
+  footsteps.pitch_scale = 0.85 if crouching else (1.15 if moving_speed > 3.3 else 1.0)
+  footsteps.play()
+ last_footstep_index = step_index
 
 # Test the full standing capsule against real geometry; never grow through a ceiling.
 func _can_stand() -> bool:

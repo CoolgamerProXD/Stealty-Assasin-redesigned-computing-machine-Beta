@@ -608,6 +608,7 @@ func run() -> void:
  Input.action_press("crouch")
  await create_timer(0.4).timeout
  check(init_player.crouching and init_player.stance_height < 1.3 and init_player.pivot.position.y < 1.2, "crouch smoothly lowers collision and camera")
+ check(init_player.body_mesh.scale == Vector3.ONE and init_player.body_mesh.upper_body.position.y < -0.35 and init_player.body_mesh.left_knee.rotation.x < -0.8, "crouch bends knees and lowers torso without shrinking character")
  var ceiling := StaticBody3D.new()
  var ceiling_collision := CollisionShape3D.new()
  var ceiling_box := BoxShape3D.new()
@@ -623,6 +624,7 @@ func run() -> void:
  ceiling.queue_free()
  await create_timer(0.4).timeout
  check(not init_player.crouching and init_player.stance_height > 1.75, "player stands after crouch when space is clear")
+ check(init_player.body_mesh.upper_body.position.y > -0.2 and absf(init_player.body_mesh.left_knee.rotation.x) < 0.5, "standing smoothly restores posture")
  check(init_npcs[0].global_position.distance_to(start_guard) > 0.2, "Initiation guard follows its route")
  for init_guard: HotelNpc in init_npcs: init_guard.collision_layer = 0
  var nearby: Interactable = init_objects[0]

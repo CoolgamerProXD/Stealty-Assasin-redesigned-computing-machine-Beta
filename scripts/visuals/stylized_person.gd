@@ -5,6 +5,10 @@ var role: String = "visitor"
 var appearance_seed: int = 0
 var left_leg: Node3D
 var right_leg: Node3D
+var left_knee: Node3D
+var right_knee: Node3D
+var upper_body: Node3D
+var crouch_amount: float = 0.0
 var left_arm: Node3D
 var right_arm: Node3D
 var torso: MeshInstance3D
@@ -21,16 +25,19 @@ var idle_activity: String = "idle"
 var clothing: StandardMaterial3D
 
 func _ready() -> void:
+ upper_body = Node3D.new()
+ upper_body.name = "UpperBody"
+ add_child(upper_body)
  var skin_variants: Array[Color] = [Color(0.68, 0.46, 0.34), Color(0.46, 0.29, 0.23), Color(0.76, 0.57, 0.46), Color(0.56, 0.39, 0.30)]
  var hair_variants: Array[Color] = [Color(0.12, 0.13, 0.15), Color(0.23, 0.15, 0.12), Color(0.10, 0.09, 0.08)]
  var skin := _material(skin_variants[absi(appearance_seed) % skin_variants.size()])
  var dark := _material(hair_variants[absi(appearance_seed) % hair_variants.size()])
  clothing = _material(_role_color())
  var trousers := _material(Color(0.16, 0.18, 0.20))
- torso = _box(self, Vector3(0, 1.22, 0), Vector3(0.48, 0.60, 0.24), clothing)
+ torso = _box(upper_body, Vector3(0, 1.22, 0), Vector3(0.48, 0.60, 0.24), clothing)
  torso.mesh = _jacket_mesh()
- _box(self, Vector3(0, 0.91, 0), Vector3(0.42, 0.16, 0.23), trousers)
- _box(self, Vector3(0, 1.56, 0), Vector3(0.14, 0.12, 0.14), skin)
+ _box(upper_body, Vector3(0, 0.91, 0), Vector3(0.42, 0.16, 0.23), trousers)
+ _box(upper_body, Vector3(0, 1.56, 0), Vector3(0.14, 0.12, 0.14), skin)
  var head := MeshInstance3D.new()
  var sphere := SphereMesh.new()
  sphere.radius = 0.15
@@ -40,39 +47,39 @@ func _ready() -> void:
  head.mesh = sphere
  head.position = Vector3(0, 1.73, 0)
  head.material_override = skin
- add_child(head)
- _box(self, Vector3(0, 1.88, 0.015), Vector3(0.28, 0.07, 0.23), dark)
+ upper_body.add_child(head)
+ _box(upper_body, Vector3(0, 1.88, 0.015), Vector3(0.28, 0.07, 0.23), dark)
  var eye := _material(Color(0.08, 0.09, 0.10))
- _box(self, Vector3(-0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
- _box(self, Vector3(0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
- _box(self, Vector3(0, 1.72, -0.158), Vector3(0.035, 0.045, 0.04), skin)
- _box(self, Vector3(0, 1.66, -0.143), Vector3(0.07, 0.012, 0.015), dark)
+ _box(upper_body, Vector3(-0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
+ _box(upper_body, Vector3(0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
+ _box(upper_body, Vector3(0, 1.72, -0.158), Vector3(0.035, 0.045, 0.04), skin)
+ _box(upper_body, Vector3(0, 1.66, -0.143), Vector3(0.07, 0.012, 0.015), dark)
  # Lapels, collar and belt establish clothed silhouettes instead of a capsule.
- _box(self, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70)))
- _box(self, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark)
+ _box(upper_body, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70)))
+ _box(upper_body, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark)
  # Visible jacket seams, collar and a small lapel accent give the silhouette
  # structure without introducing any imported assets.
  for x: float in [-0.17, 0.17]:
-  _box(self, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark)
- _box(self, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin)
- left_leg = _limb(Vector3(-0.12, 0.88, 0), Vector3(0.16, 0.76, 0.18), trousers)
- right_leg = _limb(Vector3(0.12, 0.88, 0), Vector3(0.16, 0.76, 0.18), trousers)
- _box(left_leg, Vector3(0, -0.82, -0.06), Vector3(0.18, 0.12, 0.30), dark)
- _box(right_leg, Vector3(0, -0.82, -0.06), Vector3(0.18, 0.12, 0.30), dark)
- left_arm = _limb(Vector3(-0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing)
- right_arm = _limb(Vector3(0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing)
+  _box(upper_body, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark)
+ _box(upper_body, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin)
+ left_leg = _leg(Vector3(-0.12, 0.88, 0), trousers, dark)
+ right_leg = _leg(Vector3(0.12, 0.88, 0), trousers, dark)
+ left_knee = left_leg.get_node("Knee")
+ right_knee = right_leg.get_node("Knee")
+ left_arm = _limb(Vector3(-0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing, upper_body)
+ right_arm = _limb(Vector3(0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing, upper_body)
  _box(left_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
  _box(right_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
  if role == "security":
-  _box(self, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65)))
-  _box(self, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
+  _box(upper_body, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65)))
+  _box(upper_body, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
  if role == "ruby":
-  _box(self, Vector3(0, 1.61, 0.12), Vector3(0.29, 0.48, 0.09), dark)
-  _box(self, Vector3(0, 1.03, 0.02), Vector3(0.48, 0.40, 0.25), clothing)
-  _box(self, Vector3(0, 1.40, -0.15), Vector3(0.06, 0.24, 0.02), _material(Color(0.68, 0.41, 0.32)))
+  _box(upper_body, Vector3(0, 1.61, 0.12), Vector3(0.29, 0.48, 0.09), dark)
+  _box(upper_body, Vector3(0, 1.03, 0.02), Vector3(0.48, 0.40, 0.25), clothing)
+  _box(upper_body, Vector3(0, 1.40, -0.15), Vector3(0.06, 0.24, 0.02), _material(Color(0.68, 0.41, 0.32)))
  if role == "manager":
-  _box(self, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20)))
-  _box(self, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31)))
+  _box(upper_body, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20)))
+  _box(upper_body, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31)))
 
 # Original stylized assessment sidearm, attached to the animated hand joint.
 func add_sidearm() -> void:
@@ -84,6 +91,10 @@ func add_sidearm() -> void:
  var accent := _material(Color(0.36, 0.54, 0.58))
  _box(weapon, Vector3(0, -0.16, 0), Vector3(0.10, 0.34, 0.10), metal)
  _box(weapon, Vector3(0, -0.13, 0.07), Vector3(0.08, 0.13, 0.10), accent)
+ # Project-original stylised device: a separate grip, casing and front sight.
+ _box(weapon, Vector3(0, -0.04, 0.085), Vector3(0.085, 0.18, 0.09), metal)
+ _box(weapon, Vector3(0, -0.25, -0.055), Vector3(0.07, 0.17, 0.025), accent)
+ _box(weapon, Vector3(0, -0.34, -0.03), Vector3(0.04, 0.03, 0.04), metal)
  var flash_mat := _material(Color(1.0, 0.85, 0.32))
  flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
  muzzle_flash = _box(weapon, Vector3(0, -0.38, 0), Vector3(0.13, 0.14, 0.13), flash_mat)
@@ -115,8 +126,16 @@ func animate_motion(delta: float, speed: float) -> void:
  weapon_aim_blend = move_toward(weapon_aim_blend, 1.0 if weapon_aiming and weapon_equipped else 0.0, delta * 4.0)
  torso.rotation.z = sin(idle_phase * 0.5) * 0.008
  torso.rotation.x = sin(idle_phase * 0.5) * 0.008
- left_leg.rotation.x = lerp_angle(left_leg.rotation.x, swing, blend)
- right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -swing, blend)
+ # Independent knees bend during swing and crouch. Torso descends without
+ # squashing the head or changing the model's horizontal proportions.
+ upper_body.position.y = lerpf(upper_body.position.y, -0.70 * crouch_amount, blend)
+ left_leg.position.y = lerpf(left_leg.position.y, 0.88 - 0.52 * crouch_amount, blend)
+ right_leg.position.y = left_leg.position.y
+ var stride := swing * (1.0 - 0.45 * crouch_amount)
+ left_leg.rotation.x = lerp_angle(left_leg.rotation.x, stride + 1.10 * crouch_amount, blend)
+ right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -stride + 1.10 * crouch_amount, blend)
+ left_knee.rotation.x = lerp_angle(left_knee.rotation.x, -2.20 * crouch_amount - maxf(0.0, -swing) * 0.65, blend)
+ right_knee.rotation.x = lerp_angle(right_knee.rotation.x, -2.20 * crouch_amount - maxf(0.0, swing) * 0.65, blend)
  var left_pose := -swing * 0.7
  if speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
  elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(idle_phase * 0.5) * 0.06
@@ -161,9 +180,22 @@ func _box(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshIns
  parent.add_child(part)
  return part
 
-func _limb(pos: Vector3, size: Vector3, mat: Material) -> Node3D:
+func _limb(pos: Vector3, size: Vector3, mat: Material, parent: Node3D) -> Node3D:
  var joint := Node3D.new()
  joint.position = pos
- add_child(joint)
+ parent.add_child(joint)
  _box(joint, Vector3(0, -size.y * 0.5, 0), size, mat)
  return joint
+
+func _leg(pos: Vector3, trousers: Material, shoes: Material) -> Node3D:
+ var hip := Node3D.new()
+ hip.position = pos
+ add_child(hip)
+ _box(hip, Vector3(0,-0.195,0), Vector3(0.16,0.39,0.18), trousers)
+ var knee := Node3D.new()
+ knee.name = "Knee"
+ knee.position = Vector3(0,-0.39,0)
+ hip.add_child(knee)
+ _box(knee, Vector3(0,-0.195,0), Vector3(0.14,0.39,0.16), trousers)
+ _box(knee, Vector3(0,-0.42,-0.06), Vector3(0.18,0.12,0.30), shoes)
+ return hip
