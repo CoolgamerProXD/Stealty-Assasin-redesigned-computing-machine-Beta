@@ -1,8 +1,11 @@
 class_name HotelPlayer
 extends CharacterBody3D
 signal interaction_requested
+signal equipment_use_requested
+signal equipment_selected(slot: int)
 var role: String = "visitor"
 var inventory: Inventory = Inventory.new()
+var equipment: MissionEquipment = MissionEquipment.new()
 var walk_speed: float = 2.7
 var run_speed: float = 4.7
 var crouch_speed: float = 1.5
@@ -62,6 +65,9 @@ func _unhandled_input(event: InputEvent) -> void:
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
  if event.is_action_pressed("interact"):
   interaction_requested.emit()
+ if event.is_action_pressed("equip_primary"): equipment_selected.emit(0)
+ if event.is_action_pressed("equip_secondary"): equipment_selected.emit(1)
+ if event.is_action_pressed("use_equipment"): equipment_use_requested.emit()
 
 func _physics_process(delta: float) -> void:
  var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")

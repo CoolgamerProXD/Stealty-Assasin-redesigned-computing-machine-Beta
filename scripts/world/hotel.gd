@@ -7,6 +7,7 @@ var interactables: Array[Interactable] = []
 var npcs: Array[HotelNpc] = []
 var hud: Label
 var prompt: Label
+var equipment_hud: Label
 var message: String = ""
 
 func mission_id() -> String:
@@ -105,6 +106,9 @@ func _build_player() -> void:
  player.position = Vector3(-9, 0.05, 5)
  add_child(player)
  player.interaction_requested.connect(_interact_nearest)
+ player.equipment.configure(Campaign.progress, mission_id())
+ player.equipment_use_requested.connect(_use_equipment)
+ player.equipment_selected.connect(_select_equipment)
 
 func _vector(data: Array) -> Vector3:
  return Vector3(float(data[0]), float(data[1]), float(data[2]))
@@ -158,14 +162,98 @@ func _build_interactions() -> void:
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()
  add_child(canvas)
+ var overlay := Control.new()
+ overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ canvas.add_child(overlay)
+ var left := PanelContainer.new()
+ left.position = Vector2(20, 20)
+ left.custom_minimum_size = Vector2(485, 0)
+ left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ var style := StyleBoxFlat.new()
+ style.bg_color = Color(0.025, 0.04, 0.05, 0.88)
+ style.border_width_left = 3
+ style.border_color = Color(0.75, 0.54, 0.31)
+ style.content_margin_left = 16
+ style.content_margin_right = 16
+ style.content_margin_top = 12
+ style.content_margin_bottom = 12
+ left.add_theme_stylebox_override("panel", style)
+ overlay.add_child(left)
  hud = Label.new()
- hud.position = Vector2(24, 20)
- hud.add_theme_font_size_override("font_size", 20)
- canvas.add_child(hud)
+ hud.custom_minimum_size.x = 450
+ hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ hud.add_theme_font_size_override("font_size", 17)
+ left.add_child(hud)
+ var right := PanelContainer.new()
+ right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+ right.offset_left = -315
+ right.offset_right = -20
+ right.offset_top = 20
+ right.offset_bottom = 150
+ right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ right.add_theme_stylebox_override("panel", style.duplicate())
+ overlay.add_child(right)
+ equipment_hud = Label.new()
+ equipment_hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ equipment_hud.add_theme_font_size_override("font_size", 17)
+ right.add_child(equipment_hud)
+ var bottom := PanelContainer.new()
+ bottom.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+ bottom.offset_left = 20
+ bottom.offset_right = 850
+ bottom.offset_top = -105
+ bottom.offset_bottom = -20
+ bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ bottom.add_theme_stylebox_override("panel", style.duplicate())
+ overlay.add_child(bottom)
  prompt = Label.new()
- prompt.position = Vector2(24, 620)
- prompt.add_theme_font_size_override("font_size", 21)
- canvas.add_child(prompt)
+ prompt.add_theme_font_size_override("font_size", 16)
+ bottom.add_child(prompt)
+
+func _select_equipment(slot: int) -> void:
+ if player.equipment.select_slot(slot):
+  message = "Equipped: " + Campaign.item_label(player.equipment.selected)
+ else: message = "No equipment in that slot."
+
+func _use_equipment() -> void:
+ if player.equipment.selected == "training_sidearm":
+  if player.equipment.charges <= 0:
+   message = "Training sidearm empty."
+   return
+  player.equipment.charges -= 1
+  var hit := false
+  for obj: Interactable in interactables:
+   if obj.kind == "robot" and not obj.used and _clear_reach(obj.global_position, 7.0):
+    _on_interaction(obj)
+    hit = true
+    break
+  # An unsuppressed assessment pulse is audible to nearby characters.
+  for npc: HotelNpc in npcs:
+   if npc.stunned_time <= 0 and npc.global_position.distance_to(player.global_position) < 9.0:
+    npc.observe_trespass(player.global_position)
+  if not hit: message = "Training pulse discharged; nearby people may investigate."
+ elif player.equipment.selected == "quiet_line":
+  var nearest: HotelNpc = null
+  var best := 1.8
+  for npc: HotelNpc in npcs:
+   var distance := npc.global_position.distance_to(player.global_position)
+   if distance < best and npc.stunned_time <= 0 and _clear_reach(npc.global_position, 1.8, npc.get_rid()):
+    nearest = npc
+    best = distance
+  if nearest:
+   nearest.stunned_time = 12.0
+   nearest.set_state("disabled")
+   message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
+  else: message = "Quiet Line requires a nearby unobstructed person."
+
+func _clear_reach(point: Vector3, maximum: float, excluded: RID = RID()) -> bool:
+ if player.global_position.distance_to(point) > maximum: return false
+ var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, point + Vector3.UP)
+ var exclusions: Array[RID] = [player.get_rid()]
+ if excluded.is_valid(): exclusions.append(excluded)
+ query.exclude = exclusions
+ return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 func _nearest() -> Interactable:
  var best: Interactable = null
@@ -239,7 +327,14 @@ func _process(_delta: float) -> void:
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0
  for npc: HotelNpc in npcs: highest = maxf(highest, npc.suspicion)
- var title := "INITIATION  /  ASSESSMENT" if mission_id() == "initiation" else "THE MERIDIAN  /  MISSING ARCHIVE"
- hud.text = title + "\n%s  ·  %s (%s)  ·  Awareness %.0f%%\n%s\n%s\n%s" % [player.role.to_upper(), area.to_upper(), access, highest, mission.progress_text(), mission.objective_text(), message]
+ var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
+ var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "MISSING ARCHIVE"
+ var target_state := "OFFLINE" if mission.action_complete else "ACTIVE"
+ if mission_id() != "initiation": target_state = "EVIDENCE SEARCH"
+ hud.text = title + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + mission.progress_text() + "\n" + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
+ var slots := "1  TRAINING SIDEARM"
+ if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"
+ equipment_hud.text = "EQUIPMENT\n" + slots + "\nEQUIPPED  /  " + Campaign.item_label(player.equipment.selected).to_upper()
+ if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
  var nearest := _nearest()
- prompt.text = ("E  " + nearest.label + "\n" if nearest else "") + "WASD move  ·  mouse look  ·  Shift run  ·  C crouch  ·  F5 save  ·  F9 load  ·  Esc pause"
+ prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message + "\n1 / 2 select   ·   Q use   ·   C crouch   ·   Esc pause"

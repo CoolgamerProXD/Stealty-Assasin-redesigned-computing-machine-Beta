@@ -108,7 +108,7 @@ func _start(id: String, resume: bool) -> void:
 func _loadout() -> void:
  _clear()
  _text("LOADOUT", 30)
- _text("Equipment selection is saved; equipment use is not implemented yet.", 17)
+ _text("Training sidearm is standard. Select Quiet Line as your optional item after unlocking it.", 17)
  for entry: Dictionary in Campaign.progress.equipment:
   var id := str(entry["id"])
   var unlocked: bool = Campaign.progress.item_unlocked(id)

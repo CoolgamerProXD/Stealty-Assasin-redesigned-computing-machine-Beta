@@ -11,9 +11,12 @@ static func capture(player: HotelPlayer, mission: Mission) -> Dictionary:
   "clues": mission.clues.duplicate(),
   "extracted": mission.extracted,
   "action_complete": mission.action_complete,
+  "equipment": player.equipment.snapshot(),
  }
 
 static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, objects: Array[Interactable], position_validator: Callable = Callable()) -> void:
+ var mission_id := "initiation" if mission.required_action == "disable_assessment_unit" else "meridian"
+ player.equipment.restore(data.get("equipment"), Campaign.progress, mission_id)
  var role: Variant = data.get("role", "visitor")
  player.set_disguise(role if role is String and role in KNOWN_ROLES else "visitor")
  var clues: Array[String] = []

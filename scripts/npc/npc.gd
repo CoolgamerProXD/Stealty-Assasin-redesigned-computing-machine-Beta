@@ -15,6 +15,7 @@ var investigation_time: float = 0.0
 var perception_clock: float = 0.0
 var agent: NavigationAgent3D
 var facing: Vector3 = Vector3.FORWARD
+var stunned_time: float = 0.0
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -88,6 +89,13 @@ func can_see(target: Vector3, unobstructed: bool = true) -> bool:
 
 func _physics_process(delta: float) -> void:
  if profile == null: return
+ if stunned_time > 0.0:
+  stunned_time = maxf(0.0, stunned_time - delta)
+  velocity = Vector3.ZERO
+  if stunned_time == 0.0:
+   set_state("returning")
+   if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+  return
  advance_simulation(delta)
  # Perception is throttled by the physics clock, not checked every frame.
  perception_clock += delta
