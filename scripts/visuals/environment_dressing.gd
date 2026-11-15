@@ -14,7 +14,9 @@ const TEAL := Color(0.15, 0.29, 0.30)
 
 func build(id: String) -> void:
  name = "EnvironmentDressing"
- if id == "meridian": _hotel()
+ if id == "meridian":
+  _hotel()
+  _hotel_wing()
  else: _annex()
  _batch(core_transforms, core_colors, false)
  _batch(detail_transforms, detail_colors, true)
@@ -168,6 +170,98 @@ func _hotel() -> void:
  _lamp(Vector3(-5, 2.65, 3), Color(1.0, 0.73, 0.48), 0.45, 7.0)
  _lamp(Vector3(4.5, 2.6, 0), Color(0.65, 0.82, 1.0), 0.35, 6.0)
  _lamp(Vector3(9.5, 2.6, 0), Color(0.65, 0.82, 1.0), 0.35, 6.0)
+
+# West wing detail uses the same instanced box batches as the original lobby.
+# Furnishings are deliberately outside the circulation and scripted routes.
+func _hotel_wing() -> void:
+ var ivory := Color(0.76, 0.72, 0.63)
+ var walnut := Color(0.25, 0.15, 0.11)
+ var bronze := Color(0.64, 0.46, 0.25)
+ var teal := Color(0.15, 0.28, 0.29)
+ var carpet := Color(0.29, 0.17, 0.16)
+ # A continuous runner and inlaid edge lead from the old lobby to the wing.
+ _part(Vector3(-27,0.022,-2), Vector3(29.5,0.014,3.5), carpet)
+ for z: float in [-3.65,-0.35]:
+  _part(Vector3(-27,0.035,z), Vector3(29.3,0.015,0.045), bronze)
+ for x: float in [-40.0,-34.0,-28.0,-22.0,-16.0]:
+  _part(Vector3(x,0.042,-2), Vector3(0.055,0.018,3.0), Color(0.46,0.31,0.23), true)
+ # Paneled walls, picture lights and framed abstract art give navigational rhythm.
+ for floor_y: float in [0.0,3.6]:
+  for x: float in [-39.0,-33.0,-27.0,-21.0,-15.0]:
+   for z: float in [-15.82,15.82]:
+    _part(Vector3(x,floor_y+0.52,z), Vector3(5.5,0.95,0.06), walnut)
+    _part(Vector3(x,floor_y+1.04,z), Vector3(5.5,0.06,0.08), bronze)
+    _part(Vector3(x,floor_y+2.68,z), Vector3(5.5,0.05,0.08), bronze)
+    for dx: float in [-2.35,2.35]:
+     _part(Vector3(x+dx,floor_y+1.9,z),Vector3(0.055,1.45,0.06),ivory, true)
+  # The small ceiling coves and fixtures are geometry, not extra shadow lights.
+  for x: float in [-39.0,-33.0,-27.0,-21.0,-15.0]:
+   _part(Vector3(x,floor_y+3.30,-2), Vector3(2.0,0.045,0.85), walnut)
+   _part(Vector3(x,floor_y+3.27,-2), Vector3(1.65,0.025,0.57), Color(0.95,0.79,0.55))
+   _part(Vector3(x,floor_y+3.23,-2), Vector3(0.65,0.04,0.14), Color(1.0,0.89,0.67), true)
+ # Windows are stylised landscape panels with curtains on the public lounge side;
+ # they don't cut holes into collision walls or imply an exterior accessible area.
+ for x: float in [-38.0,-30.0,-22.0,-15.0]:
+  _part(Vector3(x,1.93,15.73),Vector3(3.7,2.05,0.10),walnut)
+  _part(Vector3(x,1.93,15.66),Vector3(3.35,1.74,0.04),Color(0.19,0.31,0.36))
+  _part(Vector3(x,1.50,15.62),Vector3(3.20,0.12,0.025),Color(0.43,0.47,0.42), true)
+  for dx: float in [-1.83,1.83]:
+   _part(Vector3(x+dx,1.95,15.55),Vector3(0.27,2.1,0.20),Color(0.45,0.38,0.32))
+  _part(Vector3(x,2.08,15.60),Vector3(0.05,1.75,0.03),bronze)
+ # Dining place settings, table bases and distinct upholstered chair silhouettes.
+ for x: float in [-38.0,-31.0,-24.0,-17.0]:
+  _part(Vector3(x,0.16,-10),Vector3(1.9,0.30,0.9),walnut)
+  for dx: float in [-0.8,0.8]:
+   _part(Vector3(x+dx,0.97,-10),Vector3(0.47,0.025,0.40),ivory)
+   _part(Vector3(x+dx,1.00,-10),Vector3(0.30,0.015,0.25),Color(0.94,0.90,0.80),true)
+   _part(Vector3(x+dx+0.26,1.02,-10),Vector3(0.055,0.08,0.055),bronze,true)
+  for z: float in [-11.55,-8.45]:
+   _part(Vector3(x,0.46,z),Vector3(1.15,0.14,0.62),teal)
+   _part(Vector3(x,0.82,z + (-0.30 if z < -10.0 else 0.30)),Vector3(1.15,0.78,0.12),teal)
+   for dx: float in [-0.43,0.43]:
+    for dz: float in [-0.22,0.22]:
+     _part(Vector3(x+dx,0.20,z+dz),Vector3(0.07,0.4,0.07),walnut)
+ # Framed prints and console cabinets subdivide the large room visually.
+ for x: float in [-36.0,-26.0,-16.0]:
+  _part(Vector3(x,1.85,-15.72),Vector3(2.25,1.4,0.08),bronze)
+  _part(Vector3(x,1.85,-15.66),Vector3(2.04,1.19,0.04),Color(0.22,0.32,0.32))
+  _part(Vector3(x-0.25,1.85,-15.62),Vector3(0.09,0.9,0.025),Color(0.77,0.55,0.34),true)
+  _part(Vector3(x+0.25,1.85,-15.62),Vector3(0.09,0.7,0.025),Color(0.60,0.68,0.59),true)
+ # Lounge tables, textiles and planters.
+ for x: float in [-38.0,-30.0,-22.0,-15.0]:
+  _part(Vector3(x,0.50,9.2),Vector3(1.7,0.10,0.8),walnut)
+  for dx: float in [-0.65,0.65]:
+   _part(Vector3(x+dx,0.25,9.2),Vector3(0.07,0.50,0.55),bronze)
+  _part(Vector3(x,0.03,10),Vector3(3.3,0.018,3.3),Color(0.36,0.23,0.20))
+  for dx: float in [-0.75,0.75]:
+   _part(Vector3(x+dx,0.85,11.2),Vector3(0.5,0.42,0.2),Color(0.34,0.43,0.41),true)
+ for x: float in [-40.3,-34.0,-26.0,-18.0,-13.5]:
+  _part(Vector3(x,0.3,13.7),Vector3(0.6,0.6,0.6),Color(0.32,0.27,0.21))
+  _part(Vector3(x,0.85,13.7),Vector3(0.13,1.0,0.13),walnut)
+  for dx: float in [-0.27,0.0,0.27]:
+   _part(Vector3(x+dx,1.45+absf(dx)*0.3,13.7),Vector3(0.36,0.60,0.42),Color(0.19,0.34,0.22))
+ # Upper gallery door frames, floor runner, room numbers and suite furnishings.
+ _part(Vector3(0,3.645,0),Vector3(23.5,0.018,2.7),carpet)
+ for z: float in [-1.24,1.24]:
+  _part(Vector3(0,3.66,z),Vector3(23.4,0.015,0.035),bronze)
+ for x: float in [-9.0,-3.0,3.0,9.0]:
+  for side: float in [-1.0,1.0]:
+   for dx: float in [-0.72,0.72]:
+    _part(Vector3(x+dx,5.12,side*3.91),Vector3(0.08,2.95,0.12),walnut)
+   _part(Vector3(x,6.60,side*3.91),Vector3(1.50,0.09,0.12),walnut)
+   _part(Vector3(x+1.15,5.45,side*3.89),Vector3(0.32,0.22,0.04),bronze)
+   _part(Vector3(x,3.69,side*5.8),Vector3(3.5,0.03,3.4),Color(0.42,0.32,0.27),true)
+ # Locke's private suite: bed headboard, art, nightstands and warm reading lamps.
+ _part(Vector3(-38,4.75,-12.12),Vector3(4.2,1.5,0.16),walnut)
+ _part(Vector3(-38,4.70,-12.01),Vector3(3.8,1.15,0.06),Color(0.38,0.31,0.26))
+ for x: float in [-40.5,-35.5]:
+  _part(Vector3(x,3.98,-11.2),Vector3(0.72,0.76,0.72),walnut)
+  _part(Vector3(x,4.43,-11.2),Vector3(0.07,0.38,0.07),bronze)
+  _part(Vector3(x,4.68,-11.2),Vector3(0.42,0.20,0.42),Color(0.86,0.76,0.58))
+ _part(Vector3(-38,5.75,-13.84),Vector3(3.0,1.0,0.06),bronze)
+ _part(Vector3(-38,5.75,-13.79),Vector3(2.8,0.8,0.04),Color(0.25,0.34,0.32))
+ _part(Vector3(-41.8,5.0,-9.0),Vector3(0.08,1.8,2.6),walnut)
+ _part(Vector3(-41.72,5.0,-9.0),Vector3(0.035,1.55,2.35),Color(0.24,0.35,0.39))
 
 func _annex() -> void:
  # A cooler training facility with numbered assessment lanes and observation desks.

@@ -253,6 +253,15 @@ func _build_meridian_wing() -> void:
   add_child(sign)
  _box(Vector3(-27,7.1,0),Vector3(30,0.2,32),Color(0.32,0.32,0.30),false)
  _box(Vector3(0,7.1,0),Vector3(24,0.2,16),Color(0.32,0.32,0.30),false)
+ # Locally scheduled staff and guests use a dedicated wing navigation region.
+ # It is deliberately not advertised as a cross-floor or cross-wing path.
+ var wing_region := NavigationRegion3D.new()
+ wing_region.name = "WestWingNavigation"
+ var wing_nav := NavigationMesh.new()
+ wing_nav.vertices = PackedVector3Array([Vector3(-41,0,-6.5),Vector3(-13,0,-6.5),Vector3(-13,0,-0.8),Vector3(-41,0,-0.8)])
+ wing_nav.add_polygon(PackedInt32Array([0,3,2,1]))
+ wing_region.navigation_mesh = wing_nav
+ add_child(wing_region)
  # Navigation on the original floor remains untouched; the stationary target
  # receives a separate upper region. NPCs do not yet route across the ramp.
  var region := NavigationRegion3D.new()
@@ -307,6 +316,31 @@ func _build_npcs() -> void:
   primary_npc.position = _vector(data_target["start"])
   add_child(primary_npc)
   npcs.append(primary_npc)
+
+ # Small, deterministic wing population. Routes stay on this floor and away
+ # from solid tables; upstairs guest is idle instead of fake cross-floor routing.
+ _wing_guest("Lina Chow", "employee", Vector3(-35,0.05,-3), Vector3(-18,0,-3), "working")
+ _wing_guest("Arun Sen", "civilian", Vector3(-18,0.05,-5), Vector3(-34,0,-5), "waiting")
+ var visitor := HotelNpc.new()
+ visitor.profile = NpcProfile.new()
+ visitor.profile.identity = "Elena Hart"
+ visitor.profile.occupation = "civilian"
+ visitor.position = Vector3(-17,3.65,-2)
+ add_child(visitor)
+ visitor.set_state("conversing")
+ npcs.append(visitor)
+
+func _wing_guest(identity: String, role: String, start: Vector3, end: Vector3, activity: String) -> void:
+ var profile := NpcProfile.new()
+ profile.identity = identity
+ profile.occupation = role
+ profile.schedule.append(ScheduleEntry.new(end, activity, 5.0))
+ profile.schedule.append(ScheduleEntry.new(start, "waiting", 4.0))
+ var npc := HotelNpc.new()
+ npc.profile = profile
+ npc.position = start
+ add_child(npc)
+ npcs.append(npc)
 
 func _add_interactable(pos: Vector3, title: String, kind: String, id: String, color: Color) -> void:
  var object := Interactable.new()

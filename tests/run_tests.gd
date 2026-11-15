@@ -120,7 +120,7 @@ func run() -> void:
  settings_service.settings["graphics"] = old_quality
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
- check(player != null and npcs.size() == 4, "hotel creates player, three existing NPCs and the scheduled target")
+ check(player != null and npcs.size() == 7, "hotel preserves existing NPCs and adds three wing visitors")
  var spawned: Array[Interactable] = world.get("interactables")
  var spawned_ids: Array[String] = []
  for obj: Interactable in spawned:
@@ -128,6 +128,10 @@ func run() -> void:
  var world_mission: Mission = world.get("mission")
  check(spawned_ids.size() == world_mission.available_records.size() and spawned_ids.size() == 3, "every configured record spawns exactly once")
  check(spawned_ids.has("ledger") and spawned_ids.has("memo") and spawned_ids.has("archive"), "all unique configured records spawn")
+ var wing_npc: HotelNpc = npcs[4]
+ var wing_start := wing_npc.global_position
+ await create_timer(1.5).timeout
+ check(wing_npc.global_position.distance_to(wing_start) > 0.2 and wing_npc.global_position.y < 0.5, "wing staff follows a local ground-floor route")
  var npc: HotelNpc = npcs[0]
  var npc_start := npc.global_position
  await create_timer(2.5).timeout
