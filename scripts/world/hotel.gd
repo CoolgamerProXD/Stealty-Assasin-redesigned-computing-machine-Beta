@@ -348,6 +348,7 @@ func _fire() -> void:
  var hit := get_world_3d().direct_space_state.intersect_ray(query)
  if not hit.is_empty():
   end = hit["position"]
+  _impact_flash(end)
   var collider: Object = hit["collider"]
   if collider is Area3D and collider.get_parent() is Interactable:
    var object := collider.get_parent() as Interactable
@@ -373,6 +374,22 @@ func _fire() -> void:
  last_shot_end = end
  shot_audio.play()
  _shot_trace(origin, end)
+
+func _impact_flash(point: Vector3) -> void:
+ var flash := MeshInstance3D.new()
+ var mesh := SphereMesh.new()
+ mesh.radius = 0.09
+ mesh.height = 0.18
+ flash.mesh = mesh
+ var material := StandardMaterial3D.new()
+ material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ material.albedo_color = Color(0.7, 0.95, 1.0)
+ flash.material_override = material
+ add_child(flash)
+ flash.global_position = point
+ var tween := create_tween()
+ tween.tween_interval(0.13)
+ tween.tween_callback(flash.queue_free)
 
 func _shot_trace(origin: Vector3, end: Vector3) -> void:
  var trace := MeshInstance3D.new()

@@ -19,6 +19,10 @@ func capture(name: String) -> Image:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
+ if name in ["hotel_wall_on", "initiation_wall_on", "hotel_preset_high"]:
+  var thumb := image.duplicate() as Image
+  thumb.resize(320, 180)
+  thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.55)
  return image
 
 func red_stats(image: Image) -> Vector2:
@@ -78,6 +82,12 @@ func run() -> void:
   var c := red_stats(moved)
   print("VISUAL_METRIC: %s moved=%d centroid=%.1f" % [id, c.x, c.y])
   check(c.x > a.x + 20 and absf(c.y - b.y) > 10, id + " red silhouette follows target movement")
+  target.global_position = Vector3(20, 0.05, 0)
+  var distant := await capture(id + "_wall_distant")
+  var far_stats := red_stats(distant)
+  print("VISUAL_METRIC: %s distant=%d" % [id, far_stats.x])
+  check(far_stats.x > a.x + 8, id + " silhouette remains visible beyond the former 16 metre limit")
+  target.global_position = Vector3(4.2, 0.05, 0.8)
   key.pressed = false
   Input.parse_input_event(key.duplicate())
   var released := await capture(id + "_wall_released")
