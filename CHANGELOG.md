@@ -1,3 +1,9 @@
+# Hong Kong direction checkpoint
+
+- Preserved Initiation and legacy Meridian, including save paths; added locked planned chapter entries and an explicitly incomplete Tung Chung exploration preview.
+- Added a fictional station blockout with a small scheduled crowd and two physical character concepts. No train encounter or campaign completion is claimed. Added station, city and respectful Ngong Ping map/target plans.
+- Completed Meridian target state is now terminal, separate from temporary incapacitation, idempotent, and checkpointed with its visual outcome. Removed the experimental lobby reflection probe after a rendered lighting regression.
+
 # Changelog
 
 ## Absolute Cinema iteration

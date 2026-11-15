@@ -1,3 +1,7 @@
+# Current lighting note
+
+The experimental HIGH lobby reflection probe was removed after a rendered regression showed near-black lobby surfaces. The measurements below are historical and include the probe; they do not benchmark the current build or the Tung Chung preview. Target Iris Xe performance is unmeasured.
+
 # Performance
 
 ## Preset comparison after FXAA change

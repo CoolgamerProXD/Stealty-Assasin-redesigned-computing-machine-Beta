@@ -1,7 +1,11 @@
+# Current Hong Kong checkpoint
+
+`TungChungPreview` is a separate exploratory scene, not an assignment: it uses the existing player and scheduled NPC classes, a fictional rectangular navmesh and original modular geometry. Its lack of mission state, shooting, checkpoints, Instinct and train mechanics is intentional and visible in the menu. Meridian keeps its existing mission identity and checkpoint; planned Hong Kong chapters have no scene and cannot be unlocked as playable. Completed physical Meridian targets have a terminal NPC state separate from temporary incapacitation; the checkpoint stores whether the objective was completed with a downed pose.
+
 # Architecture
 
 ## Environment and local reactions
-`EnvironmentDressing` builds two color-instanced box batches and non-shadowing practical lights on top of unchanged collision/navigation layouts. LOW disables practicals and fine detail; MEDIUM enables practicals; HIGH includes fine detail, FXAA and a single static lobby reflection probe. `DisturbanceSystem` periodically tests each conscious observer's range, facing and physics line of sight to incapacitated NPCs. Only the seeing NPC stores and investigates the observation. `HotelPlayer` retains the spring arm, with interpolated FOV/shoulder and hand-attached procedural weapon blending; objective and movement cues use original synthesized sound.
+`EnvironmentDressing` builds two color-instanced box batches and non-shadowing practical lights on top of unchanged collision/navigation layouts. LOW disables practicals and fine detail; MEDIUM enables practicals; HIGH includes fine detail and FXAA. The experimental probe was removed after a rendered luminance regression. `DisturbanceSystem` periodically tests each conscious observer's range, facing and physics line of sight to incapacitated NPCs. Only the seeing NPC stores and investigates the observation. `HotelPlayer` retains the spring arm, with interpolated FOV/shoulder and hand-attached procedural weapon blending; objective and movement cues use original synthesized sound.
 
 
 ## Target/aim/Instinct integration

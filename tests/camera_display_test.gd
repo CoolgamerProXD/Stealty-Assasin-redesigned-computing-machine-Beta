@@ -98,7 +98,7 @@ func run() -> void:
  await process_frame
  await physics_frame
  await process_frame
- check(target.stunned_time > 0.0 and player.equipment.charges == 4, "center shot hits physical target and consumes charge")
+ check(target.objective_completed and target.completed_incapacitated and player.equipment.charges == 4, "center shot permanently completes physical target and consumes charge")
  check(float(reticle.get("hit_timer")) > 0.0, "valid hit displays reticle confirmation")
  check(world.get("mission").target_complete, "shot at Locke completes primary objective")
  check(player.body_mesh.weapon_equipped and player.body_mesh.weapon.visible, "equipped sidearm is attached to player hand")

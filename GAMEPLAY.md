@@ -1,3 +1,9 @@
+# Current direction and preview
+
+Hong Kong is the planned campaign direction; Meridian remains optional legacy content. The main-menu Tung Chung entry is a map preview, not a mission. E observes either nearby character, and Escape returns to the menu; it has no combat, Instinct, save, mission goals, train story or opportunities. See HONG_KONG_MAP_PLAN.md.
+
+A Meridian target completed by a pulse remains incapacitated and cannot resume its routine; a target completed by conversation remains standing but exits active AI. Completion and pose survive checkpoints. Quiet Line and non-target pulse incapacitation remain temporary.
+
 # Gameplay
 
 The shoulder and FOV interpolate during aim, and the sidearm's procedural pose draws, raises, recoils and lowers with the selected equipment. The fixed five-charge assessment device does not reload. Visible incapacitated people can prompt nearby NPC investigations; use actual cover rather than relying on crouch alone. The HUD's local-alert wording is not a guarantee that no other NPC can see you.
