@@ -132,6 +132,19 @@ func run() -> void:
  var second_leg_mesh: Mesh = (npcs[1].person.left_leg.get_child(0) as MeshInstance3D).mesh
  check(first_leg_mesh == second_leg_mesh and npcs[0].person.torso.mesh == npcs[1].person.torso.mesh, "identical character primitives share immutable mesh resources")
  check(npcs[0].person.clothing != npcs[1].person.clothing, "shared character meshes retain independent clothing materials")
+ var gait_figure := StylizedPerson.new()
+ world.add_child(gait_figure)
+ var maximum_float := 0.0
+ var maximum_sink := 0.0
+ for frame: int in range(180):
+  gait_figure.animate_motion(1.0 / 60.0, 3.8)
+  if frame > 30:
+   var low_foot := minf(gait_figure._shoe_bottom(gait_figure.left_leg, gait_figure.left_knee), gait_figure._shoe_bottom(gait_figure.right_leg, gait_figure.right_knee)) + gait_figure.ground_adjust
+   maximum_float = maxf(maximum_float, low_foot)
+   maximum_sink = maxf(maximum_sink, -low_foot)
+ print("GAIT_DIAG: float=", maximum_float, " sink=", maximum_sink)
+ check(maximum_float < 0.035 and maximum_sink < 0.035, "procedural running stride keeps a shoe near the ground plane")
+ gait_figure.queue_free()
  check(str(world.call("footstep_surface", Vector3(-25,0,-2))) == "carpet" and str(world.call("footstep_surface", Vector3(-25,0,-10))) == "wood", "hotel chooses footstep surfaces from local flooring")
  var furniture := world.get_node_or_null("EnvironmentDressing/HotelFurniture")
  check(furniture != null and furniture.get_child_count() >= 20, "Meridian instantiates authored seating, lamps and plants")

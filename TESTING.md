@@ -1,3 +1,7 @@
+# Latest confirmed baseline before the gait correction
+
+[Run 43769963435](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43769963435) at `0fb0915` passed 7 Python checks, 219 behavioral checks, 19 accelerated physical NPC round-trip checks, 24 camera checks, 15 rendered checks and 10 cinematic/UI checks. The Windows export launched the main menu, both missions and all three previews headlessly without logged errors. [Windows build](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43769963435/artifacts/14183976984); [scripted screenshots](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43769963435/artifacts/14183697394). These tests are automated and staged, not an interactive Windows playthrough; Iris Xe results remain unmeasured. Later commits require their own run.
+
 # Second-pass automated checkpoint
 
 GitHub Actions [43763906406](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43763906406) at `71a7e2b`: 7 Python data checks, 183 behavioral checks, 24 camera/display checks, 15 rendered image checks, and 10 cinematic/UI checks passed. The suite exercises the wing ramp and suite, a ground-floor wing route, local preview visitors, crouch posture, Initiation and Meridian Instinct, checkpoint behavior and selector return. Render captures use scripted/staged cameras and Linux Xvfb software rendering; they are not a human interactive playthrough. Windows export and headless executable launch also passed at `0bd3c93` in [43764214562](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43764214562); this does not establish interactive playability.
@@ -52,11 +56,12 @@ The Godot 4.4.1 workflow runs the existing Meridian regression suite and added c
 With Godot 4.4.1 installed, from the repository root:
 
 ```sh
-godot --headless --editor --path . --quit
+godot --path . --import
 godot --headless --path . --script res://tests/run_tests.gd
+godot --headless --path . --script res://tests/npc_route_soak_test.gd
 ```
 
-The first command imports resources and registers global script classes. The second must exit 0 and print the check/failure totals. It exercises access, inventory, objective uniqueness and extraction, memory expiry, versioned/corrupt saves and backup recovery, snapshot restoration, FOV decisions, NPC reaction/recovery, disguise permissions, physics input, navigation detours, actual ray occlusion and the world's interaction path. It is not a substitute for an interactive graphics/navigation playtest. Save tests use uniquely named `user://assassin_test_*.json` files and remove them and their `.bak`/`.tmp` files; they do not touch the playable save.
+Run the import with a working graphics display/driver: Godot 4.4.1 can emit spurious null-texture errors when its dummy renderer generates GLB previews. CI uses Xvfb and Mesa for import. The first command imports resources and registers global script classes. The second must exit 0 and print the check/failure totals. It exercises access, inventory, objective uniqueness and extraction, memory expiry, versioned/corrupt saves and backup recovery, snapshot restoration, FOV decisions, NPC reaction/recovery, disguise permissions, physics input, navigation detours, actual ray occlusion and the world's interaction path. The separate route-cycle test uses accelerated physics to exercise both endpoints of three Meridian wing routes and all 16 station routes; it does not prove general obstacle avoidance or human playability. It is not a substitute for an interactive graphics/navigation playtest. Save tests use uniquely named `user://assassin_test_*.json` files and remove them and their `.bak`/`.tmp` files; they do not touch the playable save.
 
 ## Historical results before runtime verification
 

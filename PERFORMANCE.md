@@ -1,3 +1,7 @@
+# Latest software-only sample
+
+Run [43769963435](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43769963435), `0fb0915`, Godot 4.4.1 Compatibility at 1280×720 on a Linux Xvfb/Mesa llvmpipe VM, 60 sampled frames per preset: Meridian LOW 31.986 ms / 31.26 FPS, MEDIUM 96.326 ms / 10.38 FPS, HIGH 112.128 ms / 8.92 FPS; station LOW 36.272 ms / 27.57 FPS, MEDIUM 98.305 ms / 10.17 FPS, HIGH 105.416 ms / 9.49 FPS. This software-only sample varies significantly between CI runners and is not comparable to the target Windows/Iris Xe laptop. No renderer comparison or target-device benchmark has been performed.
+
 # Second-pass synthetic sample
 
 Actions [43763906406](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43763906406), `71a7e2b`, Godot 4.4.1 Compatibility, 1280×720 Xvfb/Mesa llvmpipe on a Linux AMD EPYC 9V74 VM with four reported CPUs: fixed Meridian view, 15 warmup and 60 sampled frames per preset, LOW mean 19.706 ms (50.75 FPS), MEDIUM 63.519 ms (15.74 FPS), HIGH 74.837 ms (13.36 FPS). The station sample was LOW 22.295 ms (44.85 FPS), MEDIUM 60.593 ms (16.50 FPS), HIGH 65.816 ms (15.19 FPS). These short, noisy software-rendered samples are not measurements on the Windows Iris Xe target, an interactive route, or comparisons of Forward+, Mobile and Compatibility. Target 30–60 FPS remains unverified; more culling/optimization and hardware tests are needed.

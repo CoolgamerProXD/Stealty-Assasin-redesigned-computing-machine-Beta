@@ -25,6 +25,7 @@ var weapon_aim_blend: float = 0.0
 var phase: float = 0.0
 var idle_phase: float = 0.0
 var idle_activity: String = "idle"
+var ground_adjust: float = 0.0
 var clothing: StandardMaterial3D
 # Identical immutable primitive meshes are reused across the population. Each
 # person retains independent materials, transforms and animated joints.
@@ -136,16 +137,28 @@ func animate_motion(delta: float, speed: float) -> void:
  torso.rotation.x = sin(idle_phase * 0.5) * 0.008
  # Independent knees bend during swing and crouch. Torso descends without
  # squashing the head or changing the model's horizontal proportions.
- upper_body.position.y = lerpf(upper_body.position.y, -0.70 * crouch_amount, blend)
+ upper_body.position.y = lerpf(upper_body.position.y, -0.70 * crouch_amount + ground_adjust, blend)
  var lean := -0.055 * clampf((gait_speed - 2.7) / 2.0, 0.0, 1.0) - 0.08 * crouch_amount
  upper_body.rotation.x = lerp_angle(upper_body.rotation.x, lean, blend)
- left_leg.position.y = lerpf(left_leg.position.y, 0.88 - 0.52 * crouch_amount, blend)
+ left_leg.position.y = lerpf(left_leg.position.y, 0.88 - 0.52 * crouch_amount + ground_adjust, blend)
  right_leg.position.y = left_leg.position.y
  var stride := swing * (1.0 - 0.45 * crouch_amount)
  left_leg.rotation.x = lerp_angle(left_leg.rotation.x, stride + 1.10 * crouch_amount, blend)
  right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -stride + 1.10 * crouch_amount, blend)
  left_knee.rotation.x = lerp_angle(left_knee.rotation.x, -2.20 * crouch_amount - maxf(0.0, -swing) * 0.65, blend)
  right_knee.rotation.x = lerp_angle(right_knee.rotation.x, -2.20 * crouch_amount - maxf(0.0, swing) * 0.65, blend)
+ # Compensate the procedural stride for the lowest shoe, without moving the
+ # collision capsule. This is a small visual hip offset, not full terrain IK.
+ # Both feet previously floated together at the extremes of a stride.
+ var correction := 0.0
+ if crouch_amount < 0.05:
+  var low_foot := minf(_shoe_bottom(left_leg, left_knee), _shoe_bottom(right_leg, right_knee))
+  correction = clampf(-low_foot, -0.20, 0.04) * clampf(gait_speed / 0.5, 0.0, 1.0)
+ var adjustment_delta := correction - ground_adjust
+ upper_body.position.y += adjustment_delta
+ left_leg.position.y += adjustment_delta
+ right_leg.position.y += adjustment_delta
+ ground_adjust = correction
  var left_pose := -swing * 0.7
  if speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
  elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(idle_phase * 0.5) * 0.06
@@ -162,6 +175,16 @@ func animate_motion(delta: float, speed: float) -> void:
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
+
+# Approximate the low point of the rotating ellipsoid shoe in character-local
+# space. The shared root is already grounded by CharacterBody3D; we deliberately
+# remove last frame's visual adjustment before computing the next one.
+func _shoe_bottom(hip: Node3D, knee: Node3D) -> float:
+ var thigh_angle := hip.rotation.x
+ var foot_angle := thigh_angle + knee.rotation.x
+ var center_y := hip.position.y - ground_adjust - 0.39 * cos(thigh_angle) - 0.42 * cos(foot_angle) + 0.06 * sin(foot_angle)
+ var radius_y := 0.5 * sqrt(pow(0.12 * cos(foot_angle), 2.0) + pow(0.30 * sin(foot_angle), 2.0))
+ return center_y - radius_y
 
 func _jacket_mesh() -> ArrayMesh:
  if jacket_mesh: return jacket_mesh
