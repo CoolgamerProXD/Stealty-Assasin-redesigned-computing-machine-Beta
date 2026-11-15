@@ -40,6 +40,9 @@ func _ready() -> void:
  if not mission.configure(mission_data):
   push_error("Invalid or missing Meridian mission configuration")
  _build_environment()
+ var dressing := EnvironmentDressing.new()
+ add_child(dressing)
+ dressing.build(mission_id())
  _build_player()
  if mission.configured and mission.required_records > player.inventory.capacity:
   push_error("Mission requires more records than the inventory can hold")

@@ -85,6 +85,10 @@ func apply_settings() -> void:
  viewport.positional_shadow_atlas_size = 2048 if quality == "HIGH" else (1024 if quality == "MEDIUM" else 0)
  for light: Node in get_tree().get_nodes_in_group("quality_lights"):
   (light as Light3D).shadow_enabled = quality != "LOW"
+ for light: Node in get_tree().get_nodes_in_group("quality_practicals"):
+  (light as Light3D).visible = quality != "LOW"
+ for detail: Node in get_tree().get_nodes_in_group("quality_detail"):
+  (detail as Node3D).visible = quality == "HIGH"
  var master := AudioServer.get_bus_index("Master")
  if master >= 0: AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, float(settings["volume"]))))
  if DisplayServer.get_name() != "headless":
