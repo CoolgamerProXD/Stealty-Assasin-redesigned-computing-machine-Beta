@@ -48,12 +48,19 @@ func run() -> void:
   player.set_physics_process(false)
   player.global_position = Vector3(0.4, 0.05, 0)
   target.global_position = Vector3(4.2, 0.05, 0)
-  player.camera.global_position = Vector3(0.5, 1.35, 0)
-  player.camera.look_at(target.global_position + Vector3.UP * 0.9, Vector3.UP)
+  # The SpringArm owns its camera transform even if the player is paused.
+  # Use a fixed camera for reproducible wall-occlusion screenshots.
+  var camera := Camera3D.new()
+  world.add_child(camera)
+  camera.global_position = Vector3(0.5, 1.35, 0)
+  camera.look_at(target.global_position + Vector3.UP * 0.9, Vector3.UP)
+  camera.make_current()
+  player.camera = camera
   await physics_frame
   var ray := PhysicsRayQueryParameters3D.create(player.camera.global_position, target.global_position + Vector3.UP * 0.9)
   ray.exclude = [player.get_rid()]
   var hit := world.get_world_3d().direct_space_state.intersect_ray(ray)
+  print("VISUAL_METRIC: ", id, " camera=", player.camera.global_position, " target=", target.global_position, " hit=", hit)
   check(not hit.is_empty() and hit["position"].x < 2.2, id + " has real solid wall between camera and target")
   var off := await capture(id + "_wall_off")
   var key := InputEventKey.new()
