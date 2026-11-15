@@ -91,7 +91,7 @@ func run() -> void:
  # Hide upper slabs only for a staged architectural plan, then restore them.
  var hidden_upper: Array[Node3D] = []
  for child: Node in hotel.get_children():
-  if child is Node3D and is_equal_approx(child.position.y, 3.45):
+  if child is Node3D and child != camera and child.position.y >= 3.3:
    child.visible = false
    hidden_upper.append(child)
  await capture("cinema_lower_plan")
@@ -123,15 +123,18 @@ func run() -> void:
  player.camera.make_current()
  for i: int in range(20): await physics_frame
  await capture("cinema_weapon_idle")
+ # Stage a close pose on the clear west-wing runner, away from the lobby sofa.
+ player.global_position = Vector3(-20,0.05,-5)
  Input.action_press("crouch")
  for i: int in range(30): await physics_frame
- camera.global_position = player.global_position + Vector3(2.8,1.4,3.2)
+ camera.global_position = player.global_position + Vector3(2.0,1.35,2.5)
  camera.look_at(player.global_position + Vector3.UP * 0.75, Vector3.UP)
  camera.make_current()
  await capture("cinema_player_crouch")
  player.camera.make_current()
  check(player.body_mesh.crouch_amount > 0.9 and player.body_mesh.left_knee.rotation.x < -1.0, "crouch pose bends rather than compressing the whole model")
  Input.action_release("crouch")
+ player.global_position = Vector3(-9,0.05,1.5)
  for i: int in range(30): await physics_frame
  var aim := InputEventMouseButton.new()
  aim.button_index = MOUSE_BUTTON_RIGHT
