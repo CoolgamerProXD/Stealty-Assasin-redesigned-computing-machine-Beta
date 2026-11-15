@@ -3,6 +3,7 @@ extends CharacterBody3D
 signal interaction_requested
 signal equipment_use_requested
 signal equipment_selected(slot: int)
+signal fire_requested
 var role: String = "visitor"
 var inventory: Inventory = Inventory.new()
 var equipment: MissionEquipment = MissionEquipment.new()
@@ -12,6 +13,8 @@ var crouch_speed: float = 1.5
 var mouse_sensitivity: float = 0.0025
 var pivot: Node3D
 var camera: Camera3D
+var arm: SpringArm3D
+var aiming: bool = false
 var body_mesh: StylizedPerson
 var crouching: bool = false
 var collision_shape: CollisionShape3D
@@ -33,7 +36,7 @@ func _ready() -> void:
  pivot = Node3D.new()
  pivot.position.y = 1.5
  add_child(pivot)
- var arm := SpringArm3D.new()
+ arm = SpringArm3D.new()
  arm.spring_length = 4.0
  arm.margin = 0.2
  pivot.add_child(arm)
@@ -53,9 +56,14 @@ func _unhandled_input(event: InputEvent) -> void:
   rotate_y(-event.relative.x * mouse_sensitivity)
   pivot.rotation.x = clampf(pivot.rotation.x - event.relative.y * mouse_sensitivity, -0.95, 0.55)
  if event.is_action_pressed("release_mouse"):
+  aiming = false
   Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  if event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
   Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+  return
+ if event.is_action_pressed("aim") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED: aiming = true
+ if event.is_action_released("aim"): aiming = false
+ if event.is_action_pressed("fire") and aiming and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED: fire_requested.emit()
  if event.is_action_pressed("interact"):
   interaction_requested.emit()
  if event.is_action_pressed("equip_primary"): equipment_selected.emit(0)
@@ -63,6 +71,9 @@ func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("use_equipment"): equipment_use_requested.emit()
 
 func _physics_process(delta: float) -> void:
+ var blend := minf(1.0, delta * 9.0)
+ arm.spring_length = lerpf(arm.spring_length, 2.4 if aiming else 4.0, blend)
+ arm.position.x = lerpf(arm.position.x, 0.55 if aiming else 0.0, blend)
  var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
  var direction := transform.basis * Vector3(input.x, 0, input.y)
  var wants_crouch := Input.is_action_pressed("crouch")

@@ -85,7 +85,7 @@ func mark_target(id: String) -> bool:
  return true
 
 func can_extract() -> bool:
- var primary_done := primary_target.is_empty() or primary_target.get("id") == "assessment_unit" or target_complete
+ var primary_done: bool = primary_target.is_empty() or primary_target.get("id") == "assessment_unit" or target_complete
  return configured and clues.size() >= required_records and (required_action.is_empty() or action_complete) and primary_done
 
 func extract() -> bool:

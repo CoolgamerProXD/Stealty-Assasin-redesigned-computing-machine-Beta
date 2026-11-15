@@ -9,6 +9,8 @@ var primary_npc: HotelNpc
 var hud: Label
 var prompt: Label
 var equipment_hud: Label
+var crosshair: Label
+var shot_audio: AudioStreamPlayer
 var message: String = ""
 
 func mission_id() -> String:
@@ -121,6 +123,7 @@ func _build_player() -> void:
  player.interaction_requested.connect(_interact_nearest)
  player.equipment.configure(Campaign.progress, mission_id())
  player.equipment_use_requested.connect(_use_equipment)
+ player.fire_requested.connect(_fire)
  player.equipment_selected.connect(_select_equipment)
 
 func _vector(data: Array) -> Vector3:
@@ -251,6 +254,24 @@ func _build_ui() -> void:
  bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
  bottom.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(bottom)
+ crosshair = Label.new()
+ crosshair.text = "+"
+ crosshair.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ crosshair.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+ crosshair.add_theme_font_size_override("font_size", 32)
+ crosshair.add_theme_color_override("font_outline_color", Color.BLACK)
+ crosshair.add_theme_constant_override("outline_size", 4)
+ crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ crosshair.set_anchors_preset(Control.PRESET_CENTER)
+ crosshair.offset_left = -20
+ crosshair.offset_right = 20
+ crosshair.offset_top = -20
+ crosshair.offset_bottom = 20
+ crosshair.visible = false
+ overlay.add_child(crosshair)
+ shot_audio = AudioStreamPlayer.new()
+ shot_audio.stream = ProceduralSound.tone(180.0, 0.12, 0.14)
+ add_child(shot_audio)
  prompt = Label.new()
  prompt.add_theme_font_size_override("font_size", 16)
  bottom.add_child(prompt)
@@ -262,21 +283,7 @@ func _select_equipment(slot: int) -> void:
 
 func _use_equipment() -> void:
  if player.equipment.selected == "training_sidearm":
-  if player.equipment.charges <= 0:
-   message = "Training sidearm empty."
-   return
-  player.equipment.charges -= 1
-  var hit := false
-  for obj: Interactable in interactables:
-   if obj.kind == "robot" and not obj.used and _clear_reach(obj.global_position, 7.0):
-    _on_interaction(obj)
-    hit = true
-    break
-  # An unsuppressed assessment pulse is audible to nearby characters.
-  for npc: HotelNpc in npcs:
-   if npc.stunned_time <= 0 and npc.global_position.distance_to(player.global_position) < 9.0:
-    npc.observe_trespass(player.global_position)
-  if not hit: message = "Training pulse discharged; nearby people may investigate."
+  message = "Aim with right mouse, then fire with left mouse."
  elif player.equipment.selected == "quiet_line":
   var nearest: HotelNpc = null
   var best := 1.8
@@ -290,6 +297,59 @@ func _use_equipment() -> void:
    nearest.set_state("disabled")
    message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
   else: message = "Quiet Line requires a nearby unobstructed person."
+
+func _fire() -> void:
+ if not player.aiming: return
+ if player.equipment.selected != "training_sidearm":
+  message = "Select the training sidearm to fire."
+  return
+ if player.equipment.charges <= 0:
+  message = "Training sidearm empty."
+  return
+ player.equipment.charges -= 1
+ var screen_center := player.camera.get_viewport().get_visible_rect().size * 0.5
+ var origin := player.camera.project_ray_origin(screen_center)
+ var direction := player.camera.project_ray_normal(screen_center)
+ var end := origin + direction * 50.0
+ var query := PhysicsRayQueryParameters3D.create(origin, end)
+ query.exclude = [player.get_rid()]
+ query.collide_with_areas = true
+ var hit := get_world_3d().direct_space_state.intersect_ray(query)
+ if not hit.is_empty():
+  end = hit["position"]
+  var collider: Object = hit["collider"]
+  if collider is Area3D and collider.get_parent() is Interactable:
+   var object := collider.get_parent() as Interactable
+   if object.kind == "robot" and not object.used: _on_interaction(object)
+   else: message = "Assessment pulse hit an inactive unit."
+  elif collider is HotelNpc:
+   var npc := collider as HotelNpc
+   npc.stunned_time = 12.0
+   npc.set_state("disabled")
+   message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
+  else: message = "Assessment pulse struck a surface."
+ else: message = "Assessment pulse discharged."
+ for npc: HotelNpc in npcs:
+  if npc.stunned_time <= 0 and npc.global_position.distance_to(player.global_position) < 9.0:
+   npc.observe_trespass(player.global_position)
+ shot_audio.play()
+ _shot_trace(origin, end)
+
+func _shot_trace(origin: Vector3, end: Vector3) -> void:
+ var trace := MeshInstance3D.new()
+ var mesh := ImmediateMesh.new()
+ var material := StandardMaterial3D.new()
+ material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ material.albedo_color = Color(0.65, 0.9, 1.0)
+ mesh.surface_begin(Mesh.PRIMITIVE_LINES, material)
+ mesh.surface_add_vertex(to_local(origin))
+ mesh.surface_add_vertex(to_local(end))
+ mesh.surface_end()
+ trace.mesh = mesh
+ add_child(trace)
+ var tween := create_tween()
+ tween.tween_interval(0.12)
+ tween.tween_callback(trace.queue_free)
 
 func _clear_reach(point: Vector3, maximum: float, excluded: RID = RID()) -> bool:
  if player.global_position.distance_to(point) > maximum: return false
@@ -402,5 +462,6 @@ func _process(_delta: float) -> void:
  if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"
  equipment_hud.text = "EQUIPMENT\n" + slots + "\nEQUIPPED  /  " + Campaign.item_label(player.equipment.selected).to_upper()
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
+ crosshair.visible = player.aiming
  var nearest := _nearest()
- prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message + "\n1 / 2 select   ·   Q use   ·   C crouch   ·   Esc pause"
+ prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message + "\n1 / 2 select   ·   RMB aim / LMB fire   ·   Q gadget   ·   Ctrl instinct"

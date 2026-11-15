@@ -98,6 +98,17 @@ func _build_interactions() -> void:
   _add_interactable(_vector(record["position"]), record["label"], "clue", record["id"], Color(0.9, 0.72, 0.34))
  _add_interactable(Vector3(-5, 0, -2), "Disable assessment unit", "robot", "disable_assessment_unit", Color(0.38, 0.73, 0.83))
  robot = interactables.back()
+ var hit_area := Area3D.new()
+ hit_area.collision_layer = 2
+ hit_area.collision_mask = 0
+ var hit_shape := CollisionShape3D.new()
+ var shape := CapsuleShape3D.new()
+ shape.radius = 0.35
+ shape.height = 1.3
+ hit_shape.shape = shape
+ hit_shape.position.y = 0.65
+ hit_area.add_child(hit_shape)
+ robot.add_child(hit_area)
  # Distinct abstract machine silhouette, separate from the human NPC meshes.
  var head := MeshInstance3D.new()
  var head_mesh := SphereMesh.new()

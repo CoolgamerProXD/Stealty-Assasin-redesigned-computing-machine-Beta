@@ -29,6 +29,7 @@ func _input(event: InputEvent) -> void:
   get_viewport().set_input_as_handled()
 
 func _open() -> void:
+ if world and world.player: world.player.aiming = false
  get_tree().paused = true
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  root.visible = true

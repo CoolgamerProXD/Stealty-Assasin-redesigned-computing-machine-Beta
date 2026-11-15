@@ -396,24 +396,39 @@ func run() -> void:
  await physics_frame
  check(initiation.get("robot_alert") == true, "assessment unit reacts to nearby visible player")
  initiation.set_physics_process(false)
- var use_event := InputEventAction.new()
- use_event.action = "use_equipment"
- use_event.pressed = true
- Input.parse_input_event(use_event)
+ var aim_event := InputEventMouseButton.new()
+ aim_event.button_index = MOUSE_BUTTON_RIGHT
+ aim_event.pressed = true
+ Input.parse_input_event(aim_event)
+ await create_timer(0.5).timeout
+ initiation.call("_process", 0.0)
+ check(init_player.aiming and initiation.get("crosshair").visible and init_player.arm.spring_length < 3.0, "right mouse aims, moves camera and displays crosshair")
+ init_player.camera.look_at(assessment.global_position + Vector3.UP * 0.65, Vector3.UP)
+ await physics_frame
+ var fire_event := InputEventMouseButton.new()
+ fire_event.button_index = MOUSE_BUTTON_LEFT
+ fire_event.pressed = true
+ Input.parse_input_event(fire_event)
  await process_frame
  await physics_frame
  await process_frame
  print("EQUIP_DIAG: robot=", init_mission.action_complete, " charges=", init_player.equipment.charges, " message=", initiation.get("message"))
- check(init_mission.action_complete and init_player.equipment.charges == 4, "equipment input disables unit and spends one charge")
+ check(init_mission.action_complete and init_player.equipment.charges == 4, "center-camera shot hits assessment unit and spends one charge")
  for i: int in range(5):
-  use_event.pressed = false
-  Input.parse_input_event(use_event)
-  use_event.pressed = true
-  Input.parse_input_event(use_event)
+  fire_event.pressed = false
+  Input.parse_input_event(fire_event)
+  fire_event.pressed = true
+  Input.parse_input_event(fire_event)
   await process_frame
   await physics_frame
  initiation.call("_process", 0.0)
- check(init_player.equipment.charges == 0 and initiation.get("equipment_hud").text.contains("0 / 5"), "five-charge limit and HUD update follow input")
+ check(init_player.equipment.charges == 0 and initiation.get("equipment_hud").text.contains("0 / 5"), "five-charge limit and HUD update follow firing input")
+ aim_event.pressed = false
+ Input.parse_input_event(aim_event)
+ await process_frame
+ await physics_frame
+ initiation.call("_process", 0.0)
+ check(not init_player.aiming and not initiation.get("crosshair").visible, "releasing right mouse exits aim and hides crosshair")
  check(init_mission.action_complete and init_mission.can_extract(), "assessment unit and three unique records unlock exit")
  var after_robot := SessionSnapshot.capture(init_player, init_mission)
  SessionSnapshot.restore(before_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"), campaign)
