@@ -96,7 +96,10 @@ func apply_settings() -> void:
  for probe: Node in get_tree().get_nodes_in_group("quality_reflections"):
   (probe as ReflectionProbe).visible = quality == "HIGH"
  var master := AudioServer.get_bus_index("Master")
- if master >= 0: AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, float(settings["volume"]))))
+ if master >= 0:
+  var volume := clampf(float(settings["volume"]), 0.0, 1.0)
+  AudioServer.set_bus_mute(master, volume <= 0.0)
+  AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, volume)))
  if DisplayServer.get_name() != "headless":
   DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if settings["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED)
   var size := Vector2i(1600, 900) if settings["resolution"] == "1600x900" else Vector2i(1280, 720)

@@ -26,6 +26,9 @@ func build() -> void:
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
   _place(SOFA, Vector3(x,0,11), Vector3(0.49,0,0), Vector3(2.25,1.9,1.0), PI)
   _place(COFFEE_TABLE, Vector3(x,0,9.2), Vector3(-0.13,0,-0.1), Vector3(2.5,2.0,2.1), 0.0)
+ # Dining chairs have their own spacing, matching the table and collision
+ # centres rather than the unrelated lounge-sofa spacing.
+ for x: float in [-38.0,-31.0,-24.0,-17.0]:
   for z: float in [-11.55,-8.45]:
    _place(DINING_CHAIR, Vector3(x,0,z), Vector3(0.10,0,-0.10), Vector3(2.2,1.9,1.9), 0.0 if z < -10.0 else PI)
  for x: float in [-40.3,-34.0,-26.0,-18.0,-13.5]:

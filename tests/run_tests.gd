@@ -30,6 +30,13 @@ func run() -> void:
   settings_service.settings["show_fps"] = false
   settings_service._load_settings()
   check(settings_service.settings["graphics"] == quality and settings_service.settings["show_fps"], quality + " and FPS setting persist")
+ var master_bus := AudioServer.get_bus_index("Master")
+ settings_service.settings["volume"] = 0.0
+ settings_service.apply_settings()
+ check(master_bus >= 0 and AudioServer.is_bus_mute(master_bus), "zero volume mutes the master bus")
+ settings_service.settings["volume"] = 0.5
+ settings_service.apply_settings()
+ check(master_bus >= 0 and not AudioServer.is_bus_mute(master_bus), "raising volume unmutes the master bus")
  settings_service.settings = settings_backup
  settings_service.settings_path = settings_path_backup
  settings_service.apply_settings()
@@ -132,6 +139,17 @@ func run() -> void:
  var furniture_query := PhysicsRayQueryParameters3D.create(Vector3(-38,0.5,-7.5), Vector3(-38,0.5,-8.45))
  var furniture_hit := player.get_world_3d().direct_space_state.intersect_ray(furniture_query)
  check(not furniture_hit.is_empty() and (furniture_hit.collider as Node).is_in_group("new_furniture_collision"), "restaurant chair blocks physical movement")
+ var all_chairs_aligned := true
+ for table_x: float in [-38.0,-31.0,-24.0,-17.0]:
+  for chair_z: float in [-11.55,-8.45]:
+   var visual_found := false
+   for holder: Node in furniture.get_children():
+    if holder is Node3D and holder.position.distance_to(Vector3(table_x,0,chair_z)) < 0.01: visual_found = true
+   var chair_start := Vector3(table_x,0.5,chair_z + (-0.6 if chair_z < -10.0 else 0.6))
+   var chair_query := PhysicsRayQueryParameters3D.create(chair_start, Vector3(table_x,0.5,chair_z))
+   var chair_hit := player.get_world_3d().direct_space_state.intersect_ray(chair_query)
+   if not visual_found or chair_hit.is_empty() or not (chair_hit.collider as Node).is_in_group("new_furniture_collision"): all_chairs_aligned = false
+ check(all_chairs_aligned, "all dining chair visuals align with their collision envelopes")
  var window_query := PhysicsRayQueryParameters3D.create(Vector3(-30,2,15),Vector3(-30,2,17))
  var window_hit := player.get_world_3d().direct_space_state.intersect_ray(window_query)
  check(not window_hit.is_empty() and (window_hit.collider as Node).is_in_group("hotel_windows"), "visible window bays retain a physical exterior barrier")
