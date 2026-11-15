@@ -306,5 +306,59 @@ func run() -> void:
  check(init_mission.extracted, "Initiation exit completes only after objectives")
  initiation.queue_free()
  await process_frame
+ # Exercise actual campaign scene changes against an isolated campaign save.
+ var service := root.get_node("Campaign")
+ var saved_progress: Dictionary = service.progress.snapshot()
+ var saved_path: String = service.campaign_path
+ var isolated_path := "user://assassin_campaign_test_%d.json" % Time.get_ticks_usec()
+ service.campaign_path = isolated_path
+ service.progress.restore({})
+ check(service.begin("initiation"), "campaign begins an unlocked mission")
+ await process_frame
+ await process_frame
+ var deployed: Node = current_scene
+ check(deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn", "campaign changes to Initiation scene")
+ if deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn":
+  var pause_menu: Node = null
+  for child: Node in deployed.get_children():
+   if child.get_script() and child.get_script().resource_path == "res://scripts/ui/pause_menu.gd": pause_menu = child
+  check(pause_menu != null, "campaign mission creates pause menu")
+  if pause_menu:
+   pause_menu.call("_open")
+   check(paused and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "pause stops simulation and releases mouse")
+   pause_menu.call("_resume")
+   check(not paused, "resume restarts simulation")
+  else:
+   check(false, "pause stops simulation and releases mouse")
+   check(false, "resume restarts simulation")
+  var deployed_objects: Array[Interactable] = deployed.get("interactables")
+  for obj: Interactable in deployed_objects:
+   if obj.kind == "clue" or obj.kind == "robot": deployed.call("_on_interaction", obj)
+  for obj: Interactable in deployed_objects:
+   if obj.kind == "extract": deployed.call("_on_interaction", obj)
+  await process_frame
+  await process_frame
+  check(current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn" and service.progress.is_unlocked("meridian"), "objective completion saves unlock and opens debrief")
+  if current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn":
+   current_scene.call("_continue")
+   await process_frame
+   await process_frame
+   check(current_scene != null and current_scene.scene_file_path == "res://scenes/main_menu.tscn", "debrief can be skipped to main menu")
+  else: check(false, "debrief can be skipped to main menu")
+ else:
+  check(false, "campaign mission creates pause menu")
+  check(false, "pause stops simulation and releases mouse")
+  check(false, "resume restarts simulation")
+  check(false, "objective completion saves unlock and opens debrief")
+  check(false, "debrief can be skipped to main menu")
+ if current_scene != null:
+  current_scene.queue_free()
+  current_scene = null
+ service.active_mission = ""
+ service.progress.restore(saved_progress)
+ service.campaign_path = saved_path
+ for suffix: String in ["", ".bak", ".tmp"]:
+  if FileAccess.file_exists(isolated_path + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(isolated_path + suffix))
+ await process_frame
  print("RESULT: %d checks, %d failures" % [checks, failures.size()])
  quit(0 if failures.is_empty() else 1)

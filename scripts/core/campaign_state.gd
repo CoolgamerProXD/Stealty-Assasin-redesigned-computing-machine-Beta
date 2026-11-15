@@ -2,6 +2,7 @@ extends Node
 ## Campaign data is deliberately separate from each mission's existing save file.
 const CAMPAIGN_PATH := "user://blackline_campaign.json"
 const SETTINGS_PATH := "user://blackline_settings.json"
+var campaign_path: String = CAMPAIGN_PATH
 var progress: CampaignProgress = CampaignProgress.new()
 var active_mission: String = ""
 var load_checkpoint: bool = false
@@ -13,11 +14,11 @@ func _ready() -> void:
  if not progress.configure(data):
   push_error("Invalid campaign data")
   return
- progress.restore(SaveStore.read(CAMPAIGN_PATH))
+ progress.restore(SaveStore.read(campaign_path))
  _load_settings()
 
 func persist() -> bool:
- return SaveStore.write(CAMPAIGN_PATH, progress.snapshot())
+ return SaveStore.write(campaign_path, progress.snapshot())
 
 func checkpoint_path(id: String) -> String:
  if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
