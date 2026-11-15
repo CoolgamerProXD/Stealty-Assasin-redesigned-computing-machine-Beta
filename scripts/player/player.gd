@@ -12,7 +12,7 @@ var crouch_speed: float = 1.5
 var mouse_sensitivity: float = 0.0025
 var pivot: Node3D
 var camera: Camera3D
-var body_mesh: MeshInstance3D
+var body_mesh: StylizedPerson
 var crouching: bool = false
 var collision_shape: CollisionShape3D
 var stance_height: float = 1.8
@@ -26,12 +26,8 @@ func _ready() -> void:
  collision.shape = capsule
  collision.position.y = 0.9
  add_child(collision)
- body_mesh = MeshInstance3D.new()
- var mesh := CapsuleMesh.new()
- mesh.radius = 0.32
- mesh.height = 1.8
- body_mesh.mesh = mesh
- body_mesh.position.y = 0.9
+ body_mesh = StylizedPerson.new()
+ body_mesh.role = "visitor"
  add_child(body_mesh)
  set_disguise("visitor")
  pivot = Node3D.new()
@@ -50,10 +46,7 @@ func _ready() -> void:
 
 func set_disguise(new_role: String) -> void:
  role = new_role
- if body_mesh:
-  var material := StandardMaterial3D.new()
-  material.albedo_color = Color(0.22, 0.36, 0.48) if role == "staff" else Color(0.18, 0.18, 0.21)
-  body_mesh.material_override = material
+ if body_mesh: body_mesh.set_role(role)
 
 func _unhandled_input(event: InputEvent) -> void:
  if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -81,7 +74,7 @@ func _physics_process(delta: float) -> void:
  capsule.height = stance_height
  collision_shape.position.y = stance_height * 0.5
  body_mesh.scale.y = stance_height / 1.8
- body_mesh.position.y = stance_height * 0.5
+ body_mesh.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
  pivot.position.y = 1.5 * stance_height / 1.8
  var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)
  velocity.x = move_toward(velocity.x, direction.x * speed, 12.0 * delta)

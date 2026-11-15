@@ -362,7 +362,14 @@ func run() -> void:
    if obj.kind == "extract": deployed.call("_on_interaction", obj)
   await process_frame
   await process_frame
-  check(current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn" and service.progress.is_unlocked("meridian"), "objective completion saves unlock and opens debrief")
+  check(current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn" and service.progress.is_unlocked("meridian"), "objective completion saves unlock and opens Ruby scene")
+  if current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn":
+   current_scene.call("_apply_timeline", 6.0, 0.1)
+   check(current_scene.get("actor").position.z < 0.0 and current_scene.get("left_door").position.x < -2.0, "cinematic timeline opens doors and walks outside")
+   current_scene.call("_finish")
+   await process_frame
+   await process_frame
+  else: check(false, "cinematic timeline opens doors and walks outside")
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn":
    current_scene.call("_continue")
    await process_frame
@@ -373,7 +380,8 @@ func run() -> void:
   check(false, "campaign mission creates pause menu")
   check(false, "pause stops simulation and releases mouse")
   check(false, "resume restarts simulation")
-  check(false, "objective completion saves unlock and opens debrief")
+  check(false, "objective completion saves unlock and opens Ruby scene")
+  check(false, "cinematic timeline opens doors and walks outside")
   check(false, "debrief can be skipped to main menu")
  if current_scene != null:
   current_scene.queue_free()

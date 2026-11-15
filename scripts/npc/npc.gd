@@ -16,6 +16,7 @@ var perception_clock: float = 0.0
 var agent: NavigationAgent3D
 var facing: Vector3 = Vector3.FORWARD
 var stunned_time: float = 0.0
+var person: StylizedPerson
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -26,16 +27,9 @@ func _ready() -> void:
  collision.shape = shape
  collision.position.y = 0.85
  add_child(collision)
- var visual := MeshInstance3D.new()
- var mesh := CapsuleMesh.new()
- mesh.radius = 0.3
- mesh.height = 1.7
- visual.mesh = mesh
- visual.position.y = 0.85
- var material := StandardMaterial3D.new()
- material.albedo_color = Color(0.22, 0.32, 0.43) if profile.occupation == "security" else Color(0.55, 0.44, 0.34)
- visual.material_override = material
- add_child(visual)
+ person = StylizedPerson.new()
+ person.role = profile.occupation
+ add_child(person)
  agent = NavigationAgent3D.new()
  agent.path_desired_distance = 0.35
  agent.target_desired_distance = 0.45
@@ -128,3 +122,7 @@ func _physics_process(delta: float) -> void:
  if not is_on_floor(): velocity.y -= 9.8 * delta
  else: velocity.y = -0.1
  move_and_slide()
+ if person:
+  person.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
+  if velocity.length_squared() > 0.1:
+   person.rotation.y = atan2(-velocity.x, -velocity.z)

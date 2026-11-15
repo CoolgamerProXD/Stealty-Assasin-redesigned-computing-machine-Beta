@@ -315,7 +315,7 @@ func _on_interaction(object: Interactable) -> void:
     if Campaign.active_mission == mission_id():
      if Campaign.complete(mission_id(), mission.clues.size()):
       mission.extract()
-      get_tree().change_scene_to_file("res://scenes/ending.tscn")
+      get_tree().change_scene_to_file("res://scenes/ruby_meeting.tscn" if mission_id() == "initiation" else "res://scenes/ending.tscn")
      else: message = "Could not save campaign progress. Try again."
     elif mission.extract(): message = "INVESTIGATION COMPLETE — you left with the evidence."
    else: message = mission.objective_text()
