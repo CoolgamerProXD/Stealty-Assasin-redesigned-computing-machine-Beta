@@ -85,11 +85,13 @@ func _physics_process(delta: float) -> void:
  if profile == null: return
  if stunned_time > 0.0:
   stunned_time = maxf(0.0, stunned_time - delta)
+  if person: person.rotation.z = move_toward(person.rotation.z, 1.0, delta * 3.0)
   velocity = Vector3.ZERO
   if stunned_time == 0.0:
    set_state("returning")
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
   return
+ if person: person.rotation.z = move_toward(person.rotation.z, 0.0, delta * 3.0)
  advance_simulation(delta)
  # Perception is throttled by the physics clock, not checked every frame.
  perception_clock += delta

@@ -214,6 +214,11 @@ func run() -> void:
  world.call("_interact_nearest")
  check(not active_mission.extracted, "Meridian exit requires target as well as records")
  var witness: Interactable = objects[5]
+ var witness_npc := witness.get_parent() as HotelNpc
+ witness_npc.stunned_time = 1.0
+ world.call("_on_interaction", witness)
+ check(not active_mission.action_complete, "incapacitated witness cannot be questioned")
+ witness_npc.stunned_time = 0.0
  player.global_position = witness.global_position + Vector3(0, 0.1, 0.7)
  await physics_frame
  var question := InputEventAction.new()

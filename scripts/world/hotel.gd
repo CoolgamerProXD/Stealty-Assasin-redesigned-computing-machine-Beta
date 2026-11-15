@@ -282,6 +282,7 @@ func _nearest() -> Interactable:
  var distance := 1.8
  for object: Interactable in interactables:
   var d := player.global_position.distance_to(object.global_position)
+  if object.kind == "target" and object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0: continue
   if d < distance and object.available(player.role):
    var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, object.global_position + Vector3.UP * 0.4)
    var excluded: Array[RID] = [player.get_rid()]
@@ -312,6 +313,9 @@ func _on_interaction(object: Interactable) -> void:
      message = record["message"]
      break
   "target":
+   if object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0:
+    message = "Ivo cannot talk while incapacitated. Wait for recovery."
+    return
    if mission.mark_action(object.identifier):
     object.used = true
     object.visible = false
