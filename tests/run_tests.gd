@@ -981,6 +981,12 @@ func run() -> void:
       check(preview_player.global_position.x > 15.0 and preview_player.global_position.y > 2.0, "city preview raised walkway is physically reachable")
      else:
       check(preview.find_child("MountainTerrain", true, false) != null and preview.find_child("TreeCanopies", true, false) != null, "mountain has physical rolling terrain and batched trees")
+      var landmark := preview.find_child("ScenicBuddhaLandmark", true, false) as Node3D
+      var landmark_is_scenic := landmark != null and landmark.scale.x > 1.0
+      if landmark:
+       for part: Node in landmark.find_children("*", "", true, false):
+        if part is Interactable: landmark_is_scenic = false
+      check(landmark_is_scenic, "public landmark has monumental scale and no target interaction")
     var exit_event := InputEventAction.new()
     exit_event.action = "release_mouse"
     exit_event.pressed = true
