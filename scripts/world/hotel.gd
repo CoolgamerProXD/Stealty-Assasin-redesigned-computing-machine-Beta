@@ -11,6 +11,8 @@ var prompt: Label
 var equipment_hud: Label
 var crosshair: Label
 var shot_audio: AudioStreamPlayer
+var last_shot_start: Vector3
+var last_shot_end: Vector3
 var instinct_label: Label
 var instinct_strength: float = 0.0
 var instinct_red: StandardMaterial3D
@@ -348,6 +350,8 @@ func _fire() -> void:
  for npc: HotelNpc in npcs:
   if npc.stunned_time <= 0 and npc.global_position.distance_to(player.global_position) < 9.0:
    npc.observe_trespass(player.global_position)
+ last_shot_start = origin
+ last_shot_end = end
  shot_audio.play()
  _shot_trace(origin, end)
 
@@ -394,14 +398,17 @@ func _target_node() -> Node3D:
  if mission_id() == "initiation": return get("robot") as Node3D
  return primary_npc
 
+func _in_player_view(point: Vector3) -> bool:
+ if player.camera.is_position_behind(point): return false
+ var screen := player.camera.unproject_position(point)
+ return player.camera.get_viewport().get_visible_rect().has_point(screen)
+
 func _update_instinct(delta: float) -> void:
  var target := _target_node()
  if target and not mission.target_discovered:
   var point := target.global_position + Vector3.UP
   var excluded: RID = primary_npc.get_rid() if primary_npc else RID()
-  var screen := player.camera.unproject_position(point)
-  var bounds := player.camera.get_viewport().get_visible_rect()
-  if not player.camera.is_position_behind(point) and bounds.has_point(screen) and _clear_reach(target.global_position, instinct_target_range, excluded):
+  if _in_player_view(point) and _clear_reach(target.global_position, instinct_target_range, excluded):
    mission.target_discovered = true
  instinct_strength = move_toward(instinct_strength, 1.0, delta * 5.0) if player.instinct_active else 0.0
  instinct_label.visible = player.instinct_active
@@ -414,7 +421,7 @@ func _update_instinct(delta: float) -> void:
   _overlay_recursive(visual, instinct_red if can_highlight else null)
  for object: Interactable in interactables:
   if object.kind not in ["clue", "disguise"]: continue
-  var eligible := player.instinct_active and not object.used and _clear_reach(object.global_position, instinct_item_range)
+  var eligible := player.instinct_active and not object.used and _in_player_view(object.global_position + Vector3.UP * 0.4) and _clear_reach(object.global_position, instinct_item_range)
   _overlay_recursive(object, instinct_yellow if eligible else null)
 
 func _nearest() -> Interactable:

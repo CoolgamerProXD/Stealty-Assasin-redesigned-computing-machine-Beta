@@ -62,6 +62,57 @@ func run() -> void:
  var hotel_hud: Label = world.get("hud")
  check(hotel_hud.is_visible_in_tree() and hotel_hud.text.contains("ADRIAN LOCKE"), "Meridian target HUD is visible in rendered scene")
  check(player.body_mesh.is_visible_in_tree() and player.body_mesh.get_child_count() > 8, "articulated player visuals are present in rendered scene")
+ var target: HotelNpc = world.get("primary_npc")
+ var crowd: Array[HotelNpc] = world.get("npcs")
+ for person: HotelNpc in crowd:
+  person.set_physics_process(false)
+  if person != target: person.collision_layer = 0
+ target.global_position = Vector3(-9, 0.05, -3)
+ player.global_position = Vector3(-9, 0.05, 1.5)
+ player.rotation.y = 0.0
+ player.pivot.rotation.x = -0.22
+ Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+ await physics_frame
+ var right := InputEventMouseButton.new()
+ right.button_index = MOUSE_BUTTON_RIGHT
+ right.pressed = true
+ Input.parse_input_event(right)
+ for i: int in range(30): await physics_frame
+ player.set_physics_process(false)
+ player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
+ await physics_frame
+ check(player.aiming and world.get("crosshair").is_visible_in_tree(), "right mouse input shows aiming crosshair on virtual display")
+ var fire := InputEventMouseButton.new()
+ fire.button_index = MOUSE_BUTTON_LEFT
+ fire.pressed = true
+ Input.parse_input_event(fire)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(target.stunned_time > 0.0 and player.equipment.charges == 4, "center shot hits physical target and consumes charge")
+ var hit_screen := player.camera.unproject_position(world.get("last_shot_end"))
+ var center := player.camera.get_viewport().get_visible_rect().size * 0.5
+ check(hit_screen.distance_to(center) < 1.0, "shot impact projects to screen-center crosshair")
+ fire.pressed = false
+ Input.parse_input_event(fire.duplicate())
+ target.stunned_time = 0.0
+ player.global_position = Vector3(0.5, 0.05, 0)
+ target.global_position = Vector3(3.2, 0.05, 0)
+ await physics_frame
+ player.camera.look_at(target.global_position + Vector3.UP, Vector3.UP)
+ await physics_frame
+ fire.pressed = true
+ Input.parse_input_event(fire.duplicate())
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(target.stunned_time == 0.0 and player.equipment.charges == 3, "solid partition blocks center shot before target")
+ right.pressed = false
+ Input.parse_input_event(right.duplicate())
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(not player.aiming and not world.get("crosshair").visible, "right mouse release exits aim on virtual display")
  world.queue_free()
  await process_frame
  var initiation: Node = load("res://scenes/initiation.tscn").instantiate()

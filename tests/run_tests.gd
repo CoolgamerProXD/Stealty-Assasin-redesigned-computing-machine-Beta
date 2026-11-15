@@ -334,6 +334,28 @@ func run() -> void:
  check(guard.stunned_time > 0 and gadget_player.equipment.selected == "quiet_line", "gadget input temporarily disables a nearby NPC")
  gadget_world.call("_process", 0.0)
  check(gadget_world.get("hud").text.contains("ADRIAN LOCKE") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
+ var locke: HotelNpc = gadget_world.get("primary_npc")
+ locke.global_position = Vector3(-8.5, 0.05, 0)
+ gadget_player.global_position = Vector3(-9, 0.05, 2)
+ await physics_frame
+ gadget_player.camera.look_at(locke.global_position + Vector3.UP, Vector3.UP)
+ var meridian_mission: Mission = gadget_world.get("mission")
+ meridian_mission.target_discovered = false
+ var instinct_event := InputEventKey.new()
+ instinct_event.physical_keycode = KEY_CTRL
+ instinct_event.location = KEY_LOCATION_LEFT
+ instinct_event.pressed = true
+ Input.parse_input_event(instinct_event)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(meridian_mission.target_discovered and locke.person.torso.material_overlay == gadget_world.get("instinct_red"), "seen Meridian primary target highlights red")
+ instinct_event.pressed = false
+ Input.parse_input_event(instinct_event)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(locke.person.torso.material_overlay == null, "Meridian target highlight clears on release")
  var gadget_snapshot := SessionSnapshot.capture(gadget_player, gadget_world.get("mission"))
  var equipment_save := "user://assassin_equipment_test_%d.json" % Time.get_ticks_usec()
  check(SaveStore.write(equipment_save, gadget_snapshot), "equipment checkpoint writes to disk")
@@ -386,6 +408,7 @@ func run() -> void:
  var far_item: Interactable = init_objects[1]
  init_player.global_position = nearby.global_position + Vector3(0, 0.05, 1.0)
  await physics_frame
+ init_player.camera.look_at(nearby.global_position + Vector3.UP * 0.4, Vector3.UP)
  var ctrl := InputEventKey.new()
  ctrl.physical_keycode = KEY_CTRL
  ctrl.location = KEY_LOCATION_LEFT
@@ -399,6 +422,15 @@ func run() -> void:
  check(init_player.instinct_active and initiation.get("instinct_label").visible, "left control enables Instinct and its HUD indicator")
  check(nearby_visual.material_overlay != null and far_visual.material_overlay == null, "Instinct highlights only nearby important items")
  check(init_npcs[0].person.torso.material_overlay == null, "ordinary NPCs are not highlighted")
+ var robot_target: Interactable = initiation.get("robot")
+ init_player.global_position = robot_target.global_position + Vector3(0, 0.05, 2)
+ await physics_frame
+ init_player.camera.look_at(robot_target.global_position + Vector3.UP, Vector3.UP)
+ init_mission.target_discovered = false
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(init_mission.target_discovered and (robot_target.get_child(0) as MeshInstance3D).material_overlay == initiation.get("instinct_red"), "seen assessment unit highlights red in Instinct")
  ctrl.pressed = false
  Input.parse_input_event(ctrl)
  await process_frame
