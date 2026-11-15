@@ -559,6 +559,8 @@ func run() -> void:
  check(active_mission.clues.size() == before_duplicate, "repeated collection does not duplicate progress")
  SessionSnapshot.restore({"clues": ["ledger", "memo"], "extracted": true, "action_complete": false}, player, active_mission, objects)
  check(active_mission.action_complete and active_mission.extracted, "completed legacy Meridian checkpoint migrates witness objective")
+ SessionSnapshot.restore({"clues": ["ledger", "memo"], "extracted": true, "action_id": "disable_assessment_unit", "action_complete": true, "target_id": "adrian_locke", "target_complete": true}, player, active_mission, objects)
+ check(not active_mission.action_complete and not active_mission.extracted, "a different mission's action ID cannot complete Meridian")
  world.queue_free()
  await process_frame
  var campaign := CampaignProgress.new()
@@ -853,6 +855,11 @@ func run() -> void:
  SessionSnapshot.restore(after_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"), campaign)
  check(init_player.equipment.charges == 0, "checkpoint preserves spent charges")
  check(init_mission.action_complete and init_mission.clues.size() == 3 and init_mission.can_extract(), "snapshot restores disabled unit and all records")
+ SessionSnapshot.restore({"action_id": "interview_ivo", "action_complete": true}, init_player, init_mission, init_objects, Callable(initiation, "safe_position"))
+ check(not init_mission.action_complete, "a different mission's action ID cannot disable the assessment unit")
+ SessionSnapshot.restore({"action_complete": true}, init_player, init_mission, init_objects, Callable(initiation, "safe_position"))
+ check(init_mission.action_complete, "older Initiation snapshots without action IDs retain their completed unit")
+ SessionSnapshot.restore(after_robot, init_player, init_mission, init_objects, Callable(initiation, "safe_position"), campaign)
  for obj: Interactable in init_objects:
   if obj.kind == "extract": initiation.call("_on_interaction", obj)
  check(init_mission.extracted, "Initiation exit completes only after objectives")

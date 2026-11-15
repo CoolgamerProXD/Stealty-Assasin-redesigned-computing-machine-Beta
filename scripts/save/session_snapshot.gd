@@ -32,7 +32,10 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
    if clue is String and mission.has_record(clue) and not clues.has(clue) and player.inventory.add(clue):
     clues.append(clue)
  mission.clues = clues
- mission.action_complete = not mission.required_action.is_empty() and data.get("action_complete", false) == true
+ # Old Initiation saves did not contain an action ID. Preserve those, but
+ # never apply an explicitly different mission's objective to this mission.
+ var compatible_action: bool = not data.has("action_id") or data.get("action_id") == mission.required_action
+ mission.action_complete = not mission.required_action.is_empty() and compatible_action and data.get("action_complete", false) == true
  # A completed legacy Meridian checkpoint pre-dates the new witness objective.
  if mission.required_action == "interview_ivo" and not data.has("action_id") and data.get("extracted", false) == true:
   mission.action_complete = true
