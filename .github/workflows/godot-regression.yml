@@ -102,7 +102,7 @@ jobs:
                   continue
               lines = path.read_text(errors="replace").splitlines()
               if name in ("tests", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^WING_DIAG:|^CITY_WALKWAY_DIAG:|^CITY_VIEW_DIAG:|^CITY_OCCLUDER:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^WING_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -166,11 +166,39 @@ jobs:
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for name in ("cinema_hotel_windows", "cinema_upper_gallery", "cinema_hotel_wing", "cinema_city_gameplay", "cinema_city", "cinema_hotel_upper", "cinema_ngong_ping"):
+          for name in ("cinema_hotel_windows", "cinema_upper_gallery", "cinema_hotel_wing"):
               path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
               if not path.exists(): continue
               data = base64.b64encode(path.read_bytes()).decode("ascii")
               for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+
+      # Each notice step is capped at ten annotations by GitHub. Keep the
+      # city captures separate so all chunks are preserved, rather than
+      # displaying a corrupt partial JPEG with a grey lower half.
+      - name: Preview city views
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("cinema_city_gameplay", "cinema_city", "cinema_ngong_ping"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+
+      - name: Preview suite
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          path = pathlib.Path("visual-test-output/cinema_hotel_upper_thumb.jpg")
+          if path.exists():
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_cinema_hotel_upper_{i // 3000}::{data[i:i+3000]}")
           PYCODE
 
   windows:

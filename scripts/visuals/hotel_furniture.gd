@@ -2,6 +2,7 @@ extends Node3D
 ## Shared, authored low-poly furniture with a Meridian-specific material palette.
 ## Meshes: Kenney Furniture Kit (CC0); see assets/kenney_furniture/LICENSE.txt.
 ## Collision is authored separately in hotel.gd, so mission paths remain explicit.
+const BED := preload("res://assets/kenney_furniture/bedDouble.glb")
 const SOFA := preload("res://assets/kenney_furniture/loungeSofaLong.glb")
 const ARMCHAIR := preload("res://assets/kenney_furniture/loungeChair.glb")
 const DINING_CHAIR := preload("res://assets/kenney_furniture/chairCushion.glb")
@@ -31,6 +32,13 @@ func build() -> void:
   _place(PLANT, Vector3(x,0,13.7), Vector3(0,0,0), Vector3(2.5,2.5,2.5), 0.0)
  for x: float in [-35.0,-19.0]:
   _place(FLOOR_LAMP, Vector3(x,0,14.5), Vector3(0.06,0,-0.06), Vector3(1.8,1.8,1.8), 0.0)
+ # Bedding replaces the simple block beds while retaining their collision boxes.
+ # The imported bed's local head is toward -Z; turn the south-facing rooms
+ # around so every headboard rests against the outer wall.
+ for x: float in [-9.0,-3.0,3.0,9.0]:
+  for side: float in [-1.0,1.0]:
+   _place(BED, Vector3(x,3.6,side*6), Vector3(0.478,0,-0.5625), Vector3(2.95,2.1,1.95), PI if side > 0 else 0.0)
+ _place(BED, Vector3(-38,3.6,-11), Vector3(0.478,0,-0.5625), Vector3(4.2,2.1,1.95), 0.0)
  # Suite reading area uses the open wall, with no added obstacles near Locke.
  _place(ARMCHAIR, Vector3(-40.6,3.6,-7.1), Vector3(0.245,0,-0.205), Vector3(1.7,1.8,1.7), -PI / 2.0)
  _place(BOOKS, Vector3(-40.0,4.53,-11.2), Vector3(0.075,0,-0.047), Vector3(1.2,1.2,1.2), 0.0)

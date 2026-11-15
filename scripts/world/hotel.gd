@@ -251,8 +251,8 @@ func _build_meridian_wing() -> void:
  for z: float in [-12.5,-7.0]: _box(Vector3(-34,5.25,z),Vector3(0.2,3.3,3.0),walls)
  _box(Vector3(-38,5.25,-14),Vector3(8,3.3,0.2),walls)
  _box(Vector3(-38,5.25,-5.5),Vector3(8,3.3,0.2),walls)
- _box(Vector3(-38,4.0,-11),Vector3(4,0.8,2.2),Color(0.62,0.58,0.48),true)
- _box(Vector3(-38,4.45,-11.7),Vector3(4,0.15,0.6),Color(0.83,0.80,0.70),false)
+ # Authored bed visual shares this pre-existing collision footprint.
+ _collision_box(Vector3(-38,4.0,-11),Vector3(4,0.8,2.2))
  _box(Vector3(-40,4.05,-7),Vector3(1.3,0.9,0.8),dark,false)
  _box(Vector3(-39,3.63,-8.7),Vector3(4,0.04,2),Color(0.33,0.20,0.18),false)
  # A glazed dining screen divides the large ground floor into recognisable
@@ -291,8 +291,7 @@ func _build_meridian_wing() -> void:
    for dx: float in [-1.8,1.8]:
     _box(Vector3(x+dx,5.3,side*4),Vector3(2.4,3.4,0.18),walls)
    _box(Vector3(x,5.3,side*4),Vector3(1.2,0.45,0.18),dark,false)
-   _box(Vector3(x,4.0,side*6),Vector3(2.8,0.8,2.2),Color(0.58,0.55,0.47),true)
-   _box(Vector3(x,4.45,side*6.6),Vector3(2.5,0.16,0.65),Color(0.84,0.81,0.70),false)
+   _collision_box(Vector3(x,4.0,side*6),Vector3(2.8,0.8,2.2))
    _box(Vector3(x+2,3.95,side*6.8),Vector3(0.65,0.7,0.7),dark,false)
   _box(Vector3(x,3.63,0),Vector3(4.8,0.04,5.6),Color(0.35,0.23,0.20),false)
  # Warm shadowless pools of light, controlled by the existing quality preset.
@@ -326,8 +325,8 @@ func _build_meridian_wing() -> void:
  wing_nav.add_polygon(PackedInt32Array([0,3,2,1]))
  wing_region.navigation_mesh = wing_nav
  add_child(wing_region)
- # Navigation on the original floor remains untouched; the stationary target
- # receives a separate upper region. NPCs do not yet route across the ramp.
+ # The suite and gallery share an upper region. Only the explicitly clear
+ # corridor is used for movement; NPCs do not route across the ramp.
  var region := NavigationRegion3D.new()
  var nav := NavigationMesh.new()
  nav.vertices = PackedVector3Array([Vector3(-41.5,3.6,-15.5),Vector3(-12.5,3.6,-15.5),Vector3(-12.5,3.6,15.5),Vector3(-41.5,3.6,15.5)])
@@ -381,18 +380,11 @@ func _build_npcs() -> void:
   add_child(primary_npc)
   npcs.append(primary_npc)
 
- # Small, deterministic wing population. Routes stay on this floor and away
- # from solid tables; upstairs guest is idle instead of fake cross-floor routing.
+ # Small, deterministic wing population. Each route remains on its floor
+ # and follows an unobstructed corridor; no simulated cross-floor navigation.
  _wing_guest("Lina Chow", "employee", Vector3(-35,0.05,-3), Vector3(-18,0,-3), "working")
  _wing_guest("Arun Sen", "civilian", Vector3(-18,0.05,-5), Vector3(-34,0,-5), "waiting")
- var visitor := HotelNpc.new()
- visitor.profile = NpcProfile.new()
- visitor.profile.identity = "Elena Hart"
- visitor.profile.occupation = "civilian"
- visitor.position = Vector3(-17,3.65,-2)
- add_child(visitor)
- visitor.set_state("conversing")
- npcs.append(visitor)
+ _wing_guest("Elena Hart", "civilian", Vector3(-17,3.65,-2), Vector3(-30,3.6,-2), "conversing")
 
 func _wing_guest(identity: String, role: String, start: Vector3, end: Vector3, activity: String) -> void:
  var profile := NpcProfile.new()

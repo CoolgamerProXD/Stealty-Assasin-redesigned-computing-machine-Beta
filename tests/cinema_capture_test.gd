@@ -176,15 +176,6 @@ func run() -> void:
   root.add_child(scenery)
   for i: int in range(5): await physics_frame
   var scenery_cam := shot_camera(scenery, Vector3(0,4.0,24) if preview_name == "hong_kong" else Vector3(0,5.0,-11), Vector3(0,2.5,-20) if preview_name == "hong_kong" else Vector3(0,3.0,-29))
-  if preview_name == "hong_kong":
-   var camera_query := PhysicsRayQueryParameters3D.create(scenery_cam.global_position, Vector3(0,2.5,-20))
-   print("CITY_VIEW_DIAG: ", scenery.get_world_3d().direct_space_state.intersect_ray(camera_query))
-   for holder: Node in scenery.get_children():
-    for visual: Node in holder.get_children():
-     if visual is MeshInstance3D:
-      var bounds: AABB = visual.global_transform * visual.get_aabb()
-      if bounds.intersects_segment(scenery_cam.global_position, Vector3(0,2.5,-20)):
-       print("CITY_OCCLUDER: ", holder.name, " bounds=", bounds)
   await capture("cinema_city" if preview_name == "hong_kong" else "cinema_ngong_ping")
   check(scenery_cam.current and scenery.get("player") != null, preview_name + " preview renders with player")
   if preview_name == "hong_kong":

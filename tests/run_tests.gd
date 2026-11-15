@@ -174,8 +174,14 @@ func run() -> void:
  check(spawned_ids.has("ledger") and spawned_ids.has("memo") and spawned_ids.has("archive"), "all unique configured records spawn")
  var wing_npc: HotelNpc = npcs[4]
  var wing_start := wing_npc.global_position
+ var upper_guest: HotelNpc = npcs[6]
+ var upper_start := upper_guest.global_position
  await create_timer(1.5).timeout
  check(wing_npc.global_position.distance_to(wing_start) > 0.2 and wing_npc.global_position.y < 0.5, "wing staff follows a local ground-floor route")
+ check(upper_guest.global_position.distance_to(upper_start) > 0.2 and absf(upper_guest.global_position.y - 3.6) < 0.2, "upstairs guest follows a separate local upper-floor route")
+ var upper_query := PhysicsRayQueryParameters3D.create(Vector3(-17,4.4,-2), Vector3(-30,4.4,-2))
+ upper_query.exclude = [player.get_rid(), upper_guest.get_rid()]
+ check(player.get_world_3d().direct_space_state.intersect_ray(upper_query).is_empty(), "upper-floor route is clear of physical obstacles")
  var npc: HotelNpc = npcs[0]
  var npc_start := npc.global_position
  await create_timer(2.5).timeout

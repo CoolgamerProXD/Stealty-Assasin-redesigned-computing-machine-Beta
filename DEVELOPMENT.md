@@ -10,7 +10,7 @@ Run the three previews from Mission Selection. The city and mountain previews ar
 
 The station blockout can be run via `scenes/tung_chung_preview.tscn` or the explicitly labelled main-menu preview. It has no campaign mission logic, combat, Instinct, pause/settings, checkpoints or train gameplay. Architectural props and the decorative escalator are not collidable or traversable; the navigation mesh is an open rectangle, so NPCs may walk through scenery. See HONG_KONG_MAP_PLAN.md for planned work before enabling the real mission.
 
-The current work preserves the navigation and collision layout and batches optional architectural dressing into MultiMeshes. The Windows export preset can be used with official 4.4.1 templates; the opt-in CI Windows job performs only a headless launch. No external assets were added. Keep objective/save migrations backward-compatible and verify scene/render behavior in addition to parsing.
+The current work preserves the navigation and collision layout and batches optional architectural dressing into MultiMeshes. The Windows export preset can be used with official 4.4.1 templates; the opt-in CI Windows job performs only a headless launch. The current build also includes CC0 Kenney furniture; see THIRD_PARTY_ASSETS.md. Keep objective/save migrations backward-compatible and verify scene/render behavior in addition to parsing.
 
 
 ## Campaign expansion status
