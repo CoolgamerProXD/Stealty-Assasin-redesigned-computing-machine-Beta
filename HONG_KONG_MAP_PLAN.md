@@ -1,0 +1,31 @@
+# Hong Kong campaign — production map plan
+
+Status: design, not a claim that these maps or missions are complete. The stations, routes, schedules and setpieces below are fictional gameplay spaces, not real-world railway or site layouts. Preserve Initiation and the existing Meridian mission and saves. Meridian remains a separate legacy assignment rather than being rewritten into the new story. Do not unlock unfinished chapters as playable missions.
+
+## 01 / Initiation
+Keep the evaluation annex, its two guards, three records and moving unit. Ruby remains the handler and the introduction remains skippable.
+
+## 02 / Tung Chung — intended playable vertical slice
+**Spatial plan:** a broad concourse is the central landmark and orientation hub. One side has ticketing and entry, the opposite side has a small row of shops and facilities. Two pedestrian connections lead to a waiting area and a fictional platform, giving a loop around a central information island. An upper walkway and decorative escalators can establish scale without suggesting real routes or access. The platform leads to a self-contained train interior; no railway access gameplay. Use original bilingual-inspired graphic language, not copied commercial signage. Separate public and staff spaces are legible through color and signage, not a copy of the real station.
+
+**Population:** budget around 12–18 visible characters for the first slice, distributed between circulation, ticketing, shops and waiting. Use several short, deterministic walking/idle routes with offset start times and distinct clothing; avoid spawning an uncontrolled crowd. One Robber moves between ticketing and the information island, visibly distinctive, and is the first identification/objective. The second target, Constance's operative, waits near the shops and moves towards the platform when approached. The target should recognize the player and trigger a staged escape, rather than teleport without feedback. Exact names and deeper lore remain open.
+
+**Story flow:** identify and complete the Robber objective → identify and approach the operative → staged escape to a platform → follow into an isolated train encounter → cinematic confrontation, obtain a USB → train interior and arrival → disembark and meet Rose → complete/persist and unlock chapter 03 when that chapter is genuinely playable. Both targets must be physical characters; objective events must be idempotent. Use fictional scene transitions for the train; never teach physical rail access or stunts. A target's completed state is distinct from temporary incapacitation.
+
+**Discoveries:** a visible-but-unlabelled maintenance pouch can reveal an abstract wrench; a discovered station display opportunity can require it and briefly change a scripted crowd route. An unrelated notice provides optional contextual intel. Instinct only highlights known, nearby items; target outlines require identification/discovery. Do not simulate real-world sabotage. Place different optional paths on either side of the information island, with obvious landmarks to avoid navigation confusion.
+
+**Performance:** modular geometry with shared materials/instancing, a limited pool of animated NPCs, throttled perception, shared navmesh and no expensive real-time reflections. LOW reduces render scale/decorations. Validate actual routes, saves, combat and camera and measure on target hardware before calling it complete.
+
+## 03 / Hong Kong — intended city beyond the station
+**Plan:** a dense, connected district rather than an empty expanse. Station forecourt is the center; a commercial street runs east to a restaurant court, a quieter residential lane loops north, and a pedestrian walkway returns to the forecourt above a small public square. Multiple connections allow a loop, not disconnected rooms. Shops, food stalls, apartments and public seating supply recognizable navigation landmarks. Keep the scope to meaningful blocks with occluded sight lines, not geographic fidelity.
+
+**Population zones:** commuters at the forecourt, diners at restaurant court, workers at commercial entries and residents in the lane. Short route groups vary idle and walking activities. Rose meets the player at arrival and directs attention to the USB without deciding the deeper story. Optional intel in a shop and a public square discovery provide reasons to explore. Discoverable tools can gate fictional, reversible opportunity interactions and alternate routes; no realistic hazard systems. Plan story only after chapter 02's USB and Rose sequence have been established.
+
+**Performance:** stream or activate districts in bounded groups, use shared meshes/materials and limit visible agent count. The city is not built or benchmarked yet.
+
+## 04 / Ngong Ping — environment and target design only
+A fictional cable-car arrival frames mountain ridges and gives an uninterrupted view toward a respectful, recognizable Tian Tan Buddha landmark. A village-inspired plaza has timber storefronts and visitor seating; a garden path and a temple-inspired forecourt lead toward a distant elevated viewing area. The Buddha and religious spaces are landmarks, never targets or destructible objects. Tourists photograph the view, visitors walk between plaza and garden, and staff maintain public areas. Use stylized layered mountain silhouettes, vegetation clusters and atmospheric depth rather than claiming geographic or architectural exactness. Cable-car travel is a non-interactive cinematic vista; no operational details.
+
+**Physical target concept:** an as-yet unnamed visitor in a distinctive muted teal jacket, pale scarf and dark trousers, carrying a small sketchbook. Their presentation suggests an observant, unhurried personality: they alternate between studying the view near the Buddha, sitting to sketch and walking to the forecourt. This is a visual/schedule design only; no backstory, Constance connection or deeper lore is established. Allow identification by observation, not an omniscient marker. Respectful public-space behavior is essential.
+
+**Status:** design only; no Ngong Ping map, target, cable-car sequence or mission gameplay is claimed as implemented. Obtain cultural and location review before treating the landmark depiction as final.

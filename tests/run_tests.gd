@@ -498,6 +498,7 @@ func run() -> void:
  await physics_frame
  gadget_player.camera.look_at(locke.global_position + Vector3.UP, Vector3.UP)
  gadget_world.call("_fire")
+ print("EQUIP_DIAG: locke-shot message=", gadget_world.get("message"), " camera=", gadget_player.camera.global_position, " target=", locke.global_position, " charge=", gadget_player.equipment.charges)
  check(meridian_mission.target_complete and meridian_mission.target_incapacitated and locke.objective_completed and locke.completed_incapacitated, "center-ray shot completes physical target permanently")
  var terminal_save := SessionSnapshot.capture(gadget_player, meridian_mission)
  locke._physics_process(100.0)
