@@ -38,7 +38,7 @@ jobs:
           icd="$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' -print -quit)"
           test -n "$icd"
           export VK_DRIVER_FILES="$icd" VK_ICD_FILENAMES="$icd"
-          xvfb-run -a --server-args="-screen 0 1280x720x24" "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --rendering-driver opengl3 --editor --path . --quit 2>&1 | tee "$RUNNER_TEMP/import.log"
+          xvfb-run -a --server-args="-screen 0 1280x720x24" "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --rendering-driver opengl3 --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
           if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/import.log"; then exit 1; fi
       - name: Start main scene
         shell: bash
@@ -213,7 +213,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $godot = "$env:RUNNER_TEMP\godot\Godot_v4.4.1-stable_win64_console.exe"
           & $godot --version
-          & $godot --headless --editor --path . --quit
+          & $godot --headless --path . --import
           if ($LASTEXITCODE -ne 0) { throw 'Import failed' }
           New-Item -ItemType Directory -Force 'build/windows' | Out-Null
           & $godot --headless --path . --export-release Windows "$env:GITHUB_WORKSPACE\build\windows\PROJECT_ASSASSIN.exe"
