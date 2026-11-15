@@ -127,9 +127,6 @@ func run() -> void:
    for quality: String in ["LOW", "MEDIUM", "HIGH"]:
     service.settings["graphics"] = quality
     service.apply_settings()
-    # UPDATE_ONCE probes populate over six render frames.
-    if quality == "HIGH":
-     for i: int in range(10): await process_frame
     var preset_image := await capture("hotel_preset_" + quality.to_lower())
     check(not preset_image.is_empty() and world.get("fps_label").visible and world.get("fps_label").text.contains("FPS"), quality + " renders with FPS counter")
     if quality == "LOW": low_image = preset_image

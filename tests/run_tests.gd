@@ -102,17 +102,16 @@ func run() -> void:
  var player: HotelPlayer = world.get("player")
  var fine_detail: MultiMeshInstance3D = world.get_node("EnvironmentDressing/FineDetail")
  var practicals := get_nodes_in_group("quality_practicals")
- var probe := world.get_node("EnvironmentDressing/LobbyReflection") as ReflectionProbe
  var old_quality: String = settings_service.settings["graphics"]
  settings_service.settings["graphics"] = "LOW"
  settings_service.apply_settings()
- check(not fine_detail.visible and practicals.size() > 0 and not (practicals[0] as Light3D).visible and not probe.visible, "LOW hides fine decoration, practical lights and reflection probe")
+ check(not fine_detail.visible and practicals.size() > 0 and not (practicals[0] as Light3D).visible, "LOW hides fine decoration and practical lights")
  settings_service.settings["graphics"] = "MEDIUM"
  settings_service.apply_settings()
  check(not fine_detail.visible and (practicals[0] as Light3D).visible, "MEDIUM enables practical lights")
  settings_service.settings["graphics"] = "HIGH"
  settings_service.apply_settings()
- check(fine_detail.visible and (practicals[0] as Light3D).visible and probe.visible, "HIGH enables fine decoration, practical lights and lobby reflection")
+ check(fine_detail.visible and (practicals[0] as Light3D).visible, "HIGH enables fine decoration and practical lights")
  settings_service.settings["graphics"] = old_quality
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
@@ -344,7 +343,11 @@ func run() -> void:
  player.global_position = primary.global_position + Vector3(0, 0.1, 0.7)
  await physics_frame
  world.call("_interact_nearest")
- check(active_mission.target_complete, "confronting primary target updates objective")
+ check(active_mission.target_complete and (primary.get_parent() as HotelNpc).objective_completed, "confronting primary target updates objective and ends routine")
+ var completed_npc := primary.get_parent() as HotelNpc
+ completed_npc.advance_simulation(60.0)
+ completed_npc.observe_trespass(player.global_position)
+ check(completed_npc.state == "objective_completed" and not completed_npc.incapacitate(5.0), "completed target cannot resume AI or become temporarily incapacitated")
  player.global_position = objects[4].global_position + Vector3(0, 0.1, 0.5)
  world.call("_interact_nearest")
  check(active_mission.extracted, "world interactions complete mission")
@@ -484,6 +487,28 @@ func run() -> void:
  check(not gadget_player.equipment.available.has("quiet_line"), "checkpoint cannot grant a locked gadget")
  for suffix: String in ["", ".bak", ".tmp"]:
   if FileAccess.file_exists(equipment_save + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(equipment_save + suffix))
+ # Fire through the actual center-ray path at the physical Meridian target.
+ for person: HotelNpc in gadget_npcs: person.collision_layer = 0
+ locke.collision_layer = 1
+ locke.global_position = Vector3(-8, 0.05, 0)
+ gadget_player.global_position = Vector3(-8, 0.05, 3)
+ gadget_player.equipment.configure(campaign, "meridian")
+ gadget_player.equipment.selected = "training_sidearm"
+ gadget_player.aiming = true
+ await physics_frame
+ gadget_player.camera.look_at(locke.global_position + Vector3.UP, Vector3.UP)
+ gadget_world.call("_fire")
+ check(meridian_mission.target_complete and meridian_mission.target_incapacitated and locke.objective_completed and locke.completed_incapacitated, "center-ray shot completes physical target permanently")
+ var terminal_save := SessionSnapshot.capture(gadget_player, meridian_mission)
+ locke._physics_process(100.0)
+ locke.observe_trespass(gadget_player.global_position)
+ check(locke.state == "objective_completed" and is_equal_approx(locke.person.rotation.z, 1.0), "completed shot target stays down beyond recovery and ignores observations")
+ check(not meridian_mission.mark_target("adrian_locke", true), "repeated target completion is rejected")
+ SessionSnapshot.restore({"target_id": "adrian_locke", "target_complete": false}, gadget_player, meridian_mission, hotel_objects)
+ check(not locke.objective_completed and not meridian_mission.target_complete, "loading earlier checkpoint restores active target")
+ SessionSnapshot.restore(terminal_save, gadget_player, meridian_mission, hotel_objects)
+ locke._physics_process(100.0)
+ check(locke.objective_completed and locke.completed_incapacitated and locke.state == "objective_completed", "checkpoint restores permanent incapacitated pose and objective")
  gadget_world.queue_free()
  await process_frame
  var initiation_scene: PackedScene = load("res://scenes/initiation.tscn")

@@ -17,6 +17,9 @@ var agent: NavigationAgent3D
 var facing: Vector3 = Vector3.FORWARD
 var stunned_time: float = 0.0
 var person: StylizedPerson
+# Terminal mission state is independent of temporary incapacitation.
+var objective_completed: bool = false
+var completed_incapacitated: bool = false
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -40,11 +43,41 @@ func _ready() -> void:
   agent.target_position = profile.schedule[0].destination
 
 func set_state(next: String) -> void:
+ if objective_completed and next != "objective_completed": return
  if state == next: return
  state = next
  state_changed.emit(self, state)
 
+func complete_objective(incapacitated: bool) -> void:
+ if objective_completed: return
+ objective_completed = true
+ completed_incapacitated = incapacitated
+ stunned_time = 0.0
+ velocity = Vector3.ZERO
+ set_state("objective_completed")
+ if person: person.rotation.z = 1.0 if incapacitated else 0.0
+
+func restore_objective(completed: bool, incapacitated: bool) -> void:
+ # Loading an earlier checkpoint deliberately restores its earlier state.
+ objective_completed = false
+ completed_incapacitated = false
+ stunned_time = 0.0
+ if completed:
+  complete_objective(incapacitated)
+ else:
+  set_state("returning")
+  if person: person.rotation.z = 0.0
+  if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+
+func incapacitate(seconds: float) -> bool:
+ if objective_completed or stunned_time > 0.0: return false
+ stunned_time = maxf(0.0, seconds)
+ if stunned_time <= 0.0: return false
+ set_state("disabled")
+ return true
+
 func observe_trespass(point: Vector3) -> void:
+ if objective_completed or stunned_time > 0.0: return
  # Repeated sightings update awareness, but only the first creates a memory.
  if state != "investigating" and state != "suspicious":
   memory.observe("trespass", point, 1.0)
@@ -55,6 +88,7 @@ func observe_trespass(point: Vector3) -> void:
  if agent: agent.target_position = point
 
 func advance_simulation(delta: float) -> void:
+ if objective_completed or stunned_time > 0.0: return
  memory.tick(delta)
  if state == "suspicious":
   set_state("investigating")
@@ -83,7 +117,7 @@ func can_see(target: Vector3, unobstructed: bool = true) -> bool:
  return unobstructed and facing.normalized().dot(offset.normalized()) >= 0.5
 
 func observe_disturbance(point: Vector3) -> void:
- if state in ["suspicious", "investigating", "disabled"]: return
+ if objective_completed or stunned_time > 0.0 or state in ["suspicious", "investigating", "disabled"]: return
  memory.observe("disturbance", point, 1.0)
  investigation_target = point
  suspicion = minf(100.0, suspicion + 35.0)
@@ -93,6 +127,10 @@ func observe_disturbance(point: Vector3) -> void:
 
 func _physics_process(delta: float) -> void:
  if profile == null: return
+ if objective_completed:
+  velocity = Vector3.ZERO
+  if person: person.rotation.z = 1.0 if completed_incapacitated else 0.0
+  return
  if stunned_time > 0.0:
   stunned_time = maxf(0.0, stunned_time - delta)
   if person: person.rotation.z = move_toward(person.rotation.z, 1.0, delta * 3.0)

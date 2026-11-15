@@ -335,12 +335,11 @@ func _use_equipment() -> void:
   var best := 1.8
   for npc: HotelNpc in npcs:
    var distance := npc.global_position.distance_to(player.global_position)
-   if distance < best and npc.stunned_time <= 0 and _clear_reach(npc.global_position, 1.8, npc.get_rid()):
+   if distance < best and not npc.objective_completed and npc.stunned_time <= 0 and _clear_reach(npc.global_position, 1.8, npc.get_rid()):
     nearest = npc
     best = distance
   if nearest:
-   nearest.stunned_time = 12.0
-   nearest.set_state("disabled")
+   nearest.incapacitate(12.0)
    message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
   else: message = "Quiet Line requires a nearby unobstructed person."
 
@@ -384,15 +383,18 @@ func _fire() -> void:
   elif collider is HotelNpc:
    var npc := collider as HotelNpc
    confirmed_hit = true
-   npc.stunned_time = 12.0
-   npc.set_state("disabled")
-   if npc == primary_npc and mission.mark_target(str(mission.primary_target.get("id", ""))):
+   if npc.objective_completed:
+    message = "Target objective already complete."
+   elif npc == primary_npc and mission.mark_target(str(mission.primary_target.get("id", "")), true):
+    npc.complete_objective(true)
     for obj: Interactable in interactables:
      if obj.kind == "primary":
       obj.used = true
       obj.visible = false
     message = "Ruby: Locke tagged for Blackline follow-up."
-   else: message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
+   else:
+    npc.incapacitate(12.0)
+    message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
   else: message = "Assessment pulse struck a surface."
  else: message = "Assessment pulse discharged."
  if confirmed_hit: crosshair.call("confirm_hit")
@@ -535,6 +537,7 @@ func _on_interaction(object: Interactable) -> void:
    if mission.mark_target(object.identifier):
     object.used = true
     object.visible = false
+    if object.get_parent() is HotelNpc: (object.get_parent() as HotelNpc).complete_objective(false)
     message = "Locke: The transfer was authorized. I never saw who collected it."
   "target":
    if object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0:

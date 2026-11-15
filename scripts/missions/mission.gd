@@ -13,6 +13,7 @@ var required_action: String = ""
 var action_complete: bool = false
 var primary_target: Dictionary = {}
 var target_complete: bool = false
+var target_incapacitated: bool = false
 var target_discovered: bool = false
 
 func configure(data: Variant) -> bool:
@@ -25,6 +26,7 @@ func configure(data: Variant) -> bool:
  action_complete = false
  primary_target = {}
  target_complete = false
+ target_incapacitated = false
  target_discovered = false
  if not data is Dictionary: return false
  var raw_records: Variant = data.get("records")
@@ -89,9 +91,10 @@ func mark_action(id: String) -> bool:
  changed.emit()
  return true
 
-func mark_target(id: String) -> bool:
+func mark_target(id: String, incapacitated: bool = false) -> bool:
  if not configured or id != primary_target.get("id", "") or id.is_empty() or target_complete: return false
  target_complete = true
+ target_incapacitated = incapacitated
  target_discovered = true
  changed.emit()
  return true

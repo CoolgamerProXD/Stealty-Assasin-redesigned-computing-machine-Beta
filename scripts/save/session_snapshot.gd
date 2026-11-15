@@ -14,6 +14,7 @@ static func capture(player: HotelPlayer, mission: Mission) -> Dictionary:
   "action_id": mission.required_action,
   "target_id": mission.primary_target.get("id", ""),
   "target_complete": mission.target_complete,
+  "target_incapacitated": mission.target_incapacitated,
   "target_discovered": mission.target_discovered,
   "equipment": player.equipment.snapshot(),
  }
@@ -37,6 +38,7 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
   mission.action_complete = true
  var same_target: bool = data.get("target_id", "") == mission.primary_target.get("id", "")
  mission.target_complete = same_target and data.get("target_complete", false) == true
+ mission.target_incapacitated = mission.target_complete and data.get("target_incapacitated", false) == true
  # The briefing already identifies the mission primary, including old saves.
  mission.target_discovered = not mission.primary_target.is_empty() or (same_target and data.get("target_discovered", false) == true)
  # A previously completed Meridian save must not become incomplete after adding Locke.
@@ -48,7 +50,10 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
   if object.kind == "clue": object.used = clues.has(object.identifier)
   elif object.kind == "disguise": object.used = player.role == "staff"
   elif object.kind == "target": object.used = mission.action_complete
-  elif object.kind == "primary": object.used = mission.target_complete
+  elif object.kind == "primary":
+   object.used = mission.target_complete
+   if object.get_parent() is HotelNpc:
+    (object.get_parent() as HotelNpc).restore_objective(mission.target_complete, mission.target_incapacitated)
   elif object.kind == "robot":
    object.used = mission.action_complete
    continue # The disabled training unit remains visible.

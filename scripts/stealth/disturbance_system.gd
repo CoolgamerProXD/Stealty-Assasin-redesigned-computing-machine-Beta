@@ -9,9 +9,9 @@ func _physics_process(delta: float) -> void:
  if clock > 0.0: return
  clock = 0.8
  for observer: HotelNpc in npcs:
-  if not is_instance_valid(observer) or observer.stunned_time > 0.0 or observer.state in ["suspicious", "investigating"]: continue
+  if not is_instance_valid(observer) or observer.stunned_time > 0.0 or observer.objective_completed or observer.state in ["suspicious", "investigating"]: continue
   for subject: HotelNpc in npcs:
-   if not is_instance_valid(subject) or subject == observer or subject.stunned_time <= 0.0: continue
+   if not is_instance_valid(subject) or subject == observer or subject.stunned_time <= 0.0 and not subject.completed_incapacitated: continue
    if observer.global_position.distance_to(subject.global_position) > 6.0: continue
    if not observer.can_see(subject.global_position): continue
    var start := observer.global_position + Vector3.UP * 1.3
