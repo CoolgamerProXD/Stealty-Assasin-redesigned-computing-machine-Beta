@@ -4,7 +4,7 @@ signal back_requested
 var status: Label
 
 func _ready() -> void:
- add_theme_constant_override("separation", 6)
+ add_theme_constant_override("separation", 2)
  var heading := Label.new()
  heading.text = "SETTINGS"
  heading.add_theme_font_size_override("font_size", 30)
