@@ -150,6 +150,30 @@ func _hotel() -> void:
      _part(Vector3(x + dx, y + 0.15, z - 0.22), Vector3(0.38, 0.24, 0.10), Color(0.42, 0.38, 0.30), true)
  for x: float in [-8.0, -2.0, 4.5, 9.5]:
   _part(Vector3(x, 2.92, 0), Vector3(1.2, 0.025, 0.14), Color(1.0, 0.83, 0.57))
+ # One static, shadowless probe is restricted to HIGH. The polished inlay
+ # underneath remains decorative and never changes navigation/collision.
+ var probe := ReflectionProbe.new()
+ probe.name = "LobbyReflection"
+ probe.position = Vector3(-5, 1.45, 0)
+ probe.size = Vector3(13, 3, 15)
+ probe.update_mode = ReflectionProbe.UPDATE_ONCE
+ probe.enable_shadows = false
+ probe.add_to_group("quality_reflections")
+ probe.visible = Campaign.settings["graphics"] == "HIGH"
+ add_child(probe)
+ var polished := MeshInstance3D.new()
+ polished.name = "PolishedReceptionInlay"
+ var polished_mesh := BoxMesh.new()
+ polished_mesh.size = Vector3(3.9, 0.015, 0.85)
+ polished.mesh = polished_mesh
+ polished.position = Vector3(-5, 1.10, -4.8)
+ var polished_material := StandardMaterial3D.new()
+ polished_material.albedo_color = Color(0.43, 0.31, 0.20)
+ polished_material.metallic = 0.45
+ polished_material.roughness = 0.24
+ polished.material_override = polished_material
+ polished.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ add_child(polished)
  _lamp(Vector3(-6, 2.65, -3.5), Color(1.0, 0.70, 0.42), 0.55, 7.0)
  _lamp(Vector3(-5, 2.65, 3), Color(1.0, 0.73, 0.48), 0.45, 7.0)
  _lamp(Vector3(4.5, 2.6, 0), Color(0.65, 0.82, 1.0), 0.35, 6.0)

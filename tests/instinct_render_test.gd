@@ -36,6 +36,15 @@ func red_stats(image: Image) -> Vector2:
     sum += x
  return Vector2(count, sum / maxf(count, 1))
 
+func differing_pixels(a: Image, b: Image) -> int:
+ var count := 0
+ for y: int in range(int(a.get_height() * 0.28), int(a.get_height() * 0.8), 6):
+  for x: int in range(int(a.get_width() * 0.28), int(a.get_width() * 0.72), 6):
+   var p := a.get_pixel(x, y)
+   var q := b.get_pixel(x, y)
+   if absf(p.r - q.r) + absf(p.g - q.g) + absf(p.b - q.b) > 0.08: count += 1
+ return count
+
 func run() -> void:
  output = OS.get_environment("TEST_SCREENSHOT_DIR")
  if output.is_empty(): output = ProjectSettings.globalize_path("res://visual-test-output")
@@ -104,11 +113,17 @@ func run() -> void:
    var service: Node = root.get_node("Campaign")
    var old_settings: Dictionary = service.settings.duplicate(true)
    service.settings["show_fps"] = true
+   var low_image: Image
    for quality: String in ["LOW", "MEDIUM", "HIGH"]:
     service.settings["graphics"] = quality
     service.apply_settings()
     var preset_image := await capture("hotel_preset_" + quality.to_lower())
     check(not preset_image.is_empty() and world.get("fps_label").visible and world.get("fps_label").text.contains("FPS"), quality + " renders with FPS counter")
+    if quality == "LOW": low_image = preset_image
+    if quality == "HIGH":
+     var difference := differing_pixels(low_image, preset_image)
+     print("VISUAL_METRIC: low_high_pixel_difference=", difference)
+     check(difference > 20, "LOW and HIGH visibly alter the rendered scene")
    service.settings = old_settings
    service.apply_settings()
   world.queue_free()

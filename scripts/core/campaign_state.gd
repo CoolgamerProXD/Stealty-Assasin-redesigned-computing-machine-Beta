@@ -89,6 +89,8 @@ func apply_settings() -> void:
   (light as Light3D).visible = quality != "LOW"
  for detail: Node in get_tree().get_nodes_in_group("quality_detail"):
   (detail as Node3D).visible = quality == "HIGH"
+ for probe: Node in get_tree().get_nodes_in_group("quality_reflections"):
+  (probe as ReflectionProbe).visible = quality == "HIGH"
  var master := AudioServer.get_bus_index("Master")
  if master >= 0: AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, float(settings["volume"]))))
  if DisplayServer.get_name() != "headless":

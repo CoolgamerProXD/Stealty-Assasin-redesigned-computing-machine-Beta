@@ -25,6 +25,23 @@ func capture(name: String) -> void:
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
 
+func sample_preset(service: Node, quality: String) -> void:
+ service.settings["graphics"] = quality
+ service.apply_settings()
+ for i: int in range(15): await process_frame
+ var intervals: Array[float] = []
+ var previous := Time.get_ticks_usec()
+ for i: int in range(60):
+  await process_frame
+  var now := Time.get_ticks_usec()
+  intervals.append(float(now - previous) / 1000.0)
+  previous = now
+ var total := 0.0
+ for value: float in intervals: total += value
+ intervals.sort()
+ var mean := total / intervals.size()
+ print("PRESET_METRIC: %s frames=%d mean_ms=%.3f p95_ms=%.3f fps=%.2f" % [quality, intervals.size(), mean, intervals[56], 1000.0 / maxf(mean, 0.001)])
+
 func shot_camera(world: Node3D, pos: Vector3, target: Vector3) -> Camera3D:
  var camera := Camera3D.new()
  world.add_child(camera)
@@ -49,6 +66,8 @@ func run() -> void:
  camera.global_position = Vector3(4.5, 1.8, 4.4)
  camera.look_at(Vector3(4.5, 1.2, -6.0), Vector3.UP)
  await capture("cinema_hotel_corridor")
+ for quality: String in ["LOW", "MEDIUM", "HIGH"]:
+  await sample_preset(service, quality)
  var target: HotelNpc = hotel.get("primary_npc")
  camera.global_position = target.global_position + Vector3(2.4, 1.7, 2.4)
  camera.look_at(target.global_position + Vector3.UP * 1.0, Vector3.UP)

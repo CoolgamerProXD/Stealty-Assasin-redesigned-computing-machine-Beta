@@ -102,16 +102,17 @@ func run() -> void:
  var player: HotelPlayer = world.get("player")
  var fine_detail: MultiMeshInstance3D = world.get_node("EnvironmentDressing/FineDetail")
  var practicals := get_nodes_in_group("quality_practicals")
+ var probe := world.get_node("EnvironmentDressing/LobbyReflection") as ReflectionProbe
  var old_quality: String = settings_service.settings["graphics"]
  settings_service.settings["graphics"] = "LOW"
  settings_service.apply_settings()
- check(not fine_detail.visible and practicals.size() > 0 and not (practicals[0] as Light3D).visible, "LOW hides fine decoration and practical lights")
+ check(not fine_detail.visible and practicals.size() > 0 and not (practicals[0] as Light3D).visible and not probe.visible, "LOW hides fine decoration, practical lights and reflection probe")
  settings_service.settings["graphics"] = "MEDIUM"
  settings_service.apply_settings()
  check(not fine_detail.visible and (practicals[0] as Light3D).visible, "MEDIUM enables practical lights")
  settings_service.settings["graphics"] = "HIGH"
  settings_service.apply_settings()
- check(fine_detail.visible and (practicals[0] as Light3D).visible, "HIGH enables fine decoration and practical lights")
+ check(fine_detail.visible and (practicals[0] as Light3D).visible and probe.visible, "HIGH enables fine decoration, practical lights and lobby reflection")
  settings_service.settings["graphics"] = old_quality
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")

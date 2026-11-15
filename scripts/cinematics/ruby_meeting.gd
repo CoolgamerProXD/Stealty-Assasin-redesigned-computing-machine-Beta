@@ -39,7 +39,8 @@ func _ready() -> void:
  var light := DirectionalLight3D.new()
  light.rotation_degrees = Vector3(-45, 35, 0)
  light.light_energy = 1.0
- light.shadow_enabled = true
+ light.add_to_group("quality_lights")
+ light.shadow_enabled = Campaign.settings["graphics"] != "LOW"
  add_child(light)
  _box(Vector3(0, -0.15, 3), Vector3(12, 0.3, 8), Color(0.30, 0.33, 0.34))
  _box(Vector3(0, -0.15, -5), Vector3(20, 0.3, 10), Color(0.33, 0.34, 0.31))
@@ -67,6 +68,22 @@ func _ready() -> void:
  camera.current = true
  var canvas := CanvasLayer.new()
  add_child(canvas)
+ var bars := Control.new()
+ bars.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ canvas.add_child(bars)
+ var top_bar := ColorRect.new()
+ top_bar.color = Color(0.015, 0.02, 0.025, 0.88)
+ top_bar.set_anchors_preset(Control.PRESET_TOP_WIDE)
+ top_bar.offset_bottom = 48
+ top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ bars.add_child(top_bar)
+ var bottom_bar := ColorRect.new()
+ bottom_bar.color = Color(0.015, 0.02, 0.025, 0.88)
+ bottom_bar.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+ bottom_bar.offset_top = -48
+ bottom_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ bars.add_child(bottom_bar)
  subtitles = Label.new()
  subtitles.position = Vector2(110, 570)
  subtitles.custom_minimum_size = Vector2(1000, 80)
@@ -143,12 +160,15 @@ func _apply_timeline(t: float, delta: float) -> void:
  actor.position = Vector3(0, 0, lerpf(4.5, -3.1, walk))
  actor.animate_motion(delta, 1.1 if t > 1.0 and t < 8.0 else 0.0)
  ruby.animate_motion(delta, 0.0)
- if t < 7.0:
-  camera.position = Vector3(-2.4, 2.8, actor.position.z + 6.0)
-  camera.look_at(Vector3(0, 1.25, actor.position.z - 1.5), Vector3.UP)
- else:
-  camera.position = Vector3(5.0, 2.4, -1.2)
-  camera.look_at(Vector3(0.7, 1.2, -3.8), Vector3.UP)
+ # Blend between the tracking and dialogue compositions rather than cutting
+ # to a discontinuous camera position in the middle of Ruby's introduction.
+ var mix := smoothstep(6.3, 7.7, t)
+ var tracking_position := Vector3(-2.4, 2.8, actor.position.z + 6.0)
+ var dialogue_position := Vector3(5.0, 2.4, -1.2)
+ var tracking_focus := Vector3(0, 1.25, actor.position.z - 1.5)
+ var dialogue_focus := Vector3(0.7, 1.2, -3.8)
+ camera.position = tracking_position.lerp(dialogue_position, mix)
+ camera.look_at(tracking_focus.lerp(dialogue_focus, mix), Vector3.UP)
  if t < 8.0: subtitles.text = "ASSESSMENT COMPLETE  /  CIVIC EVALUATION ANNEX"
  elif t < 12.0: subtitles.text = "RUBY: You noticed the missing piece. Most people only count the locks."
  elif t < 15.0: subtitles.text = "RUBY: I'm Ruby. From now on, I handle your assignments for Blackline."
