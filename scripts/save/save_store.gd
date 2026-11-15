@@ -44,7 +44,11 @@ static func _read_one(path: String) -> Dictionary:
  if not FileAccess.file_exists(path): return {}
  var file := FileAccess.open(path, FileAccess.READ)
  if file == null: return {}
- var parsed: Variant = JSON.parse_string(file.get_as_text())
+ # Malformed saves are expected during recovery; instance parsing returns an
+ # error code without emitting JSON.parse_string's engine error message.
+ var json := JSON.new()
+ if json.parse(file.get_as_text()) != OK: return {}
+ var parsed: Variant = json.data
  if not parsed is Dictionary: return {}
  if parsed.get("version", -1) != VERSION or not parsed.get("data") is Dictionary: return {}
  return parsed["data"]

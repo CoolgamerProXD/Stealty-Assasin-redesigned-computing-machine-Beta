@@ -97,6 +97,8 @@ func run() -> void:
   if obj.kind == "clue" and NavigationServer3D.map_get_closest_point(navmap, obj.global_position).distance_to(obj.global_position) > 0.5:
    records_on_navmesh = false
  check(records_on_navmesh, "all record markers are on the navigation mesh")
+ await create_timer(2.0).timeout
+ check(npc.schedule_index == 1, "NPC advances to the next scheduled destination")
  npc.facing = Vector3.FORWARD
  check(npc.can_see(npc.global_position + Vector3.FORWARD * 3.0), "NPC sees in field of view")
  check(not npc.can_see(npc.global_position + Vector3.BACK * 3.0), "NPC cannot see behind")
@@ -107,6 +109,8 @@ func run() -> void:
  check(npc.state == "investigating", "suspicion triggers investigation")
  npc.advance_simulation(11.0)
  check(npc.state == "returning", "investigation returns to routine")
+ await create_timer(8.0).timeout
+ check(npc.state not in ["investigating", "suspicious", "returning"], "NPC resumes its interrupted schedule")
  player.set_disguise("staff")
  check(player.role == "staff" and AccessRules.can_enter(player.role, "staff"), "disguise changes access")
  for existing: HotelNpc in npcs:
@@ -197,7 +201,10 @@ func run() -> void:
  world.call("_interact_nearest")
  check(not objects[0].used and world_mission.clues.is_empty(), "full inventory does not consume or count record")
  player.inventory.capacity = 6
- world.call("_interact_nearest")
+ var interaction_event := InputEventAction.new()
+ interaction_event.action = "interact"
+ interaction_event.pressed = true
+ player._unhandled_input(interaction_event)
  var active_mission: Mission = world.get("mission")
  check(active_mission.clues.has("ledger") and player.inventory.has_item("ledger"), "world interaction records clue and item")
  player.global_position = objects[1].global_position + Vector3(0, 0.1, 0.5)
