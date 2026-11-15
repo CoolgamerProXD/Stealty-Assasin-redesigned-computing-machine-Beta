@@ -81,6 +81,15 @@ func can_see(target: Vector3, unobstructed: bool = true) -> bool:
  if offset.length() > 7.0 or offset.length() < 0.01: return false
  return unobstructed and facing.normalized().dot(offset.normalized()) >= 0.5
 
+func observe_disturbance(point: Vector3) -> void:
+ if state in ["suspicious", "investigating", "disabled"]: return
+ memory.observe("disturbance", point, 1.0)
+ investigation_target = point
+ suspicion = minf(100.0, suspicion + 35.0)
+ investigation_time = 0.0
+ set_state("suspicious")
+ if agent: agent.target_position = point
+
 func _physics_process(delta: float) -> void:
  if profile == null: return
  if stunned_time > 0.0:
@@ -99,7 +108,9 @@ func _physics_process(delta: float) -> void:
   perception_clock = 0.0
   if player and not AccessRules.can_enter(player.role, AccessRules.area_at(player.global_position)) and can_see(player.global_position):
    var ray_start := global_position + Vector3.UP * 1.3
-   var ray_end := player.global_position + Vector3.UP * 1.0
+   # Target the actual stance, so cover geometry, not a magic crouch bonus,
+   # determines whether the player is visible.
+   var ray_end := player.global_position + Vector3.UP * (player.stance_height * 0.65)
    var query := PhysicsRayQueryParameters3D.create(ray_start, ray_end)
    query.exclude = [get_rid(), player.get_rid()]
    var clear := get_world_3d().direct_space_state.intersect_ray(query).is_empty()
@@ -127,4 +138,4 @@ func _physics_process(delta: float) -> void:
  if person:
   person.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
   if velocity.length_squared() > 0.1:
-   person.rotation.y = atan2(-velocity.x, -velocity.z)
+   person.rotation.y = lerp_angle(person.rotation.y, atan2(-velocity.x, -velocity.z), 1.0 - exp(-delta * 8.0))

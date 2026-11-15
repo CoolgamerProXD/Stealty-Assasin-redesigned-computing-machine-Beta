@@ -61,6 +61,13 @@ jobs:
           TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/visual-test-output" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/instinct_render_test.gd 2>&1 | tee "$RUNNER_TEMP/visual.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^VISUAL FAIL:' "$RUNNER_TEMP/visual.log"; then exit 1; fi
           grep -E '^VISUAL RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/visual.log"
+      - name: Cinematic scene and UI captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/cinema_capture_test.gd 2>&1 | tee "$RUNNER_TEMP/cinema.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^CINEMA FAIL:' "$RUNNER_TEMP/cinema.log"; then exit 1; fi
+          grep -E '^CINEMA RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/cinema.log"
       - name: Upload rendered comparisons
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -79,13 +86,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "environment", "import", "startup", "tests", "camera", "visual"):
+          for name in ("version", "environment", "import", "startup", "tests", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "camera", "visual"):
-                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+              if name in ("tests", "camera", "visual", "cinema"):
+                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -116,4 +123,28 @@ jobs:
               encoded = base64.b64encode(path.read_bytes()).decode("ascii")
               for index in range(0, len(encoded), 3000):
                   print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
+          PYCODE
+      - name: Preview environment captures
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("cinema_hotel_lobby", "cinema_initiation"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview gameplay captures
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("cinema_hotel_corridor", "cinema_weapon_aim"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
           PYCODE

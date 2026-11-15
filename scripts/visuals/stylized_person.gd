@@ -12,6 +12,8 @@ var muzzle_flash: MeshInstance3D
 var weapon_recoil: float = 0.0
 var weapon_aiming: bool = false
 var weapon_equipped: bool = false
+var weapon_draw: float = 0.0
+var weapon_aim_blend: float = 0.0
 var phase: float = 0.0
 var clothing: StandardMaterial3D
 
@@ -93,17 +95,22 @@ func animate_motion(delta: float, speed: float) -> void:
  if not left_leg: return
  phase += delta * (3.0 + minf(speed, 5.0) * 3.0)
  var swing := sin(phase) * minf(speed * 0.16, 0.6)
- var blend := minf(1.0, delta * 10.0)
+ var blend := 1.0 - exp(-delta * 10.0)
+ weapon_draw = move_toward(weapon_draw, 1.0 if weapon_equipped else 0.0, delta * 3.0)
+ weapon_aim_blend = move_toward(weapon_aim_blend, 1.0 if weapon_aiming and weapon_equipped else 0.0, delta * 4.0)
+ torso.rotation.z = sin(phase * 0.5) * 0.008
+ torso.rotation.x = sin(phase * 0.5) * 0.008
  left_leg.rotation.x = lerp_angle(left_leg.rotation.x, swing, blend)
  right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -swing, blend)
- left_arm.rotation.x = lerp_angle(left_arm.rotation.x, -swing * 0.7, blend)
- var right_pose := swing * 0.7
- if weapon_equipped: right_pose = 1.35 if weapon_aiming else 0.35
+ left_arm.rotation.x = lerp_angle(left_arm.rotation.x, lerpf(-swing * 0.7, 1.05, weapon_aim_blend), blend)
+ left_arm.rotation.z = lerp_angle(left_arm.rotation.z, -0.20 * weapon_aim_blend, blend)
+ var ready_pose := lerpf(0.35, 1.35, weapon_aim_blend)
+ var right_pose := lerpf(swing * 0.7, ready_pose, weapon_draw)
  right_pose -= weapon_recoil * 0.35
  right_arm.rotation.x = lerp_angle(right_arm.rotation.x, right_pose, blend)
  if weapon:
-  weapon.visible = weapon_equipped
-  muzzle_flash.visible = weapon_equipped and weapon_recoil > 0.72
+  weapon.visible = weapon_draw > 0.03
+  muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
 
 func _material(color: Color) -> StandardMaterial3D:

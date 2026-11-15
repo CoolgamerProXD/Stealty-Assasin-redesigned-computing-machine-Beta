@@ -201,6 +201,72 @@ func run() -> void:
  check(not observer.memory.observations.is_empty() and observer.suspicion > 0.0, "NPC observes trespass through an opening")
  observer.set_physics_process(false)
  observer.collision_layer = 0
+ # A waist-high solid barrier blocks the lower crouched sight ray, but not
+ # the standing ray. This exercises real geometry instead of a stance bonus.
+ var cover := StaticBody3D.new()
+ var cover_shape := CollisionShape3D.new()
+ var cover_box := BoxShape3D.new()
+ cover_box.size = Vector3(0.2, 1.10, 2.0)
+ cover_shape.shape = cover_box
+ cover.add_child(cover_shape)
+ world.add_child(cover)
+ cover.global_position = Vector3(4.5, 0.55, 4.7)
+ observer.global_position = Vector3(3.5, 0.05, 4.7)
+ observer.facing = Vector3.RIGHT
+ observer.memory.observations.clear()
+ observer.suspicion = 0.0
+ observer.state = "idle"
+ player.global_position = Vector3(5.5, 0.05, 4.7)
+ player.velocity = Vector3.ZERO
+ await physics_frame
+ observer.set_physics_process(true)
+ await create_timer(0.9).timeout
+ check(observer.suspicion > 0.0, "standing player is visible over low cover")
+ observer.set_physics_process(false)
+ observer.memory.observations.clear()
+ observer.suspicion = 0.0
+ observer.state = "idle"
+ Input.action_press("crouch")
+ await create_timer(0.4).timeout
+ observer.set_physics_process(true)
+ await create_timer(0.9).timeout
+ check(observer.suspicion == 0.0, "low solid cover blocks crouched sight ray")
+ observer.set_physics_process(false)
+ Input.action_release("crouch")
+ cover.queue_free()
+ await create_timer(0.4).timeout
+ # Local visual discovery of an incapacitated person respects opaque cover.
+ var down := HotelNpc.new()
+ down.profile = NpcProfile.new()
+ world.add_child(down)
+ down.set_physics_process(false)
+ down.global_position = Vector3(-4, 0.05, 0)
+ down.stunned_time = 5.0
+ observer.global_position = Vector3(-6, 0.05, 0)
+ observer.facing = Vector3.RIGHT
+ observer.state = "idle"
+ observer.memory.observations.clear()
+ var disturbance := DisturbanceSystem.new()
+ disturbance.npcs = [observer, down]
+ world.add_child(disturbance)
+ disturbance.set_physics_process(false)
+ var screen := StaticBody3D.new()
+ var screen_shape := CollisionShape3D.new()
+ var screen_box := BoxShape3D.new()
+ screen_box.size = Vector3(0.2, 2.0, 2.0)
+ screen_shape.shape = screen_box
+ screen.add_child(screen_shape)
+ world.add_child(screen)
+ screen.global_position = Vector3(-5, 1, 0)
+ await physics_frame
+ disturbance._physics_process(1.0)
+ check(observer.memory.observations.is_empty(), "unseen disturbance does not create global knowledge")
+ screen.queue_free()
+ await physics_frame
+ disturbance._physics_process(1.0)
+ check(observer.state == "suspicious" and observer.memory.observations.size() == 1 and observer.memory.observations[0].kind == "disturbance", "visible incapacitated NPC triggers local investigation")
+ disturbance.queue_free()
+ down.queue_free()
  player.set_disguise("staff")
  # Interaction selection must not reach through a wall, even within range.
  var objects: Array[Interactable] = world.get("interactables")

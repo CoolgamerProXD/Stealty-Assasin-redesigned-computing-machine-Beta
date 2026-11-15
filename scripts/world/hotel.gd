@@ -12,6 +12,8 @@ var prompt_panel: PanelContainer
 var equipment_hud: Label
 var crosshair: Control
 var shot_audio: AudioStreamPlayer
+var objective_audio: AudioStreamPlayer
+var ambience_audio: AudioStreamPlayer
 var last_shot_start: Vector3
 var last_shot_end: Vector3
 var instinct_label: Label
@@ -54,6 +56,9 @@ func _ready() -> void:
     mission.configure(null)
     break
  _build_npcs()
+ var disturbances := DisturbanceSystem.new()
+ disturbances.npcs = npcs
+ add_child(disturbances)
  _build_interactions()
  _build_ui()
  _setup_instinct()
@@ -300,6 +305,14 @@ func _build_ui() -> void:
  shot_audio = AudioStreamPlayer.new()
  shot_audio.stream = ProceduralSound.tone(180.0, 0.12, 0.14)
  add_child(shot_audio)
+ objective_audio = AudioStreamPlayer.new()
+ objective_audio.stream = ProceduralSound.tone(440.0, 0.20, 0.05)
+ add_child(objective_audio)
+ mission.changed.connect(objective_audio.play)
+ ambience_audio = AudioStreamPlayer.new()
+ ambience_audio.stream = ProceduralSound.tone(55.0 if mission_id() == "initiation" else 45.0, 1.0, 0.012, true)
+ add_child(ambience_audio)
+ ambience_audio.play()
  prompt = Label.new()
  prompt.add_theme_font_size_override("font_size", 16)
  bottom.add_child(prompt)
@@ -345,7 +358,7 @@ func _fire() -> void:
   message = "Camera obstructed. Move to get a clear shot."
   return
  player.equipment.charges -= 1
- player.body_mesh.fire_weapon()
+ player.shot_feedback()
  var direction := player.camera.project_ray_normal(screen_center)
  var end := origin + direction * 50.0
  var query := PhysicsRayQueryParameters3D.create(origin, end)
@@ -562,14 +575,18 @@ func _process(_delta: float) -> void:
  var area := AccessRules.area_at(player.global_position)
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0
- for npc: HotelNpc in npcs: highest = maxf(highest, npc.suspicion)
+ var local_state := "NO LOCAL ALERT"
+ for npc: HotelNpc in npcs:
+  if npc.suspicion > highest and _clear_reach(npc.global_position, 9.0, npc.get_rid()):
+   highest = npc.suspicion
+   local_state = "INVESTIGATING" if npc.state == "investigating" else "SUSPICIOUS"
  var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
  var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "ADRIAN LOCKE  /  OPERATIONS DIRECTOR"
  var target_done := mission.action_complete if mission_id() == "initiation" else mission.target_complete
  var target_state := "COMPLETE" if target_done else "ACTIVE"
  if mission_id() == "initiation" and not mission.action_complete and get("robot_alert") == true:
   target_state = "SCANNING NEARBY"
- hud.text = title + "\n" + mission.objective_text() + "\n" + mission.progress_text() + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
+ hud.text = title + "\n" + mission.objective_text() + "\n" + mission.progress_text() + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + "%s  /  %s  ·  %s  ·  %s" % [area.to_upper(), access, player.role.to_upper(), local_state]
  fps_label.visible = Campaign.settings["show_fps"]
  fps_label.text = "%d FPS" % Engine.get_frames_per_second()
  var slots := "1  TRAINING SIDEARM"

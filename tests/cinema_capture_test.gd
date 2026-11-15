@@ -1,0 +1,116 @@
+extends SceneTree
+## Scripted 1280x720 captures, not a human playthrough. Cameras are positioned
+## explicitly for repeatable composition; actual gameplay camera also captured.
+var output: String
+var checks := 0
+var failures := 0
+
+func _initialize() -> void:
+ call_deferred("run")
+
+func check(value: bool, text: String) -> void:
+ checks += 1
+ if value: print("CINEMA PASS: ", text)
+ else:
+  failures += 1
+  printerr("CINEMA FAIL: ", text)
+
+func capture(name: String) -> void:
+ for i: int in range(4): await process_frame
+ await RenderingServer.frame_post_draw
+ var image := root.get_texture().get_image()
+ image.save_png(output.path_join(name + ".png"))
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim"]:
+  var thumb := image.duplicate() as Image
+  thumb.resize(320, 180)
+  thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
+
+func shot_camera(world: Node3D, pos: Vector3, target: Vector3) -> Camera3D:
+ var camera := Camera3D.new()
+ world.add_child(camera)
+ camera.global_position = pos
+ camera.look_at(target, Vector3.UP)
+ camera.fov = 65
+ camera.make_current()
+ return camera
+
+func run() -> void:
+ output = ProjectSettings.globalize_path("res://visual-test-output")
+ DirAccess.make_dir_recursive_absolute(output)
+ var service: Node = root.get_node("Campaign")
+ var saved: Dictionary = service.settings.duplicate(true)
+ service.settings["graphics"] = "HIGH"
+ service.apply_settings()
+ var hotel: Node3D = load("res://scenes/hotel.tscn").instantiate()
+ root.add_child(hotel)
+ for i: int in range(10): await physics_frame
+ var camera := shot_camera(hotel, Vector3(-9.8, 2.1, 5.5), Vector3(-5.1, 1.1, -4.6))
+ await capture("cinema_hotel_lobby")
+ camera.global_position = Vector3(4.5, 1.8, 4.4)
+ camera.look_at(Vector3(4.5, 1.2, -6.0), Vector3.UP)
+ await capture("cinema_hotel_corridor")
+ var target: HotelNpc = hotel.get("primary_npc")
+ camera.global_position = target.global_position + Vector3(2.4, 1.7, 2.4)
+ camera.look_at(target.global_position + Vector3.UP * 1.0, Vector3.UP)
+ await capture("cinema_adrian_locke")
+ check(target.profile.identity == "Adrian Locke" and target.person.is_visible_in_tree(), "physical scheduled primary visible in hotel")
+ var npc: HotelNpc = hotel.get("npcs")[0]
+ var before := npc.global_position
+ camera.global_position = npc.global_position + Vector3(2.8, 1.8, 2.8)
+ camera.look_at(npc.global_position + Vector3.UP, Vector3.UP)
+ await capture("cinema_npc_motion_before")
+ await create_timer(1.5).timeout
+ await capture("cinema_npc_motion_after")
+ # Existing headless suite asserts actual schedule motion; these two images
+ # document the scripted scene and are not a motion-quality judgment.
+ print("CINEMA_METRIC: NPC displacement=", npc.global_position.distance_to(before))
+ var player: HotelPlayer = hotel.get("player")
+ player.global_position = Vector3(-9, 0.05, 1.5)
+ player.rotation.y = 0
+ player.pivot.rotation.x = -0.22
+ player.camera.make_current()
+ for i: int in range(20): await physics_frame
+ await capture("cinema_weapon_idle")
+ var aim := InputEventMouseButton.new()
+ aim.button_index = MOUSE_BUTTON_RIGHT
+ aim.pressed = true
+ Input.parse_input_event(aim)
+ for i: int in range(30): await physics_frame
+ await capture("cinema_weapon_aim")
+ check(player.aiming and player.body_mesh.weapon_aim_blend > 0.8 and player.camera.fov < 62, "aim transitions weapon and FOV in gameplay camera")
+ aim.pressed = false
+ Input.parse_input_event(aim.duplicate())
+ for i: int in range(30): await physics_frame
+ check(not player.aiming and player.body_mesh.weapon_aim_blend < 0.2 and player.camera.fov > 65, "aim release restores exploration pose and FOV")
+ hotel.queue_free()
+ await process_frame
+ var initiation: Node3D = load("res://scenes/initiation.tscn").instantiate()
+ root.add_child(initiation)
+ for i: int in range(10): await physics_frame
+ var init_cam := shot_camera(initiation, Vector3(-12.5, 2.1, 6.0), Vector3(-6.0, 1.0, -4.5))
+ await capture("cinema_initiation")
+ check(init_cam.current and initiation.get("npcs").size() == 2, "Initiation camera renders scene with exactly two guards")
+ initiation.queue_free()
+ await process_frame
+ var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
+ root.add_child(menu)
+ await process_frame
+ menu.call("_settings")
+ await capture("cinema_graphics_settings")
+ check(menu.get("panel").get_child_count() > 0, "settings panel opens from main menu")
+ menu.queue_free()
+ await process_frame
+ var old_ending: Dictionary = service.ending.duplicate(true)
+ service.ending = {"name": "02  /  THE MERIDIAN", "records": 2, "debrief": "Ruby: The archive trail continues."}
+ var ending: Control = load("res://scenes/ending.tscn").instantiate()
+ root.add_child(ending)
+ await create_timer(1.6).timeout
+ await capture("cinema_staged_debrief")
+ check(ending.get("debrief").modulate.a > 0.9, "debrief appears after its transition")
+ ending.queue_free()
+ service.ending = old_ending
+ service.settings = saved
+ service.apply_settings()
+ await process_frame
+ print("CINEMA RESULT: %d checks, %d failures" % [checks, failures])
+ quit(0 if failures == 0 else 1)

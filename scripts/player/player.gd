@@ -20,6 +20,9 @@ var body_mesh: StylizedPerson
 var crouching: bool = false
 var collision_shape: CollisionShape3D
 var stance_height: float = 1.8
+var camera_kick: float = 0.0
+var footstep_clock: float = 0.0
+var footsteps: AudioStreamPlayer3D
 
 func _ready() -> void:
  var collision := CollisionShape3D.new()
@@ -46,6 +49,11 @@ func _ready() -> void:
  camera = Camera3D.new()
  arm.add_child(camera)
  camera.current = true
+ camera.fov = 68.0
+ footsteps = AudioStreamPlayer3D.new()
+ footsteps.stream = ProceduralSound.tone(90.0, 0.07, 0.035)
+ footsteps.max_distance = 6.0
+ add_child(footsteps)
  pivot.rotation.x = -0.22
  Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -81,10 +89,16 @@ func _notification(what: int) -> void:
   aiming = false
   instinct_active = false
 
+func shot_feedback() -> void:
+ camera_kick = 1.0
+ body_mesh.fire_weapon()
+
 func _physics_process(delta: float) -> void:
- var blend := minf(1.0, delta * 9.0)
+ var blend := 1.0 - exp(-delta * 9.0)
+ camera.fov = lerpf(camera.fov, (58.0 if aiming else 68.0) + camera_kick * 1.2, 1.0 - exp(-delta * 8.0))
+ camera_kick = move_toward(camera_kick, 0.0, delta * 5.0)
  arm.spring_length = lerpf(arm.spring_length, 2.4 if aiming else 4.0, blend)
- arm.position.x = lerpf(arm.position.x, 0.55 if aiming else 0.0, blend)
+ arm.position.x = lerpf(arm.position.x, 0.55 if aiming else 0.15, blend)
  var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
  var direction := transform.basis * Vector3(input.x, 0, input.y)
  var wants_crouch := Input.is_action_pressed("crouch")
@@ -106,6 +120,14 @@ func _physics_process(delta: float) -> void:
  if not is_on_floor(): velocity.y -= 9.8 * delta
  else: velocity.y = -0.1
  move_and_slide()
+ var moving_speed := Vector2(velocity.x, velocity.z).length()
+ if is_on_floor() and moving_speed > 0.5:
+  footstep_clock -= delta
+  if footstep_clock <= 0.0:
+   footsteps.pitch_scale = 0.85 if crouching else (1.15 if moving_speed > 3.3 else 1.0)
+   footsteps.play()
+   footstep_clock = 0.32 if moving_speed > 3.3 else (0.72 if crouching else 0.48)
+ else: footstep_clock = minf(footstep_clock, 0.1)
 
 # Test the full standing capsule against real geometry; never grow through a ceiling.
 func _can_stand() -> bool:
