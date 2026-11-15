@@ -1,0 +1,44 @@
+name: Godot 4.4.1 regression
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install official Godot 4.4.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 -o "$RUNNER_TEMP/godot.zip" https://github.com/godotengine/godot-builds/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip
+          echo 'ef4e76880a514257175544952c61191106fdef3095b909bafed9fcbeb230c3e5533920a0f3012882dd4bbde83028a67549825794e2d2c3cf76eba7918b71370e  '"$RUNNER_TEMP"'/godot.zip' | sha512sum -c -
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --version
+      - name: Data checks
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Import project
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --editor --path . --quit 2>&1 | tee "$RUNNER_TEMP/import.log"
+          if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/import.log"; then exit 1; fi
+      - name: Start main scene
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -f 'Headless 120-frame run: elapsed %e s; peak RSS %M KiB' timeout 90 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --quit-after 120 2>&1 | tee "$RUNNER_TEMP/startup.log"
+          if grep -E 'SCRIPT ERROR|ERROR:' "$RUNNER_TEMP/startup.log"; then exit 1; fi
+      - name: Behavioral regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/run_tests.gd 2>&1 | tee "$RUNNER_TEMP/tests.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^FAIL:' "$RUNNER_TEMP/tests.log"; then exit 1; fi
+          grep -E '^RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/tests.log"
