@@ -17,6 +17,9 @@ func build(id: String) -> void:
  if id == "meridian":
   _hotel()
   _hotel_wing()
+  var furniture := preload("res://scripts/visuals/hotel_furniture.gd").new()
+  add_child(furniture)
+  furniture.build()
  else: _annex()
  _batch(core_transforms, core_colors, false)
  _batch(detail_transforms, detail_colors, true)
@@ -101,10 +104,6 @@ func _hotel() -> void:
  _part(Vector3(-5, 1.67, -7.67), Vector3(3.8, 0.04, 0.04), BRASS)
  _sign("THE MERIDIAN", Vector3(-5, 1.9, -7.62), Color(0.92, 0.77, 0.48))
  _sign("RECEPTION  /  GUEST SERVICES", Vector3(-5, 1.48, -7.62), IVORY)
- _sofa(-7.8, 2.1)
- _sofa(-4.8, 3.7)
- _part(Vector3(-7.0, 0.40, 3.2), Vector3(1.25, 0.08, 0.70), WOOD)
- for x: float in [-7.5, -6.5]: _part(Vector3(x, 0.20, 3.2), Vector3(0.06, 0.4, 0.06), BRASS)
  _plant(-10.6, -6.8)
  _plant(0.6, 6.8)
  # Framed wall panels, baseboards, and high-contrast wayfinding at access boundaries.
@@ -215,12 +214,6 @@ func _hotel_wing() -> void:
    _part(Vector3(x+dx,0.97,-10),Vector3(0.47,0.025,0.40),ivory)
    _part(Vector3(x+dx,1.00,-10),Vector3(0.30,0.015,0.25),Color(0.94,0.90,0.80),true)
    _part(Vector3(x+dx+0.26,1.02,-10),Vector3(0.055,0.08,0.055),bronze,true)
-  for z: float in [-11.55,-8.45]:
-   _part(Vector3(x,0.46,z),Vector3(1.15,0.14,0.62),teal)
-   _part(Vector3(x,0.82,z + (-0.30 if z < -10.0 else 0.30)),Vector3(1.15,0.78,0.12),teal)
-   for dx: float in [-0.43,0.43]:
-    for dz: float in [-0.22,0.22]:
-     _part(Vector3(x+dx,0.20,z+dz),Vector3(0.07,0.4,0.07),walnut)
  # Framed prints and console cabinets subdivide the large room visually.
  for x: float in [-36.0,-26.0,-16.0]:
   _part(Vector3(x,1.85,-15.72),Vector3(2.25,1.4,0.08),bronze)
@@ -229,17 +222,7 @@ func _hotel_wing() -> void:
   _part(Vector3(x+0.25,1.85,-15.62),Vector3(0.09,0.7,0.025),Color(0.60,0.68,0.59),true)
  # Lounge tables, textiles and planters.
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
-  _part(Vector3(x,0.50,9.2),Vector3(1.7,0.10,0.8),walnut)
-  for dx: float in [-0.65,0.65]:
-   _part(Vector3(x+dx,0.25,9.2),Vector3(0.07,0.50,0.55),bronze)
   _part(Vector3(x,0.03,10),Vector3(3.3,0.018,3.3),Color(0.36,0.23,0.20))
-  for dx: float in [-0.75,0.75]:
-   _part(Vector3(x+dx,0.85,11.2),Vector3(0.5,0.42,0.2),Color(0.34,0.43,0.41),true)
- for x: float in [-40.3,-34.0,-26.0,-18.0,-13.5]:
-  _part(Vector3(x,0.3,13.7),Vector3(0.6,0.6,0.6),Color(0.32,0.27,0.21))
-  _part(Vector3(x,0.85,13.7),Vector3(0.13,1.0,0.13),walnut)
-  for dx: float in [-0.27,0.0,0.27]:
-   _part(Vector3(x+dx,1.45+absf(dx)*0.3,13.7),Vector3(0.36,0.60,0.42),Color(0.19,0.34,0.22))
  # Upper gallery door frames, floor runner, room numbers and suite furnishings.
  _part(Vector3(0,3.645,0),Vector3(23.5,0.018,2.7),carpet)
  for z: float in [-1.24,1.24]:

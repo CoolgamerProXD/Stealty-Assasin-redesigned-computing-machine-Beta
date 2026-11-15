@@ -103,6 +103,19 @@ func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void
   collider.shape = shape
   holder.add_child(collider)
 
+# Collision-only envelopes used by separately authored furniture models.
+func _collision_box(pos: Vector3, size: Vector3) -> void:
+ var body := StaticBody3D.new()
+ body.name = "FurnitureCollision"
+ body.add_to_group("new_furniture_collision")
+ body.position = pos
+ var collider := CollisionShape3D.new()
+ var shape := BoxShape3D.new()
+ shape.size = size
+ collider.shape = shape
+ body.add_child(collider)
+ add_child(body)
+
 func _build_environment() -> void:
  var environment := WorldEnvironment.new()
  var sky := Environment.new()
@@ -131,7 +144,6 @@ func _build_environment() -> void:
  _box(Vector3(4.5, 0.01, 0), Vector3(5, 0.02, 15.5), Color(0.26, 0.29, 0.29), false)
  _box(Vector3(9.45, 0.02, 0), Vector3(4.8, 0.03, 15.5), Color(0.24, 0.25, 0.27), false)
  _box(Vector3(-5, 0.5, -4.8), Vector3(4, 1, 1), Color(0.28, 0.18, 0.13), false)
- _box(Vector3(-5, 0.35, 3.5), Vector3(2.4, 0.7, 1), Color(0.33, 0.22, 0.18), false)
  _box(Vector3(4.5, 0.45, -5), Vector3(2.2, 0.9, 1), Color(0.32, 0.27, 0.22), false)
  _box(Vector3(9.5, 0.5, -5), Vector3(2.5, 1, 1), Color(0.28, 0.27, 0.24), false)
  for boundary: float in [2.0, 7.0]:
@@ -213,11 +225,10 @@ func _build_meridian_wing() -> void:
  for x: float in [-38.0,-31.0,-24.0,-17.0]:
   _box(Vector3(x,0.45,-10),Vector3(2.4,0.9,1.3),dark,true)
   _box(Vector3(x,0.95,-10),Vector3(2.5,0.12,1.4),Color(0.65,0.57,0.46),false)
-  for z: float in [-11.5,-8.5]:
-   _box(Vector3(x,0.35,z),Vector3(1.2,0.7,0.55),Color(0.22,0.30,0.29),false)
+  for z: float in [-11.55,-8.45]:
+   _collision_box(Vector3(x,0.36,z), Vector3(0.72,0.72,0.72))
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
-  _box(Vector3(x,0.4,11),Vector3(2.3,0.8,0.8),Color(0.23,0.33,0.32),true)
-  _box(Vector3(x,0.8,11.3),Vector3(2.3,0.7,0.15),Color(0.20,0.28,0.28),false)
+  _collision_box(Vector3(x,0.4,11),Vector3(2.3,0.8,0.8))
  # Four pairs of guest rooms off a clear central upstairs gallery.
  for x: float in [-6.0,0.0,6.0]:
   for z: float in [-6.0,6.0]:
@@ -806,7 +817,42 @@ func load_game() -> void:
   message = "No valid compatible save found."
  else:
   SessionSnapshot.restore(data, player, mission, interactables, safe_position, Campaign.progress)
-  message = "Progress loaded. NPCs continue their current routines."
+  var relocated := _resolve_furniture_checkpoint()
+  message = "Progress loaded. Moved clear of new furniture." if relocated else "Progress loaded. NPCs continue their current routines."
+
+# Old saves can contain positions that were valid before furniture became solid.
+# Only relocate if a new furniture envelope overlaps; retain all mission state.
+func _resolve_furniture_checkpoint() -> bool:
+ if not _new_furniture_overlaps(player.global_position): return false
+ var start := player.global_position
+ for distance: float in [0.8, 1.4, 2.0, 2.8]:
+  for direction: Vector3 in [Vector3.RIGHT, Vector3.LEFT, Vector3.FORWARD, Vector3.BACK, Vector3(1,0,1).normalized(), Vector3(-1,0,1).normalized(), Vector3(1,0,-1).normalized(), Vector3(-1,0,-1).normalized()]:
+   var candidate := start + direction * distance
+   if safe_position(candidate) and _standing_space_clear(candidate):
+    player.global_position = candidate
+    player.velocity = Vector3.ZERO
+    return true
+ return false
+
+func _checkpoint_query(point: Vector3) -> PhysicsShapeQueryParameters3D:
+ var capsule := CapsuleShape3D.new()
+ capsule.radius = 0.33
+ capsule.height = 1.7
+ var query := PhysicsShapeQueryParameters3D.new()
+ query.shape = capsule
+ query.transform = Transform3D(Basis.IDENTITY, point + Vector3.UP * 0.90)
+ query.exclude = [player.get_rid()]
+ query.collision_mask = player.collision_mask
+ return query
+
+func _new_furniture_overlaps(point: Vector3) -> bool:
+ for result: Dictionary in player.get_world_3d().direct_space_state.intersect_shape(_checkpoint_query(point), 32):
+  var collider: Object = result.get("collider")
+  if collider is Node and collider.is_in_group("new_furniture_collision"): return true
+ return false
+
+func _standing_space_clear(point: Vector3) -> bool:
+ return player.get_world_3d().direct_space_state.intersect_shape(_checkpoint_query(point), 32).is_empty()
 
 func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("save_game"): save_game()

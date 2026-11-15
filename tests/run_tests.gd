@@ -121,6 +121,19 @@ func run() -> void:
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
  check(player != null and npcs.size() == 7, "hotel preserves existing NPCs and adds three wing visitors")
+ var furniture := world.get_node_or_null("EnvironmentDressing/HotelFurniture")
+ check(furniture != null and furniture.get_child_count() >= 20, "Meridian instantiates authored seating, lamps and plants")
+ await physics_frame
+ var furniture_query := PhysicsRayQueryParameters3D.create(Vector3(-38,0.5,-7.5), Vector3(-38,0.5,-8.45))
+ var furniture_hit := player.get_world_3d().direct_space_state.intersect_ray(furniture_query)
+ check(not furniture_hit.is_empty() and (furniture_hit.collider as Node).is_in_group("new_furniture_collision"), "restaurant chair blocks physical movement")
+ var before_migration := player.global_position
+ player.global_position = Vector3(-38,0.05,-8.45)
+ check(world.call("_new_furniture_overlaps", player.global_position), "legacy position overlapping new chair is detected")
+ var migrated: bool = world.call("_resolve_furniture_checkpoint")
+ check(migrated and not bool(world.call("_new_furniture_overlaps", player.global_position)), "legacy checkpoint relocates out of new solid furniture")
+ player.global_position = before_migration
+ player.velocity = Vector3.ZERO
  var spawned: Array[Interactable] = world.get("interactables")
  var spawned_ids: Array[String] = []
  for obj: Interactable in spawned:
