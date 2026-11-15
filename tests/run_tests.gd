@@ -423,8 +423,10 @@ func run() -> void:
  var aim_event := InputEventMouseButton.new()
  aim_event.button_index = MOUSE_BUTTON_RIGHT
  aim_event.pressed = true
+ print("EQUIP_DIAG: before mouse aim captured=", Input.mouse_mode, " mapped=", aim_event.is_action_pressed("aim"), " backend=", DisplayServer.get_name())
  Input.parse_input_event(aim_event)
  await create_timer(0.5).timeout
+ print("EQUIP_DIAG: after mouse aim captured=", Input.mouse_mode, " aiming=", init_player.aiming, " arm=", init_player.arm.spring_length)
  initiation.call("_process", 0.0)
  check(init_player.aiming and initiation.get("crosshair").visible and init_player.arm.spring_length < 3.0, "right mouse aims, moves camera and displays crosshair")
  init_player.camera.look_at(assessment.global_position + Vector3.UP * 0.65, Vector3.UP)
