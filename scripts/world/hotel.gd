@@ -30,6 +30,7 @@ var instinct_yellow: StandardMaterial3D
 @export var instinct_item_color: Color = Color(1.0, 0.82, 0.05)
 var box_meshes: Dictionary = {}
 var box_materials: Dictionary = {}
+var floor_finish: ShaderMaterial
 var message: String = ""
 var last_message: String = ""
 var message_remaining: float = 0.0
@@ -94,6 +95,12 @@ func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void
  var visual := MeshInstance3D.new()
  visual.mesh = box_meshes[size]
  visual.material_override = box_materials[color]
+ # Apply the finish only to Meridian's floor slabs, never to Initiation.
+ if mission_id() == "meridian" and size.y == 0.3 and size.x >= 13.0 and (is_equal_approx(pos.y,-0.15) or is_equal_approx(pos.y,3.45)):
+  if floor_finish == null:
+   floor_finish = ShaderMaterial.new()
+   floor_finish.shader = preload("res://shaders/meridian_floor.gdshader")
+  visual.material_override = floor_finish
  if not solid: visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  holder.add_child(visual)
  if solid:
@@ -165,6 +172,29 @@ func _build_environment() -> void:
  region.navigation_mesh = HotelLayout.navigation_mesh()
  add_child(region)
 
+func _hotel_window(pos: Vector3, size: Vector3) -> void:
+ var body := StaticBody3D.new()
+ body.name = "GlazedWindow"
+ body.position = pos
+ add_child(body)
+ var shape := BoxShape3D.new()
+ shape.size = size
+ var collision := CollisionShape3D.new()
+ collision.shape = shape
+ body.add_child(collision)
+ var visual := MeshInstance3D.new()
+ var glass := BoxMesh.new()
+ glass.size = size
+ visual.mesh = glass
+ var material := StandardMaterial3D.new()
+ material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ material.albedo_color = Color(0.33,0.51,0.55,0.24)
+ material.roughness = 0.18
+ material.metallic = 0.05
+ visual.material_override = material
+ visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ body.add_child(visual)
+
 func _build_meridian_wing() -> void:
  # A new west wing and upper level retain all original coordinates. Walkable
  # area is approximately seven times the original single-floor area; the
@@ -174,9 +204,17 @@ func _build_meridian_wing() -> void:
  var dark := Color(0.25,0.20,0.17)
  var brass := Color(0.70,0.53,0.29)
  _box(Vector3(-27,-0.15,0),Vector3(30,0.3,32),floor_mat)
+ _box(Vector3(-27,3.5,-16),Vector3(30,7,0.25),walls)
  for z: float in [-16.0,16.0]:
-  _box(Vector3(-27,3.5,z),Vector3(30,7,0.25),walls)
   _box(Vector3(0,5.4,z * 0.5),Vector3(24,3.6,0.25),walls)
+ # Four real glazed bays replace the south wall's formerly painted panels.
+ # The glass remains solid, retaining the original outside boundary.
+ _box(Vector3(-27,0.45,16),Vector3(30,0.9,0.25),walls)
+ _box(Vector3(-27,4.98,16),Vector3(30,4.04,0.25),walls)
+ for span: Vector2 in [Vector2(-42,-39.85), Vector2(-36.15,-31.85), Vector2(-28.15,-23.85), Vector2(-20.15,-16.85), Vector2(-13.15,-12)]:
+  _box(Vector3((span.x+span.y)*0.5,1.93,16),Vector3(span.y-span.x,2.06,0.25),walls)
+ for x: float in [-38.0,-30.0,-22.0,-15.0]:
+  _hotel_window(Vector3(x,1.93,16),Vector3(3.7,2.06,0.10))
  _box(Vector3(-42,3.5,0),Vector3(0.25,7,32),walls)
  _box(Vector3(12,5.4,0),Vector3(0.25,3.6,16),walls)
  for z: float in [-12.0,12.0]: _box(Vector3(-12,3.5,z),Vector3(0.25,7,8),walls)

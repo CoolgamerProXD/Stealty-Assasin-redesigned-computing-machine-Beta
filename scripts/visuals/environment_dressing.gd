@@ -201,12 +201,23 @@ func _hotel_wing() -> void:
  # Windows are stylised landscape panels with curtains on the public lounge side;
  # they don't cut holes into collision walls or imply an exterior accessible area.
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
-  _part(Vector3(x,1.93,15.73),Vector3(3.7,2.05,0.10),walnut)
-  _part(Vector3(x,1.93,15.66),Vector3(3.35,1.74,0.04),Color(0.19,0.31,0.36))
-  _part(Vector3(x,1.50,15.62),Vector3(3.20,0.12,0.025),Color(0.43,0.47,0.42), true)
+  for y: float in [0.91,2.95]:
+   _part(Vector3(x,y,15.73),Vector3(3.7,0.10,0.10),walnut)
+  _part(Vector3(x,1.50,15.62),Vector3(3.20,0.08,0.025),Color(0.43,0.47,0.42), true)
   for dx: float in [-1.83,1.83]:
    _part(Vector3(x+dx,1.95,15.55),Vector3(0.27,2.1,0.20),Color(0.45,0.38,0.32))
   _part(Vector3(x,2.08,15.60),Vector3(0.05,1.75,0.03),bronze)
+ # A shallow original scenic backdrop gives the glazed bays an exterior read.
+ # It is a vista only; it does not expand the accessible hotel footprint.
+ _part(Vector3(-27,2.0,18.1),Vector3(31,4.0,0.08),Color(0.25,0.38,0.45))
+ _part(Vector3(-27,0.55,17.95),Vector3(31,1.1,0.06),Color(0.17,0.30,0.34))
+ for i: int in range(15):
+  var x := -41.0 + float(i) * 2.0
+  var height := 0.9 + float((i * 7) % 5) * 0.40
+  _part(Vector3(x,height*0.5+0.55,17.8),Vector3(1.5,height,0.08),Color(0.16+float(i%3)*0.025,0.25,0.29))
+  for row: int in range(2):
+   for col: int in range(3):
+    _part(Vector3(x-0.45+float(col)*0.45,0.85+float(row)*0.52,17.74),Vector3(0.13,0.19,0.02),Color(0.75,0.65,0.43),true)
  # Dining place settings, table bases and distinct upholstered chair silhouettes.
  for x: float in [-38.0,-31.0,-24.0,-17.0]:
   _part(Vector3(x,0.16,-10),Vector3(1.9,0.30,0.9),walnut)

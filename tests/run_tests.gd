@@ -127,6 +127,10 @@ func run() -> void:
  var furniture_query := PhysicsRayQueryParameters3D.create(Vector3(-38,0.5,-7.5), Vector3(-38,0.5,-8.45))
  var furniture_hit := player.get_world_3d().direct_space_state.intersect_ray(furniture_query)
  check(not furniture_hit.is_empty() and (furniture_hit.collider as Node).is_in_group("new_furniture_collision"), "restaurant chair blocks physical movement")
+ var window_query := PhysicsRayQueryParameters3D.create(Vector3(-30,2,15),Vector3(-30,2,17))
+ var window_hit := player.get_world_3d().direct_space_state.intersect_ray(window_query)
+ check(not window_hit.is_empty() and str((window_hit.collider as Node).name).begins_with("GlazedWindow"), "visible window bays retain a physical exterior barrier")
+ check(world.get("floor_finish") is ShaderMaterial, "Meridian stone and timber floors use the shared world-space finish")
  var before_migration := player.global_position
  player.global_position = Vector3(-38,0.05,-8.45)
  check(world.call("_new_furniture_overlaps", player.global_position), "legacy position overlapping new chair is detected")

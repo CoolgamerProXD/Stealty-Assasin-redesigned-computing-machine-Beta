@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint", "cinema_player_crouch", "cinema_upper_gallery", "cinema_lower_plan", "cinema_hotel_windows"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -71,6 +71,9 @@ func run() -> void:
  camera.global_position = Vector3(-16, 2.0, -3)
  camera.look_at(Vector3(-31,1.1,-10),Vector3.UP)
  await capture("cinema_hotel_wing")
+ camera.global_position = Vector3(-28,1.7,6.8)
+ camera.look_at(Vector3(-30,1.5,15.8),Vector3.UP)
+ await capture("cinema_hotel_windows")
  camera.global_position = Vector3(-39.5,5.2,-6.8)
  camera.look_at(Vector3(-38,4.6,-9),Vector3.UP)
  await capture("cinema_hotel_upper")
