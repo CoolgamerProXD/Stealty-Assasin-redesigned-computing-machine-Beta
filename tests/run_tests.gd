@@ -620,6 +620,8 @@ func run() -> void:
  initiation.call("_process", 0.0)
  check(initiation.get("hud").text.contains("ASSESSMENT UNIT") and initiation.get("equipment_hud").text.contains("5 / 5"), "Initiation HUD shows target and real starting charges")
  check(init_player.body_mesh is StylizedPerson and init_npcs[0].person is StylizedPerson, "player and guard spawn articulated visual characters")
+ check(init_player.body_mesh.left_elbow != null and init_player.body_mesh.right_elbow != null and init_player.body_mesh.weapon.get_parent() == init_player.body_mesh.right_elbow, "articulated elbows carry the visible sidearm")
+ check(init_player.body_mesh.left_knee.get_child(0) is MeshInstance3D and (init_player.body_mesh.left_knee.get_child(0) as MeshInstance3D).mesh is CylinderMesh, "character legs use tapered articulated geometry")
  var start_guard := init_npcs[0].global_position
  init_player.global_position = Vector3(-12, 0.05, 0)
  Input.action_press("crouch")

@@ -11,6 +11,9 @@ var upper_body: Node3D
 var crouch_amount: float = 0.0
 var left_arm: Node3D
 var right_arm: Node3D
+var left_elbow: Node3D
+var right_elbow: Node3D
+var gait_speed: float = 0.0
 var torso: MeshInstance3D
 var weapon: Node3D
 var muzzle_flash: MeshInstance3D
@@ -48,7 +51,7 @@ func _ready() -> void:
  head.position = Vector3(0, 1.73, 0)
  head.material_override = skin
  upper_body.add_child(head)
- _box(upper_body, Vector3(0, 1.88, 0.015), Vector3(0.28, 0.07, 0.23), dark)
+ _ellipsoid(upper_body, Vector3(0, 1.87, 0.015), Vector3(0.29, 0.11, 0.27), dark)
  var eye := _material(Color(0.08, 0.09, 0.10))
  _box(upper_body, Vector3(-0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
  _box(upper_body, Vector3(0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
@@ -66,10 +69,10 @@ func _ready() -> void:
  right_leg = _leg(Vector3(0.12, 0.88, 0), trousers, dark)
  left_knee = left_leg.get_node("Knee")
  right_knee = right_leg.get_node("Knee")
- left_arm = _limb(Vector3(-0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing, upper_body)
- right_arm = _limb(Vector3(0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing, upper_body)
- _box(left_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
- _box(right_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
+ left_arm = _arm(Vector3(-0.29, 1.47, 0), clothing, skin)
+ right_arm = _arm(Vector3(0.29, 1.47, 0), clothing, skin)
+ left_elbow = left_arm.get_node("Elbow")
+ right_elbow = right_arm.get_node("Elbow")
  if role == "security":
   _box(upper_body, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65)))
   _box(upper_body, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
@@ -85,8 +88,8 @@ func _ready() -> void:
 func add_sidearm() -> void:
  if weapon: return
  weapon = Node3D.new()
- weapon.position = Vector3(0, -0.58, -0.04)
- right_arm.add_child(weapon)
+ weapon.position = Vector3(0, -0.30, -0.04)
+ right_elbow.add_child(weapon)
  var metal := _material(Color(0.12, 0.15, 0.18))
  var accent := _material(Color(0.36, 0.54, 0.58))
  _box(weapon, Vector3(0, -0.16, 0), Vector3(0.10, 0.34, 0.10), metal)
@@ -118,10 +121,11 @@ func set_role(value: String) -> void:
 
 func animate_motion(delta: float, speed: float) -> void:
  if not left_leg: return
- phase += delta * minf(speed, 5.0) * 2.6
- idle_phase += delta * 2.0
- var swing := sin(phase) * minf(speed * 0.16, 0.6)
  var blend := 1.0 - exp(-delta * 10.0)
+ gait_speed = lerpf(gait_speed, speed, 1.0 - exp(-delta * 8.0))
+ phase += delta * minf(gait_speed, 5.0) * 2.6
+ idle_phase += delta * 2.0
+ var swing := sin(phase) * minf(gait_speed * 0.16, 0.6)
  weapon_draw = move_toward(weapon_draw, 1.0 if weapon_equipped else 0.0, delta * 3.0)
  weapon_aim_blend = move_toward(weapon_aim_blend, 1.0 if weapon_aiming and weapon_equipped else 0.0, delta * 4.0)
  torso.rotation.z = sin(idle_phase * 0.5) * 0.008
@@ -129,6 +133,8 @@ func animate_motion(delta: float, speed: float) -> void:
  # Independent knees bend during swing and crouch. Torso descends without
  # squashing the head or changing the model's horizontal proportions.
  upper_body.position.y = lerpf(upper_body.position.y, -0.70 * crouch_amount, blend)
+ var lean := -0.055 * clampf((gait_speed - 2.7) / 2.0, 0.0, 1.0) - 0.08 * crouch_amount
+ upper_body.rotation.x = lerp_angle(upper_body.rotation.x, lean, blend)
  left_leg.position.y = lerpf(left_leg.position.y, 0.88 - 0.52 * crouch_amount, blend)
  right_leg.position.y = left_leg.position.y
  var stride := swing * (1.0 - 0.45 * crouch_amount)
@@ -145,6 +151,9 @@ func animate_motion(delta: float, speed: float) -> void:
  var right_pose := lerpf(swing * 0.7, ready_pose, weapon_draw)
  right_pose -= weapon_recoil * 0.35
  right_arm.rotation.x = lerp_angle(right_arm.rotation.x, right_pose, blend)
+ # Elbows bend subtly during the stride and extend as the device is presented.
+ left_elbow.rotation.x = lerp_angle(left_elbow.rotation.x, lerpf(-0.15 - absf(swing) * 0.20, -0.36, weapon_aim_blend), blend)
+ right_elbow.rotation.x = lerp_angle(right_elbow.rotation.x, lerpf(-0.15 - absf(swing) * 0.20, -0.12, weapon_draw), blend)
  if weapon:
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
@@ -180,22 +189,56 @@ func _box(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshIns
  parent.add_child(part)
  return part
 
-func _limb(pos: Vector3, size: Vector3, mat: Material, parent: Node3D) -> Node3D:
- var joint := Node3D.new()
- joint.position = pos
- parent.add_child(joint)
- _box(joint, Vector3(0, -size.y * 0.5, 0), size, mat)
- return joint
+func _ellipsoid(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshInstance3D:
+ var part := MeshInstance3D.new()
+ var mesh := SphereMesh.new()
+ mesh.radius = 0.5
+ mesh.height = 1.0
+ mesh.radial_segments = 10
+ mesh.rings = 5
+ part.mesh = mesh
+ part.scale = size
+ part.position = pos
+ part.material_override = mat
+ parent.add_child(part)
+ return part
+
+func _tapered(parent: Node3D, pos: Vector3, top_radius: float, bottom_radius: float, length: float, mat: Material) -> MeshInstance3D:
+ var part := MeshInstance3D.new()
+ var mesh := CylinderMesh.new()
+ mesh.top_radius = top_radius
+ mesh.bottom_radius = bottom_radius
+ mesh.height = length
+ mesh.radial_segments = 8
+ part.mesh = mesh
+ part.position = pos
+ part.material_override = mat
+ parent.add_child(part)
+ return part
+
+func _arm(pos: Vector3, fabric: Material, skin: Material) -> Node3D:
+ var shoulder := Node3D.new()
+ shoulder.position = pos
+ upper_body.add_child(shoulder)
+ _ellipsoid(shoulder, Vector3(0,-0.025,0), Vector3(0.19,0.19,0.19), fabric)
+ _tapered(shoulder, Vector3(0,-0.14,0), 0.082, 0.065, 0.28, fabric)
+ var elbow := Node3D.new()
+ elbow.name = "Elbow"
+ elbow.position.y = -0.28
+ shoulder.add_child(elbow)
+ _tapered(elbow, Vector3(0,-0.13,0), 0.067, 0.055, 0.26, fabric)
+ _ellipsoid(elbow, Vector3(0,-0.30,0), Vector3(0.12,0.14,0.13), skin)
+ return shoulder
 
 func _leg(pos: Vector3, trousers: Material, shoes: Material) -> Node3D:
  var hip := Node3D.new()
  hip.position = pos
  add_child(hip)
- _box(hip, Vector3(0,-0.195,0), Vector3(0.16,0.39,0.18), trousers)
+ _tapered(hip, Vector3(0,-0.195,0), 0.09, 0.072, 0.39, trousers)
  var knee := Node3D.new()
  knee.name = "Knee"
  knee.position = Vector3(0,-0.39,0)
  hip.add_child(knee)
- _box(knee, Vector3(0,-0.195,0), Vector3(0.14,0.39,0.16), trousers)
- _box(knee, Vector3(0,-0.42,-0.06), Vector3(0.18,0.12,0.30), shoes)
+ _tapered(knee, Vector3(0,-0.195,0), 0.072, 0.055, 0.39, trousers)
+ _ellipsoid(knee, Vector3(0,-0.42,-0.06), Vector3(0.18,0.12,0.30), shoes)
  return hip

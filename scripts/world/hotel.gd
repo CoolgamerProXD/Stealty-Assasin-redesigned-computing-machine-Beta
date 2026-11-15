@@ -11,7 +11,7 @@ var prompt: Label
 var prompt_panel: PanelContainer
 var equipment_hud: Label
 var awareness_hud: Label
-var interaction_dot: Label
+var interaction_dot: Control
 var equipment_icon: Control
 var crosshair: Control
 var shot_audio: AudioStreamPlayer
@@ -491,7 +491,9 @@ func _build_ui() -> void:
  canvas.add_child(overlay)
  # Original restrained HUD: only mission-derived information, no invented health.
  var style := StyleBoxFlat.new()
- style.bg_color = Color(0.025, 0.04, 0.05, 0.64)
+ style.bg_color = Color(0.025, 0.035, 0.04, 0.78)
+ style.border_color = Color(0.70, 0.56, 0.36, 0.55)
+ style.border_width_bottom = 1
  style.content_margin_left = 12
  style.content_margin_right = 12
  style.content_margin_top = 6
@@ -526,6 +528,7 @@ func _build_ui() -> void:
  equipment_row.add_child(equipment_icon)
  equipment_hud = Label.new()
  equipment_hud.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+ equipment_hud.size_flags_horizontal = Control.SIZE_EXPAND_FILL
  equipment_hud.add_theme_font_size_override("font_size", 17)
  equipment_row.add_child(equipment_hud)
  var bottom := PanelContainer.new()
@@ -536,17 +539,18 @@ func _build_ui() -> void:
  bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
  bottom.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(bottom)
+ var awareness_panel := PanelContainer.new()
+ awareness_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+ awareness_panel.offset_left = 20
+ awareness_panel.offset_top = -78
+ awareness_panel.offset_right = 285
+ awareness_panel.offset_bottom = -20
+ awareness_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ awareness_panel.add_theme_stylebox_override("panel", style.duplicate())
+ overlay.add_child(awareness_panel)
  awareness_hud = Label.new()
- awareness_hud.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
- awareness_hud.offset_left = 24
- awareness_hud.offset_top = -70
- awareness_hud.offset_right = 420
- awareness_hud.offset_bottom = -20
- awareness_hud.add_theme_font_size_override("font_size", 16)
- awareness_hud.add_theme_color_override("font_shadow_color", Color.BLACK)
- awareness_hud.add_theme_constant_override("shadow_offset_x", 2)
- awareness_hud.add_theme_constant_override("shadow_offset_y", 2)
- overlay.add_child(awareness_hud)
+ awareness_hud.add_theme_font_size_override("font_size", 15)
+ awareness_panel.add_child(awareness_hud)
  crosshair = preload("res://scripts/ui/aim_reticle.gd").new()
  crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
  crosshair.set_anchors_preset(Control.PRESET_CENTER)
@@ -556,14 +560,12 @@ func _build_ui() -> void:
  crosshair.offset_bottom = 20
  crosshair.visible = false
  overlay.add_child(crosshair)
- interaction_dot = Label.new()
- interaction_dot.text = "·"
+ interaction_dot = preload("res://scripts/ui/interaction_reticle.gd").new()
  interaction_dot.set_anchors_preset(Control.PRESET_CENTER)
- interaction_dot.offset_left = -5
- interaction_dot.offset_right = 5
- interaction_dot.offset_top = -14
- interaction_dot.offset_bottom = 14
- interaction_dot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+ interaction_dot.offset_left = -8
+ interaction_dot.offset_right = 8
+ interaction_dot.offset_top = -8
+ interaction_dot.offset_bottom = 8
  interaction_dot.visible = false
  overlay.add_child(interaction_dot)
  instinct_label = Label.new()
@@ -911,11 +913,13 @@ func _process(_delta: float) -> void:
  var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "ADRIAN LOCKE"
  hud.text = target + "  /  " + mission.objective_text() + "\n" + "RECORDS  %d / %d  ·  REQUIRED %d" % [mission.clues.size(), mission.available_records.size(), mission.required_records]
  awareness_hud.text = "%s  /  %s\n%s" % [area.to_upper(), access, local_state]
+ awareness_hud.add_theme_color_override("font_color", Color(1.0,0.76,0.48) if local_state != "NO LOCAL ALERT" else (Color(0.94,0.78,0.58) if access == "RESTRICTED" else Color(0.86,0.90,0.84)))
  fps_label.visible = Campaign.settings["show_fps"]
  fps_label.text = "%d FPS" % Engine.get_frames_per_second()
  equipment_icon.call("set_item", player.equipment.selected)
  equipment_hud.text = Campaign.item_label(player.equipment.selected).to_upper()
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
+ elif player.equipment.selected == "quiet_line": equipment_hud.text += "\nQ  /  USE NEARBY"
  crosshair.visible = player.aiming
  var nearest := _nearest()
  interaction_dot.visible = nearest != null and not player.aiming
