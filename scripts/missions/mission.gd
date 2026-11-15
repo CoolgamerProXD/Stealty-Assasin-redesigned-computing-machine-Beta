@@ -32,7 +32,16 @@ func configure(data: Variant) -> bool:
  var action: Variant = data.get("required_action", "")
  var primary: Variant = data.get("primary_target", {})
  if not primary is Dictionary: return false
- if not primary.is_empty() and (not primary.get("id") is String or not primary.get("name") is String or not primary.get("description") is String): return false
+ if not primary.is_empty():
+  for key: String in ["id", "name", "description"]:
+   if not primary.get(key) is String or str(primary[key]).strip_edges().is_empty(): return false
+  if primary["id"] == "adrian_locke":
+   if not _valid_point(primary.get("start")) or not primary.get("schedule") is Array or primary["schedule"].is_empty(): return false
+   for entry: Variant in primary["schedule"]:
+    if not entry is Dictionary or not _valid_point(entry.get("destination")): return false
+    if not entry.get("activity") is String or entry["activity"] not in ["working", "waiting", "conversing", "idle"]: return false
+    var duration: Variant = entry.get("duration")
+    if not (duration is float or duration is int) or not is_finite(float(duration)) or float(duration) <= 0.0: return false
  if not action is String: return false
  if not raw_records is Array or raw_records.is_empty(): return false
  if not (raw_required is int or raw_required is float): return false
@@ -74,6 +83,7 @@ func record_clue(id: String) -> bool:
 func mark_action(id: String) -> bool:
  if not configured or required_action.is_empty() or id != required_action or action_complete: return false
  action_complete = true
+ if id == "disable_assessment_unit": target_discovered = true
  changed.emit()
  return true
 
@@ -111,3 +121,9 @@ func objective_text() -> String:
   if required_action == "interview_ivo": return "Question Ivo Chen and collect %d different records." % required_records
   return "Complete the target objective and collect %d different records." % required_records
  return "Collect %d different records, then leave." % required_records
+
+func _valid_point(value: Variant) -> bool:
+ if not value is Array or value.size() != 3: return false
+ for component: Variant in value:
+  if not (component is int or component is float) or not is_finite(float(component)): return false
+ return true
