@@ -242,17 +242,22 @@ jobs:
           New-Item -ItemType Directory -Force 'build/windows' | Out-Null
           & $godot --headless --path . --export-release Windows "$env:GITHUB_WORKSPACE\build\windows\PROJECT_ASSASSIN.exe"
           if ($LASTEXITCODE -ne 0) { throw 'Export failed' }
-      - name: Launch exported build headlessly
+      - name: Launch exported scenes headlessly
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $path = "$env:GITHUB_WORKSPACE\build\windows"
-          $process = Start-Process "$path\PROJECT_ASSASSIN.exe" -WorkingDirectory $path -ArgumentList @('--headless', '--quit-after', '120', '--log-file', "$path\smoke.log") -PassThru
-          if (!$process.WaitForExit(90000)) { $process.Kill(); throw 'Exported build timed out' }
-          if ($process.ExitCode -ne 0) { throw "Exported build exited $($process.ExitCode)" }
-          if (!(Test-Path "$path\smoke.log")) { throw 'No smoke log produced' }
-          Get-Content "$path\smoke.log"
-          if (Select-String -Path "$path\smoke.log" -Pattern 'SCRIPT ERROR|ERROR:') { throw 'Exported build logged errors' }
+          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview')
+          foreach ($scene in $scenes) {
+            $log = "$path\smoke-$scene.log"
+            $arguments = @('--headless', '--quit-after', '120', '--log-file', $log, "res://scenes/$scene.tscn")
+            $process = Start-Process "$path\PROJECT_ASSASSIN.exe" -WorkingDirectory $path -ArgumentList $arguments -PassThru
+            if (!$process.WaitForExit(90000)) { $process.Kill(); throw "$scene timed out" }
+            if ($process.ExitCode -ne 0) { throw "$scene exited $($process.ExitCode)" }
+            if (!(Test-Path $log)) { throw "No smoke log for $scene" }
+            Get-Content $log
+            if (Select-String -Path $log -Pattern 'SCRIPT ERROR|ERROR:') { throw "$scene logged errors" }
+          }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: project-assassin-windows-smoke-tested
