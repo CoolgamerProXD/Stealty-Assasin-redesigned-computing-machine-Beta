@@ -898,6 +898,23 @@ func run() -> void:
  if current_scene != null:
   current_scene.queue_free()
   current_scene = null
+ # Verify settings controls and Back are actually reachable at the design
+ # resolution, rather than merely checking that a panel was instantiated.
+ var settings_menu: Control = load("res://scenes/main_menu.tscn").instantiate()
+ root.add_child(settings_menu)
+ await process_frame
+ settings_menu.call("_settings")
+ await process_frame
+ await process_frame
+ var settings_panel: Control = settings_menu.get("panel").get_child(0)
+ var settings_fit := true
+ for child: Node in settings_panel.get_children():
+  if child is Control and not root.get_visible_rect().encloses(child.get_global_rect()):
+   settings_fit = false
+   print("MENU_BOUNDS_DIAG: settings ", child.name, " ", child.get_global_rect(), " viewport=", root.get_visible_rect())
+ check(settings_fit, "settings rows and Back fit within the 720p viewport")
+ settings_menu.queue_free()
+ await process_frame
  # Exercise the actual map-selection buttons and Escape scene transitions.
  var progress_before_previews := JSON.stringify(service.progress.snapshot())
  for preview_name: String in ["TUNG CHUNG", "HONG KONG", "NGONG PING"]:
