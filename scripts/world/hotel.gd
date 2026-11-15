@@ -162,7 +162,7 @@ func _build_interactions() -> void:
  for npc: HotelNpc in npcs:
   if npc.profile.identity == "Ivo Chen":
    _add_interactable(Vector3.ZERO, "Question Ivo Chen", "target", "interview_ivo", Color(0.9, 0.55, 0.2))
-   var target := interactables.back()
+   var target: Interactable = interactables.back()
    target.reparent(npc, false)
    target.position = Vector3.ZERO
    var marker := target.get_child(0) as Node3D
