@@ -226,10 +226,13 @@ func run() -> void:
  observer.memory.observations.clear()
  observer.suspicion = 0.0
  observer.state = "idle"
+ observer.global_position = Vector3(3.5, 0.05, 4.7)
+ observer.velocity = Vector3.ZERO
  Input.action_press("crouch")
  await create_timer(0.4).timeout
  observer.set_physics_process(true)
  await create_timer(0.9).timeout
+ print("STEALTH_DIAG: observer=", observer.global_position, " player=", player.global_position, " stance=", player.stance_height, " suspicion=", observer.suspicion)
  check(observer.suspicion == 0.0, "low solid cover blocks crouched sight ray")
  observer.set_physics_process(false)
  Input.action_release("crouch")

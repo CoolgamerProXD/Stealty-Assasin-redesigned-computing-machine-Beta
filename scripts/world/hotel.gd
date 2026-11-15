@@ -26,6 +26,8 @@ var instinct_yellow: StandardMaterial3D
 @export var instinct_target_color: Color = Color(1.0, 0.08, 0.05)
 @export var instinct_item_color: Color = Color(1.0, 0.82, 0.05)
 var message: String = ""
+var last_message: String = ""
+var message_remaining: float = 0.0
 
 func mission_id() -> String:
  return "meridian"
@@ -315,6 +317,8 @@ func _build_ui() -> void:
  ambience_audio.play()
  prompt = Label.new()
  prompt.add_theme_font_size_override("font_size", 16)
+ prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ prompt.custom_minimum_size.x = 780
  bottom.add_child(prompt)
 
 func _select_equipment(slot: int) -> void:
@@ -595,5 +599,10 @@ func _process(_delta: float) -> void:
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
  crosshair.visible = player.aiming
  var nearest := _nearest()
- prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message
+ if message != last_message:
+  last_message = message
+  message_remaining = 7.0
+ message_remaining = maxf(0.0, message_remaining - _delta)
+ var current_message := message if message_remaining > 0.0 else ""
+ prompt.text = ("E  /  " + nearest.label + ("\n" if not current_message.is_empty() else "") if nearest else "") + current_message
  prompt_panel.visible = not prompt.text.strip_edges().is_empty()
