@@ -81,7 +81,10 @@ func apply_settings() -> void:
  var viewport := get_viewport()
  var quality: String = settings["graphics"]
  viewport.scaling_3d_scale = 0.7 if quality == "LOW" else (0.85 if quality == "MEDIUM" else 1.0)
- viewport.msaa_3d = Viewport.MSAA_2X if quality == "HIGH" else Viewport.MSAA_DISABLED
+ # Multisampling is disproportionately expensive on software/integrated GPUs.
+ # HIGH uses one post-process AA pass instead, alongside full resolution.
+ viewport.msaa_3d = Viewport.MSAA_DISABLED
+ viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if quality == "HIGH" else Viewport.SCREEN_SPACE_AA_DISABLED
  viewport.positional_shadow_atlas_size = 2048 if quality == "HIGH" else (1024 if quality == "MEDIUM" else 0)
  for light: Node in get_tree().get_nodes_in_group("quality_lights"):
   (light as Light3D).shadow_enabled = quality != "LOW"
