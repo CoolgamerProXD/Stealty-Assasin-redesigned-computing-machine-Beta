@@ -97,6 +97,18 @@ func _build_environment() -> void:
  for boundary: float in [2.0, 7.0]:
   for z: float in [-6.0, 0.0, 6.0]:
    _box(Vector3(boundary, 1.5, z), Vector3(0.2, 3.0, 4.0), Color(0.42, 0.40, 0.36))
+ # Architectural trim and lamps are non-colliding; existing routes remain unchanged.
+ _box(Vector3(0, 3.05, 0), Vector3(24, 0.1, 16), Color(0.31, 0.31, 0.29), false)
+ _box(Vector3(-5, 0.025, 0), Vector3(10, 0.025, 5), Color(0.34, 0.22, 0.20), false)
+ for x: float in [-8.0, -2.0, 4.5, 9.5]:
+  _box(Vector3(x, 2.95, 0), Vector3(1.8, 0.06, 0.18), Color(0.9, 0.77, 0.52), false)
+  _box(Vector3(x, 1.3, -7.84), Vector3(1.5, 1.0, 0.04), Color(0.22, 0.27, 0.29), false)
+  _box(Vector3(x, 1.3, -7.79), Vector3(1.25, 0.75, 0.04), Color(0.40, 0.39, 0.34), false)
+ for boundary: float in [2.0, 7.0]:
+  for z: float in [-3.0, 3.0]:
+   _box(Vector3(boundary, 2.85, z), Vector3(0.32, 0.3, 2.0), Color(0.30, 0.27, 0.23), false)
+   for side: float in [-0.92, 0.92]:
+    _box(Vector3(boundary, 1.4, z + side), Vector3(0.32, 2.8, 0.14), Color(0.30, 0.27, 0.23), false)
  var region := NavigationRegion3D.new()
  region.navigation_mesh = HotelLayout.navigation_mesh()
  add_child(region)

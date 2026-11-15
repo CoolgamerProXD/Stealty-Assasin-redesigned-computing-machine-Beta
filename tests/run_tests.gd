@@ -356,9 +356,9 @@ func run() -> void:
  var assessment: Interactable = null
  for obj: Interactable in init_objects:
   if obj.kind == "robot": assessment = obj
- for guard: HotelNpc in init_npcs:
-  guard.set_physics_process(false)
-  guard.collision_layer = 0
+ for init_guard: HotelNpc in init_npcs:
+  init_guard.set_physics_process(false)
+  init_guard.collision_layer = 0
  initiation.set_physics_process(false)
  init_player.global_position = assessment.global_position + Vector3(0, 0.05, 1)
  await physics_frame

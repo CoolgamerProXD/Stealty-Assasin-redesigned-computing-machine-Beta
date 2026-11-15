@@ -49,6 +49,13 @@ func _build_environment() -> void:
  _box(Vector3(-10, 0.45, -7), Vector3(3, 0.9, 1), Color(0.30, 0.27, 0.23), false)
  _box(Vector3(4.5, 0.45, -7), Vector3(2, 0.9, 1), Color(0.28, 0.32, 0.32), false)
  _box(Vector3(10, 0.45, 7), Vector3(3, 0.9, 1), Color(0.32, 0.30, 0.25), false)
+ _box(Vector3(0, 3.05, 0), Vector3(30, 0.1, 20), Color(0.28, 0.31, 0.31), false)
+ for x: float in [-10.0, -3.0, 4.5, 10.5]:
+  _box(Vector3(x, 2.95, 0), Vector3(1.5, 0.06, 0.22), Color(0.75, 0.88, 0.86), false)
+  _box(Vector3(x, 1.6, -9.83), Vector3(1.6, 0.8, 0.04), Color(0.14, 0.25, 0.27), false)
+ for boundary: float in [2.0, 7.0]:
+  for z: float in [-3.0, 3.0]:
+   _box(Vector3(boundary, 2.85, z), Vector3(0.3, 0.3, 2), Color(0.24, 0.29, 0.30), false)
  var region := NavigationRegion3D.new()
  var nav := NavigationMesh.new()
  var xs := [-14.5, 1.5, 2.5, 6.5, 7.5, 14.5]
