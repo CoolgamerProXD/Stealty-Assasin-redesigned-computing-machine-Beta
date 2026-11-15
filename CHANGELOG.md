@@ -1,5 +1,11 @@
 # Changelog
 
+## Critical gameplay update (unreleased)
+- Add live mission/equipment HUD, actual selected loadout, five-charge unsuppressed assessment pulses and non-graphic Quiet Line interaction; persist equipment in compatible checkpoints.
+- Add Ivo Chen as the Meridian's physical witness objective; assessment unit now reacts to proximity. Preserve previously completed Meridian checkpoints.
+- Add skippable 3D Ruby meeting with doors, moving actors, cameras, subtitles and synthesized tones; replace character capsules with original articulated low-poly figures and add basic environmental trim.
+- These are still prototypes, not a production character/environment overhaul. See README for limitations and test scope.
+
 ## Campaign foundation (unreleased)
 - Add original BLACKLINE/Ruby/Covenant campaign data, progression/unlock/replay and persistent settings, main menu, pause and results/debrief screen.
 - Add Initiation greybox with two scheduled guards, moving assessment unit and three required records; reuse existing player, NPC, interaction and save systems, preserving the Meridian save path.

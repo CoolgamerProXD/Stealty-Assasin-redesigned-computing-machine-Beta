@@ -1,5 +1,8 @@
 # Architecture
 
+## Critical gameplay update
+`MissionEquipment` owns deployment slots, selection and five-charge state; the world handles use and NPC reactions. `SessionSnapshot` stores it and validates optional items against campaign unlocks on restore. The HUD is composed by the mission world and reads live mission, NPC and equipment state. The Meridian witness is the existing Ivo Chen NPC with a moving child interactable; both missions use `Mission.required_action` and the same snapshot. Old completed Meridian saves receive the witness flag during migration. `StylizedPerson` supplies original articulated procedural visuals without changing CharacterBody3D or the spring arm. `ruby_meeting.gd` is a separate timeline-driven 3D sequence with procedural tones; campaign completion is persisted before entry. Historical sections below may describe earlier versions.
+
 Godot 4.4.1, GDScript, Compatibility renderer initially. `scenes/main_menu.tscn` is the entry point. The hotel builder is intentionally a greybox composition root; it creates geometry, a hand-authored tiled NavigationRegion3D with two doorway routes per partition, player, actors, interaction markers and minimal HUD. It is not the intended final content pipeline.
 
 - `player/player.gd`: CharacterBody3D movement, spring-arm camera and input; owns a separate inventory instance and emits interaction requests.

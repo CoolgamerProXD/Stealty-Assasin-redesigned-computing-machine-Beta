@@ -1,5 +1,8 @@
 # NPC simulation
 
+## Critical gameplay update
+A nearby unsuppressed training pulse causes NPCs to investigate the player's position. Quiet Line temporarily disables a nearby unobstructed NPC for 12 seconds, after which it returns toward its schedule. Incapacitation and other NPC state are not saved. The assessment unit scans nearby unobstructed players and slows its patrol; it does not conduct a full guard-like investigation.
+
 ## Initiation reuse and remaining work
 The two Initiation guards reuse the same deterministic individual perception, memory and navigation implementation. They use positional visitor/staff/secure areas, not a mission-specific permission model. Existing simulation is not full warning/escalation or reliable blocked/unreachable recovery; investigate/recovery and last known locations remain basic. The moving assessment unit is not an NPC and does not react to observations. Crouch changes physical stance; there is no special detection multiplier.
 

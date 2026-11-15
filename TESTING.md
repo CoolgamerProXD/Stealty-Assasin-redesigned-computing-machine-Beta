@@ -1,5 +1,8 @@
 # Testing
 
+## Current gameplay update
+The workflow includes synthetic input events for equipment and witness interaction, mission objective/legacy save checks, both mission HUDs, a skippable Ruby scene and scripted virtual-display scene checks. Results are only established by a successful run on the commit under test; direct timeline sampling and synthetic input are not a manual playthrough. Real audio quality, visual composition, asset quality, both full player routes, Windows export and target-device performance require human verification. Prior results below describe older commits.
+
 ## Campaign expansion verification scope
 
 [Actions run 43700503344](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43700503344) on `a6c6ca95aa9de847ee47ed152ff3e9660e96d3a4` passed: six Python data checks, official 4.4.1 headless import and menu startup, 87/87 Godot behavioral assertions, and 5/5 scripted Xvfb camera checks. The headless tests include a standing-clearance obstruction and isolated campaign scene/debrief transition. Run 43700434097 failed one guard movement assertion because it began measuring after the guard arrived; the test was changed to measure from the initial route position and rerun. These are automated checks, not manual playtesting.

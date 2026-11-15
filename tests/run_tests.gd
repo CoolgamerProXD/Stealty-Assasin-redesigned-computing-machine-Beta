@@ -216,8 +216,16 @@ func run() -> void:
  var witness: Interactable = objects[5]
  player.global_position = witness.global_position + Vector3(0, 0.1, 0.7)
  await physics_frame
- world.call("_interact_nearest")
- check(active_mission.action_complete, "physical Ivo target can be questioned")
+ var question := InputEventAction.new()
+ question.action = "interact"
+ question.pressed = true
+ Input.parse_input_event(question)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(active_mission.action_complete, "physical Ivo target can be questioned through input")
+ question.pressed = false
+ Input.parse_input_event(question)
  player.global_position = objects[4].global_position + Vector3(0, 0.1, 0.5)
  world.call("_interact_nearest")
  check(active_mission.extracted, "world interactions complete mission")
@@ -310,12 +318,16 @@ func run() -> void:
  gadget_world.call("_process", 0.0)
  check(gadget_world.get("hud").text.contains("IVO CHEN") and gadget_world.get("equipment_hud").text.contains("QUIET LINE"), "Meridian HUD displays target and equipped gadget")
  var gadget_snapshot := SessionSnapshot.capture(gadget_player, gadget_world.get("mission"))
+ var equipment_save := "user://assassin_equipment_test_%d.json" % Time.get_ticks_usec()
+ check(SaveStore.write(equipment_save, gadget_snapshot), "equipment checkpoint writes to disk")
  gadget_player.equipment.configure(campaign_copy, "meridian")
- SessionSnapshot.restore(gadget_snapshot, gadget_player, gadget_world.get("mission"), gadget_world.get("interactables"), Callable(gadget_world, "safe_position"), campaign)
+ SessionSnapshot.restore(SaveStore.read(equipment_save), gadget_player, gadget_world.get("mission"), gadget_world.get("interactables"), Callable(gadget_world, "safe_position"), campaign)
  check(gadget_player.equipment.available.has("quiet_line") and gadget_player.equipment.selected == "quiet_line", "checkpoint restores unlocked gadget selection")
  gadget_player.equipment.configure(campaign_copy, "meridian")
  SessionSnapshot.restore(gadget_snapshot, gadget_player, gadget_world.get("mission"), gadget_world.get("interactables"), Callable(gadget_world, "safe_position"), campaign_copy)
  check(not gadget_player.equipment.available.has("quiet_line"), "checkpoint cannot grant a locked gadget")
+ for suffix: String in ["", ".bak", ".tmp"]:
+  if FileAccess.file_exists(equipment_save + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(equipment_save + suffix))
  gadget_world.queue_free()
  await process_frame
  var initiation_scene: PackedScene = load("res://scenes/initiation.tscn")
@@ -362,9 +374,11 @@ func run() -> void:
  for init_guard: HotelNpc in init_npcs:
   init_guard.set_physics_process(false)
   init_guard.collision_layer = 0
- initiation.set_physics_process(false)
  init_player.global_position = assessment.global_position + Vector3(0, 0.05, 1)
  await physics_frame
+ await physics_frame
+ check(initiation.get("robot_alert") == true, "assessment unit reacts to nearby visible player")
+ initiation.set_physics_process(false)
  var use_event := InputEventAction.new()
  use_event.action = "use_equipment"
  use_event.pressed = true
@@ -435,10 +449,17 @@ func run() -> void:
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ruby_meeting.tscn":
    current_scene.call("_apply_timeline", 6.0, 0.1)
    check(current_scene.get("actor").position.z < 0.0 and current_scene.get("left_door").position.x < -2.0, "cinematic timeline opens doors and walks outside")
-   current_scene.call("_finish")
+   var skip_event := InputEventAction.new()
+   skip_event.action = "release_mouse"
+   skip_event.pressed = true
+   Input.parse_input_event(skip_event)
    await process_frame
+   await physics_frame
    await process_frame
-  else: check(false, "cinematic timeline opens doors and walks outside")
+   check(service.progress.is_unlocked("meridian"), "skipping Ruby scene preserves campaign unlock")
+  else:
+   check(false, "cinematic timeline opens doors and walks outside")
+   check(false, "skipping Ruby scene preserves campaign unlock")
   if current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn":
    current_scene.call("_continue")
    await process_frame
@@ -451,6 +472,7 @@ func run() -> void:
   check(false, "resume restarts simulation")
   check(false, "objective completion saves unlock and opens Ruby scene")
   check(false, "cinematic timeline opens doors and walks outside")
+  check(false, "skipping Ruby scene preserves campaign unlock")
   check(false, "debrief can be skipped to main menu")
  if current_scene != null:
   current_scene.queue_free()

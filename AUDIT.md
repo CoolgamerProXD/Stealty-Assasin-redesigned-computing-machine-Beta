@@ -1,5 +1,11 @@
 # PROJECT ASSASSIN — audit and stabilisation
 
+## Critical gameplay update
+
+The original HUD was present as a fixed-position plain label, but did not identify a character target or equipment; its visibility in the user's playtest could not be reproduced or diagnosed from source alone. The new HUD uses panels and derives values from mission and equipment state. The old loadout was metadata only; it is now provisioned, controlled and saved in mission. Initiation's moving robot now scans nearby visible players and accepts an assessment pulse or interaction. Meridian's existing employee Ivo Chen is a physical, scheduled records witness, integrated with the mission's required action and checkpoint. Already-extracted legacy saves remain complete; in-progress saves acquire the new objective.
+
+A skippable 3D Ruby meeting, simple synthesized cinematic sounds and original articulated procedural figures replace the previous static debrief-only introduction and capsule visuals. These are deliberately low-poly and remain prototypes: there is no skinned character rig, polished authored animation, voice acting, textured asset library, real exterior art direction or completed environment overhaul. AI, path recovery, NPC persistence, target-device performance and manual playtesting remain open. See README and TESTING for current status; the sections below are historical and can describe superseded functionality.
+
 ## Campaign expansion status
 The campaign/menu, Initiation greybox and persistence changes are incremental. The Meridian layout is reused rather than expanded; equipment is metadata only, and ending is a text/results fade rather than a camera cinematic. The Initiation robot is moving but not reactive. Full NPC escalation, blocked-navigation recovery, audio and graphics quality settings remain incomplete. There has been no manual Windows playtest or target GPU measurement. Historical findings below apply to the earlier prototype and should be read alongside these changes.
 
