@@ -27,13 +27,18 @@ func _ready() -> void:
  head.material_override = skin
  add_child(head)
  _box(self, Vector3(0, 1.88, 0.015), Vector3(0.28, 0.07, 0.23), dark)
+ var eye := _material(Color(0.08, 0.09, 0.10))
+ _box(self, Vector3(-0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
+ _box(self, Vector3(0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
+ _box(self, Vector3(0, 1.72, -0.158), Vector3(0.035, 0.045, 0.04), skin)
+ _box(self, Vector3(0, 1.66, -0.143), Vector3(0.07, 0.012, 0.015), dark)
  # Lapels, collar and belt establish clothed silhouettes instead of a capsule.
  _box(self, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70)))
  _box(self, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark)
- left_leg = _limb(Vector3(-0.12, 0.88, 0), Vector3(0.16, 0.66, 0.18), trousers)
- right_leg = _limb(Vector3(0.12, 0.88, 0), Vector3(0.16, 0.66, 0.18), trousers)
- _box(left_leg, Vector3(0, -0.70, -0.06), Vector3(0.18, 0.12, 0.30), dark)
- _box(right_leg, Vector3(0, -0.70, -0.06), Vector3(0.18, 0.12, 0.30), dark)
+ left_leg = _limb(Vector3(-0.12, 0.88, 0), Vector3(0.16, 0.76, 0.18), trousers)
+ right_leg = _limb(Vector3(0.12, 0.88, 0), Vector3(0.16, 0.76, 0.18), trousers)
+ _box(left_leg, Vector3(0, -0.82, -0.06), Vector3(0.18, 0.12, 0.30), dark)
+ _box(right_leg, Vector3(0, -0.82, -0.06), Vector3(0.18, 0.12, 0.30), dark)
  left_arm = _limb(Vector3(-0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing)
  right_arm = _limb(Vector3(0.31, 1.47, 0), Vector3(0.14, 0.54, 0.16), clothing)
  _box(left_arm, Vector3(0, -0.57, 0), Vector3(0.12, 0.13, 0.13), skin)
@@ -42,6 +47,11 @@ func _ready() -> void:
   _box(self, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
  if role == "ruby":
   _box(self, Vector3(0, 1.61, 0.12), Vector3(0.29, 0.48, 0.09), dark)
+  _box(self, Vector3(0, 1.03, 0.02), Vector3(0.48, 0.40, 0.25), clothing)
+  _box(self, Vector3(0, 1.40, -0.15), Vector3(0.06, 0.24, 0.02), _material(Color(0.68, 0.41, 0.32)))
+ if role == "manager":
+  _box(self, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20)))
+  _box(self, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31)))
 
 func _role_color() -> Color:
  match role:
@@ -49,6 +59,7 @@ func _role_color() -> Color:
   "employee", "staff": return Color(0.28, 0.38, 0.43)
   "civilian": return Color(0.58, 0.38, 0.24)
   "ruby": return Color(0.31, 0.15, 0.19)
+  "manager": return Color(0.31, 0.24, 0.16)
   _: return Color(0.20, 0.21, 0.25)
 
 func set_role(value: String) -> void:
@@ -59,10 +70,11 @@ func animate_motion(delta: float, speed: float) -> void:
  if not left_leg: return
  phase += delta * (3.0 + minf(speed, 5.0) * 3.0)
  var swing := sin(phase) * minf(speed * 0.16, 0.6)
- left_leg.rotation.x = swing
- right_leg.rotation.x = -swing
- left_arm.rotation.x = -swing * 0.7
- right_arm.rotation.x = swing * 0.7
+ var blend := minf(1.0, delta * 10.0)
+ left_leg.rotation.x = lerp_angle(left_leg.rotation.x, swing, blend)
+ right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -swing, blend)
+ left_arm.rotation.x = lerp_angle(left_arm.rotation.x, -swing * 0.7, blend)
+ right_arm.rotation.x = lerp_angle(right_arm.rotation.x, swing * 0.7, blend)
 
 func _material(color: Color) -> StandardMaterial3D:
  var mat := StandardMaterial3D.new()

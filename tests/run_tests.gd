@@ -381,6 +381,30 @@ func run() -> void:
  await create_timer(0.4).timeout
  check(not init_player.crouching and init_player.stance_height > 1.75, "player stands after crouch when space is clear")
  check(init_npcs[0].global_position.distance_to(start_guard) > 0.2, "Initiation guard follows its route")
+ for init_guard: HotelNpc in init_npcs: init_guard.collision_layer = 0
+ var nearby: Interactable = init_objects[0]
+ var far_item: Interactable = init_objects[1]
+ init_player.global_position = nearby.global_position + Vector3(0, 0.05, 1.0)
+ await physics_frame
+ var ctrl := InputEventKey.new()
+ ctrl.physical_keycode = KEY_CTRL
+ ctrl.location = KEY_LOCATION_LEFT
+ ctrl.pressed = true
+ Input.parse_input_event(ctrl)
+ await process_frame
+ await physics_frame
+ await process_frame
+ var nearby_visual := nearby.get_child(0) as MeshInstance3D
+ var far_visual := far_item.get_child(0) as MeshInstance3D
+ check(init_player.instinct_active and initiation.get("instinct_label").visible, "left control enables Instinct and its HUD indicator")
+ check(nearby_visual.material_overlay != null and far_visual.material_overlay == null, "Instinct highlights only nearby important items")
+ check(init_npcs[0].person.torso.material_overlay == null, "ordinary NPCs are not highlighted")
+ ctrl.pressed = false
+ Input.parse_input_event(ctrl)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(not init_player.instinct_active and nearby_visual.material_overlay == null, "releasing left control immediately clears Instinct")
  for obj: Interactable in init_objects:
   if obj.kind == "clue": initiation.call("_on_interaction", obj)
  check(init_mission.clues.size() == 3 and not init_mission.can_extract(), "three records alone cannot complete assessment")
