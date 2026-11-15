@@ -106,3 +106,14 @@ jobs:
               for index in range(0, len(encoded), 3000):
                   print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
           PYCODE
+      - name: Preview physical target thumbnails
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for path in sorted(pathlib.Path("visual-test-output").glob("*_target_open_thumb.jpg")):
+              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+              for index in range(0, len(encoded), 3000):
+                  print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
+          PYCODE

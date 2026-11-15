@@ -19,7 +19,7 @@ func capture(name: String) -> Image:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["hotel_wall_on", "initiation_wall_on", "hotel_preset_high"]:
+ if name in ["hotel_wall_on", "initiation_wall_on", "hotel_target_open", "initiation_target_open"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.55)
@@ -56,10 +56,13 @@ func run() -> void:
   # Use a fixed camera for reproducible wall-occlusion screenshots.
   var camera := Camera3D.new()
   world.add_child(camera)
-  camera.global_position = Vector3(0.5, 1.35, 0)
+  camera.global_position = Vector3(5.4, 1.35, 2.8)
   camera.look_at(target.global_position + Vector3.UP * 0.9, Vector3.UP)
   camera.make_current()
   player.camera = camera
+  await capture(id + "_target_open")
+  camera.global_position = Vector3(0.5, 1.35, 0)
+  camera.look_at(target.global_position + Vector3.UP * 0.9, Vector3.UP)
   await physics_frame
   var ray := PhysicsRayQueryParameters3D.create(player.camera.global_position, target.global_position + Vector3.UP * 0.9)
   ray.exclude = [player.get_rid()]
