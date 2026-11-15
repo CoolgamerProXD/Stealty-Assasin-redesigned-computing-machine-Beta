@@ -168,6 +168,8 @@ func run() -> void:
  check(furniture != null and furniture.get_child_count() >= 20, "Meridian instantiates authored seating, lamps and plants")
  var crockery := world.find_child("DiningCrockery", true, false) as MultiMeshInstance3D
  check(crockery != null and crockery.multimesh.instance_count == 24, "restaurant has batched round plates and cups")
+ var dining_lights := get_nodes_in_group("dining_practicals")
+ check(dining_lights.size() == 2 and (dining_lights[0] as OmniLight3D).omni_range >= 8.0, "restaurant has two dedicated shadowless light pools")
  await physics_frame
  var furniture_query := PhysicsRayQueryParameters3D.create(Vector3(-38,0.5,-7.5), Vector3(-38,0.5,-8.45))
  var furniture_hit := player.get_world_3d().direct_space_state.intersect_ray(furniture_query)

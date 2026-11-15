@@ -259,6 +259,9 @@ func _hotel_wing() -> void:
    for side: float in [-1.0,1.0]:
     _part(Vector3(x+dx+side*0.24,1.025,-10),Vector3(0.025,0.014,0.30),bronze,true)
  _dining_crockery()
+ for x: float in [-35.0,-19.0]:
+  _part(Vector3(x,3.25,-10),Vector3(2.0,0.045,0.7),walnut)
+  _part(Vector3(x,3.22,-10),Vector3(1.65,0.025,0.45),Color(1.0,0.82,0.58))
  # Framed prints and console cabinets subdivide the large room visually.
  for x: float in [-36.0,-26.0,-16.0]:
   _part(Vector3(x,1.85,-15.72),Vector3(2.25,1.4,0.08),bronze)

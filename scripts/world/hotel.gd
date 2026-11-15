@@ -307,6 +307,19 @@ func _build_meridian_wing() -> void:
    light.add_to_group("quality_practicals")
    light.visible = Campaign.settings["graphics"] != "LOW"
    add_child(light)
+ # Restaurant tables sit beyond the corridor lights' range. Two warm,
+ # shadowless pools make the dining room readable without per-table lights.
+ for x: float in [-35.0,-19.0]:
+  var dining_light := OmniLight3D.new()
+  dining_light.position = Vector3(x,2.65,-10)
+  dining_light.light_color = Color(1.0,0.78,0.56)
+  dining_light.light_energy = 0.45
+  dining_light.omni_range = 9.0
+  dining_light.shadow_enabled = false
+  dining_light.add_to_group("quality_practicals")
+  dining_light.add_to_group("dining_practicals")
+  dining_light.visible = Campaign.settings["graphics"] != "LOW"
+  add_child(dining_light)
  for entry: Array in [["DINING / LOUNGE", Vector3(-18,2.4,-8.0)], ["GUEST ROOMS", Vector3(-10,6.5,0)], ["PRIVATE SUITE", Vector3(-33.8,6.5,-9.5)]]:
   var sign := Label3D.new()
   sign.text = entry[0]
