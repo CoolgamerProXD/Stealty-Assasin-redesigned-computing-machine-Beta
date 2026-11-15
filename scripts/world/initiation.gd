@@ -30,7 +30,8 @@ func _build_environment() -> void:
  var light := DirectionalLight3D.new()
  light.rotation_degrees = Vector3(-55, -25, 0)
  light.light_energy = 0.8
- light.shadow_enabled = false
+ light.add_to_group("quality_lights")
+ light.shadow_enabled = Campaign.settings["graphics"] != "LOW"
  add_child(light)
  _box(Vector3(0, -0.15, 0), Vector3(30, 0.3, 20), Color(0.27, 0.30, 0.30))
  _box(Vector3(-15, 1.5, 0), Vector3(0.25, 3, 20), Color(0.48, 0.50, 0.47))
@@ -123,7 +124,21 @@ func _build_interactions() -> void:
  robot_light = robot_material
  head.material_override = robot_material
  robot.add_child(head)
+ # Jointed, machine-like silhouette: two legs, shoulders and a bright sensor.
+ for x: float in [-0.21, 0.21]:
+  _robot_part(Vector3(x, 0.28, 0), Vector3(0.13, 0.56, 0.18), robot_material)
+  _robot_part(Vector3(x * 1.9, 0.70, 0), Vector3(0.16, 0.46, 0.18), robot_material)
+ _robot_part(Vector3(0, 1.07, -0.245), Vector3(0.28, 0.08, 0.04), robot_material)
  _add_interactable(Vector3(-13, 0, 7), "Complete assessment", "extract", "exit", Color(0.4, 0.8, 0.5))
+
+func _robot_part(pos: Vector3, size: Vector3, material: Material) -> void:
+ var visual := MeshInstance3D.new()
+ var mesh := BoxMesh.new()
+ mesh.size = size
+ visual.mesh = mesh
+ visual.position = pos
+ visual.material_override = material
+ robot.add_child(visual)
 
 func _on_interaction(object: Interactable) -> void:
  if object.kind == "robot":

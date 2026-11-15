@@ -37,7 +37,8 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
   mission.action_complete = true
  var same_target: bool = data.get("target_id", "") == mission.primary_target.get("id", "")
  mission.target_complete = same_target and data.get("target_complete", false) == true
- mission.target_discovered = mission.target_complete or (same_target and data.get("target_discovered", false) == true)
+ # The briefing already identifies the mission primary, including old saves.
+ mission.target_discovered = not mission.primary_target.is_empty() or (same_target and data.get("target_discovered", false) == true)
  # A previously completed Meridian save must not become incomplete after adding Locke.
  if mission.primary_target.get("id") == "adrian_locke" and not data.has("target_id") and data.get("extracted", false) == true:
   mission.target_complete = true

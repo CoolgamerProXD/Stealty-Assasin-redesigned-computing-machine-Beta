@@ -7,7 +7,7 @@ var progress: CampaignProgress = CampaignProgress.new()
 var active_mission: String = ""
 var load_checkpoint: bool = false
 var ending: Dictionary = {}
-var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8}
+var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "graphics": "MEDIUM", "show_fps": false}
 
 func _ready() -> void:
  var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
@@ -70,9 +70,20 @@ func _load_settings() -> void:
  if (sensitivity is int or sensitivity is float) and is_finite(float(sensitivity)): settings["sensitivity"] = clampf(float(sensitivity), 0.001, 0.006)
  var volume: Variant = data.get("volume", 0.8)
  if (volume is int or volume is float) and is_finite(float(volume)): settings["volume"] = clampf(float(volume), 0.0, 1.0)
+ var graphics: Variant = data.get("graphics", "MEDIUM")
+ if graphics is String and graphics in ["LOW", "MEDIUM", "HIGH"]: settings["graphics"] = graphics
+ var show_fps: Variant = data.get("show_fps", false)
+ if show_fps is bool: settings["show_fps"] = show_fps
  apply_settings()
 
 func apply_settings() -> void:
+ var viewport := get_viewport()
+ var quality: String = settings["graphics"]
+ viewport.scaling_3d_scale = 0.7 if quality == "LOW" else (0.85 if quality == "MEDIUM" else 1.0)
+ viewport.msaa_3d = Viewport.MSAA_2X if quality == "HIGH" else Viewport.MSAA_DISABLED
+ viewport.positional_shadow_atlas_size = 2048 if quality == "HIGH" else (1024 if quality == "MEDIUM" else 0)
+ for light: Node in get_tree().get_nodes_in_group("quality_lights"):
+  (light as Light3D).shadow_enabled = quality != "LOW"
  var master := AudioServer.get_bus_index("Master")
  if master >= 0: AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, float(settings["volume"]))))
  if DisplayServer.get_name() != "headless":

@@ -54,6 +54,20 @@ jobs:
           xvfb-run -a --server-args="-screen 0 1280x720x24" /usr/bin/time -f 'Virtual-display run: elapsed %e s; peak RSS %M KiB' timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/camera_display_test.gd 2>&1 | tee "$RUNNER_TEMP/camera.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^CAMERA FAIL:' "$RUNNER_TEMP/camera.log"; then exit 1; fi
           grep -E '^CAMERA RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/camera.log"
+      - name: Through-wall rendered image regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/visual-test-output" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/instinct_render_test.gd 2>&1 | tee "$RUNNER_TEMP/visual.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^VISUAL FAIL:' "$RUNNER_TEMP/visual.log"; then exit 1; fi
+          grep -E '^VISUAL RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/visual.log"
+      - name: Upload rendered comparisons
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: instinct-rendered-comparisons
+          path: visual-test-output/*.png
+          if-no-files-found: ignore
       # Expose short diagnostics through the GitHub checks API; some environments
       # cannot reach the separate Actions log-download host.
       - name: Report diagnostic excerpts
@@ -65,13 +79,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "environment", "import", "startup", "tests", "camera"):
+          for name in ("version", "environment", "import", "startup", "tests", "camera", "visual"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "camera"):
-                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+              if name in ("tests", "camera", "visual"):
+                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:

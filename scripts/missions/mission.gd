@@ -66,6 +66,8 @@ func configure(data: Variant) -> bool:
  required_records = int(threshold)
  required_action = action
  primary_target = primary.duplicate(true)
+ # Both primary identities are explicitly named in their mission briefings.
+ target_discovered = not primary_target.is_empty()
  configured = true
  return true
 
@@ -115,7 +117,7 @@ func objective_text() -> String:
  if extracted: return "Investigation complete."
  if can_extract(): return "Evidence secured. Return to the exit."
  if primary_target.get("id") == "adrian_locke" and not target_complete:
-  return "Confront Adrian Locke about the transfer."
+  return "Confront or tag Adrian Locke about the transfer."
  if not required_action.is_empty() and not action_complete:
   if required_action == "disable_assessment_unit": return "Disable the assessment unit and collect %d different records." % required_records
   if required_action == "interview_ivo": return "Question Ivo Chen and collect %d different records." % required_records

@@ -7,6 +7,11 @@ var right_leg: Node3D
 var left_arm: Node3D
 var right_arm: Node3D
 var torso: MeshInstance3D
+var weapon: Node3D
+var muzzle_flash: MeshInstance3D
+var weapon_recoil: float = 0.0
+var weapon_aiming: bool = false
+var weapon_equipped: bool = false
 var phase: float = 0.0
 var clothing: StandardMaterial3D
 
@@ -53,6 +58,24 @@ func _ready() -> void:
   _box(self, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20)))
   _box(self, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31)))
 
+# Original stylized assessment sidearm, attached to the animated hand joint.
+func add_sidearm() -> void:
+ if weapon: return
+ weapon = Node3D.new()
+ weapon.position = Vector3(0, -0.58, -0.04)
+ right_arm.add_child(weapon)
+ var metal := _material(Color(0.12, 0.15, 0.18))
+ var accent := _material(Color(0.36, 0.54, 0.58))
+ _box(weapon, Vector3(0, -0.16, 0), Vector3(0.10, 0.34, 0.10), metal)
+ _box(weapon, Vector3(0, -0.13, 0.07), Vector3(0.08, 0.13, 0.10), accent)
+ var flash_mat := _material(Color(1.0, 0.85, 0.32))
+ flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ muzzle_flash = _box(weapon, Vector3(0, -0.38, 0), Vector3(0.13, 0.14, 0.13), flash_mat)
+ muzzle_flash.visible = false
+
+func fire_weapon() -> void:
+ weapon_recoil = 1.0
+
 func _role_color() -> Color:
  match role:
   "security": return Color(0.17, 0.25, 0.34)
@@ -74,7 +97,14 @@ func animate_motion(delta: float, speed: float) -> void:
  left_leg.rotation.x = lerp_angle(left_leg.rotation.x, swing, blend)
  right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -swing, blend)
  left_arm.rotation.x = lerp_angle(left_arm.rotation.x, -swing * 0.7, blend)
- right_arm.rotation.x = lerp_angle(right_arm.rotation.x, swing * 0.7, blend)
+ var right_pose := swing * 0.7
+ if weapon_equipped: right_pose = 1.35 if weapon_aiming else 0.35
+ right_pose -= weapon_recoil * 0.35
+ right_arm.rotation.x = lerp_angle(right_arm.rotation.x, right_pose, blend)
+ if weapon:
+  weapon.visible = weapon_equipped
+  muzzle_flash.visible = weapon_equipped and weapon_recoil > 0.72
+ weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
 
 func _material(color: Color) -> StandardMaterial3D:
  var mat := StandardMaterial3D.new()

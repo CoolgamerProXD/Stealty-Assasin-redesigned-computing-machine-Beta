@@ -34,6 +34,7 @@ func _ready() -> void:
  body_mesh.role = "visitor"
  add_child(body_mesh)
  set_disguise("visitor")
+ body_mesh.add_sidearm()
  pivot = Node3D.new()
  pivot.position.y = 1.5
  add_child(pivot)
@@ -95,6 +96,8 @@ func _physics_process(delta: float) -> void:
  capsule.height = stance_height
  collision_shape.position.y = stance_height * 0.5
  body_mesh.scale.y = stance_height / 1.8
+ body_mesh.weapon_equipped = equipment.selected == "training_sidearm"
+ body_mesh.weapon_aiming = aiming and body_mesh.weapon_equipped
  body_mesh.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
  pivot.position.y = 1.5 * stance_height / 1.8
  var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)

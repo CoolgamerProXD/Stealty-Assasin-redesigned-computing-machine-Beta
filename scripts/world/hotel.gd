@@ -14,6 +14,7 @@ var shot_audio: AudioStreamPlayer
 var last_shot_start: Vector3
 var last_shot_end: Vector3
 var instinct_label: Label
+var fps_label: Label
 var instinct_strength: float = 0.0
 var instinct_red: StandardMaterial3D
 var instinct_yellow: StandardMaterial3D
@@ -94,7 +95,8 @@ func _build_environment() -> void:
  var light := DirectionalLight3D.new()
  light.rotation_degrees = Vector3(-55, -30, 0)
  light.light_energy = 0.8
- light.shadow_enabled = false
+ light.add_to_group("quality_lights")
+ light.shadow_enabled = Campaign.settings["graphics"] != "LOW"
  add_child(light)
  _box(Vector3(0, -0.15, 0), Vector3(24, 0.3, 16), Color(0.34, 0.32, 0.29))
  _box(Vector3(-12, 1.5, 0), Vector3(0.25, 3, 16), Color(0.52, 0.49, 0.43))
@@ -244,11 +246,11 @@ func _build_ui() -> void:
  hud.add_theme_font_size_override("font_size", 17)
  left.add_child(hud)
  var right := PanelContainer.new()
- right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+ right.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
  right.offset_left = -315
  right.offset_right = -20
- right.offset_top = 20
- right.offset_bottom = 150
+ right.offset_top = -155
+ right.offset_bottom = -20
  right.mouse_filter = Control.MOUSE_FILTER_IGNORE
  right.add_theme_stylebox_override("panel", style.duplicate())
  overlay.add_child(right)
@@ -281,6 +283,14 @@ func _build_ui() -> void:
  instinct_label.modulate = Color(0.95, 0.82, 0.5)
  instinct_label.visible = false
  overlay.add_child(instinct_label)
+ fps_label = Label.new()
+ fps_label.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+ fps_label.offset_left = -100
+ fps_label.offset_right = -20
+ fps_label.offset_top = 20
+ fps_label.offset_bottom = 45
+ fps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+ overlay.add_child(fps_label)
  shot_audio = AudioStreamPlayer.new()
  shot_audio.stream = ProceduralSound.tone(180.0, 0.12, 0.14)
  add_child(shot_audio)
@@ -329,6 +339,7 @@ func _fire() -> void:
   message = "Camera obstructed. Move to get a clear shot."
   return
  player.equipment.charges -= 1
+ player.body_mesh.fire_weapon()
  var direction := player.camera.project_ray_normal(screen_center)
  var end := origin + direction * 50.0
  var query := PhysicsRayQueryParameters3D.create(origin, end)
@@ -346,7 +357,13 @@ func _fire() -> void:
    var npc := collider as HotelNpc
    npc.stunned_time = 12.0
    npc.set_state("disabled")
-   message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
+   if npc == primary_npc and mission.mark_target(str(mission.primary_target.get("id", ""))):
+    for obj: Interactable in interactables:
+     if obj.kind == "primary":
+      obj.used = true
+      obj.visible = false
+    message = "Ruby: Locke tagged for Blackline follow-up."
+   else: message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
   else: message = "Assessment pulse struck a surface."
  else: message = "Assessment pulse discharged."
  for npc: HotelNpc in npcs:
@@ -383,6 +400,10 @@ func _clear_reach(point: Vector3, maximum: float, excluded: RID = RID()) -> bool
 
 func _setup_instinct() -> void:
  instinct_red = _highlight_material(instinct_target_color)
+ # The primary identity is provided by the briefing. Draw its actual mesh even
+ # behind opaque walls; ordinary NPCs and unknown items never use this pass.
+ instinct_red.no_depth_test = true
+ instinct_red.render_priority = 1
  instinct_yellow = _highlight_material(instinct_item_color)
 
 func _highlight_material(color: Color) -> StandardMaterial3D:
@@ -412,9 +433,9 @@ func _update_instinct(delta: float) -> void:
   var excluded: RID = primary_npc.get_rid() if primary_npc else RID()
   if _in_player_view(point) and _clear_reach(target.global_position, instinct_target_range, excluded):
    mission.target_discovered = true
- instinct_strength = move_toward(instinct_strength, 1.0, delta * 5.0) if player.instinct_active else 0.0
+ instinct_strength = 1.0 if player.instinct_active else 0.0
  instinct_label.visible = player.instinct_active
- instinct_red.albedo_color.a = instinct_strength * 0.7
+ instinct_red.albedo_color.a = instinct_strength * 0.9
  instinct_yellow.albedo_color.a = instinct_strength * 0.7
  if target:
   var target_done := mission.action_complete if mission_id() == "initiation" else mission.target_complete
@@ -522,14 +543,16 @@ func _process(_delta: float) -> void:
  var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
  var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "ADRIAN LOCKE  /  OPERATIONS DIRECTOR"
  var target_done := mission.action_complete if mission_id() == "initiation" else mission.target_complete
- var target_state := "COMPLETE" if target_done else "LOCATE AND INTERACT"
+ var target_state := "COMPLETE" if target_done else "ACTIVE"
  if mission_id() == "initiation" and not mission.action_complete and get("robot_alert") == true:
   target_state = "SCANNING NEARBY"
- hud.text = title + "\nPRIMARY  /  " + target + "  ·  " + target_state + "\nSECONDARY  /  " + mission.progress_text() + ("  |  IVO: " + ("QUESTIONED" if mission.action_complete else "QUESTION") if mission_id() == "meridian" else "") + "\nNEXT  /  " + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
+ hud.text = title + "\n" + mission.objective_text() + "\n" + mission.progress_text() + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
+ fps_label.visible = Campaign.settings["show_fps"]
+ fps_label.text = "%d FPS" % Engine.get_frames_per_second()
  var slots := "1  TRAINING SIDEARM"
  if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"
  equipment_hud.text = "EQUIPMENT\n" + slots + "\nEQUIPPED  /  " + Campaign.item_label(player.equipment.selected).to_upper()
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
  crosshair.visible = player.aiming
  var nearest := _nearest()
- prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message + "\n1 / 2 select   ·   RMB aim / LMB fire   ·   Q gadget   ·   Ctrl instinct"
+ prompt.text = ("E  /  " + nearest.label + "\n" if nearest else "") + message

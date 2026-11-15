@@ -94,6 +94,8 @@ func run() -> void:
  await physics_frame
  await process_frame
  check(target.stunned_time > 0.0 and player.equipment.charges == 4, "center shot hits physical target and consumes charge")
+ check(world.get("mission").target_complete, "shot at Locke completes primary objective")
+ check(player.body_mesh.weapon_equipped and player.body_mesh.weapon.visible, "equipped sidearm is attached to player hand")
  var hit_screen := player.camera.unproject_position(world.get("last_shot_end"))
  var center := player.camera.get_viewport().get_visible_rect().size * 0.5
  check(hit_screen.distance_to(center) < 1.0, "shot impact projects to screen-center crosshair")
