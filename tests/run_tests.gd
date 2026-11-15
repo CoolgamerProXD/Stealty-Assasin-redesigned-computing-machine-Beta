@@ -1012,6 +1012,18 @@ func run() -> void:
      var passenger_start := passenger.global_position
      await create_timer(0.8).timeout
      check(passenger.global_position.distance_to(passenger_start) > 0.2, "station passenger advances along a local route")
+     for person: HotelNpc in station_npcs: person.collision_layer = 0
+     preview_player.global_position = Vector3(19,0.05,3)
+     preview_player.rotation.y = 0
+     preview_player.velocity = Vector3.ZERO
+     await physics_frame
+     Engine.time_scale = 2.0
+     Input.action_press("move_back")
+     await create_timer(2.6).timeout
+     Input.action_release("move_back")
+     Engine.time_scale = 1.0
+     print("PREVIEW_ROUTE_DIAG: station platform ", preview_player.global_position)
+     check(preview_player.global_position.z > 8.5 and preview_player.global_position.z < 11.8, "station public platform approach is physically walkable")
     else:
      var preview_npcs: Array[HotelNpc] = preview.get("npcs")
      check(preview_npcs.size() >= 3, preview_name + " preview includes local visitors")
@@ -1042,6 +1054,21 @@ func run() -> void:
       Input.action_release("move_right")
       print("CITY_WALKWAY_DIAG: ", preview_player.global_position)
       check(preview_player.global_position.x > 15.0 and preview_player.global_position.y > 2.0, "city preview raised walkway is physically reachable")
+      for actor: HotelNpc in preview_npcs: actor.collision_layer = 0
+      preview_player.global_position = Vector3(0,0.05,0)
+      preview_player.velocity = Vector3.ZERO
+      await physics_frame
+      Engine.time_scale = 2.0
+      Input.action_press("move_left")
+      await create_timer(4.6).timeout
+      Input.action_release("move_left")
+      print("PREVIEW_ROUTE_DIAG: city west ", preview_player.global_position)
+      check(preview_player.global_position.x < -10.0, "city western district connects physically to the central street")
+      Input.action_press("move_right")
+      await create_timer(4.6).timeout
+      Input.action_release("move_right")
+      Engine.time_scale = 1.0
+      check(preview_player.global_position.x > -2.0, "city central street is reachable on the return route")
      else:
       check(preview.find_child("MountainTerrain", true, false) != null and preview.find_child("TreeCanopies", true, false) != null, "mountain has physical rolling terrain and batched trees")
       var landmark := preview.find_child("ScenicBuddhaLandmark", true, false) as Node3D
@@ -1050,6 +1077,22 @@ func run() -> void:
        for part: Node in landmark.find_children("*", "", true, false):
         if part is Interactable: landmark_is_scenic = false
       check(landmark_is_scenic, "public landmark has monumental scale and no target interaction")
+      for actor: HotelNpc in preview_npcs: actor.collision_layer = 0
+      preview_player.global_position = Vector3(9,0.05,-8)
+      preview_player.rotation.y = 0
+      preview_player.velocity = Vector3.ZERO
+      await physics_frame
+      Engine.time_scale = 2.0
+      Input.action_press("move_right")
+      await create_timer(6.5).timeout
+      Input.action_release("move_right")
+      print("PREVIEW_ROUTE_DIAG: mountain slope ", preview_player.global_position)
+      check(preview_player.global_position.x > 23.0 and preview_player.global_position.y > 0.7, "mountain terrain is physically walkable uphill")
+      Input.action_press("move_left")
+      await create_timer(6.5).timeout
+      Input.action_release("move_left")
+      Engine.time_scale = 1.0
+      check(preview_player.global_position.x < 12.0 and preview_player.global_position.y < 0.4, "mountain terrain is physically walkable back down")
     var exit_event := InputEventAction.new()
     exit_event.action = "release_mouse"
     exit_event.pressed = true
