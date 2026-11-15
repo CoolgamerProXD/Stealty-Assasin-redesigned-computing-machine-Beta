@@ -20,7 +20,7 @@ func capture(name: String) -> void:
  await RenderingServer.frame_post_draw
  var image := root.get_texture().get_image()
  image.save_png(output.path_join(name + ".png"))
- if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping"]:
+ if name in ["cinema_hotel_lobby", "cinema_hotel_corridor", "cinema_initiation", "cinema_weapon_idle", "cinema_weapon_aim", "cinema_tung_chung", "cinema_hotel_wing", "cinema_hotel_upper", "cinema_hotel_intel", "cinema_city", "cinema_ngong_ping", "cinema_hotel_footprint"]:
   var thumb := image.duplicate() as Image
   thumb.resize(320, 180)
   thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.50)
@@ -68,12 +68,25 @@ func run() -> void:
  await capture("cinema_hotel_corridor")
  for quality: String in ["LOW", "MEDIUM", "HIGH"]:
   await sample_preset(service, quality)
- camera.global_position = Vector3(-19, 2.1, -3)
- camera.look_at(Vector3(-34,1.1,-10),Vector3.UP)
+ camera.global_position = Vector3(-16, 2.0, -3)
+ camera.look_at(Vector3(-31,1.1,-10),Vector3.UP)
  await capture("cinema_hotel_wing")
- camera.global_position = Vector3(-31,5.2,-1)
- camera.look_at(Vector3(-38,4.5,-10),Vector3.UP)
+ camera.global_position = Vector3(-39.5,5.2,-6.8)
+ camera.look_at(Vector3(-38,4.6,-9),Vector3.UP)
  await capture("cinema_hotel_upper")
+ # Remove only the decorative ceiling for an overhead upper-floor plan view.
+ var hidden_roofs: Array[Node3D] = []
+ for child: Node in hotel.get_children():
+  if child is Node3D and is_equal_approx(child.position.y, 7.1):
+   child.visible = false
+   hidden_roofs.append(child)
+ camera.global_position = Vector3(-15, 55, 0)
+ camera.look_at(Vector3(-15,3.6,0),Vector3.FORWARD)
+ camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+ camera.size = 72
+ await capture("cinema_hotel_footprint")
+ camera.projection = Camera3D.PROJECTION_PERSPECTIVE
+ for roof: Node3D in hidden_roofs: roof.visible = true
  camera.global_position = Vector3(-5,1.4,-2.2)
  camera.look_at(Vector3(-5,0.8,-3.6),Vector3.UP)
  await capture("cinema_hotel_intel")

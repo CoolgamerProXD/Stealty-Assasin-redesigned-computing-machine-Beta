@@ -169,6 +169,28 @@ func run() -> void:
  Input.action_release("move_left")
  print("WING_DIAG: ascent=", player.global_position)
  check(player.global_position.x < -35.0 and player.global_position.y > 3.3, "player walks from ground level up the connected ramp")
+ # Navigate around the stairwell and through the suite door to the real target.
+ var before_suite := SessionSnapshot.capture(player, world_mission)
+ Input.action_press("move_forward")
+ await create_timer(2.0).timeout
+ Input.action_release("move_forward")
+ Input.action_press("move_right")
+ await create_timer(2.7).timeout
+ Input.action_release("move_right")
+ Input.action_press("move_forward")
+ await create_timer(2.7).timeout
+ Input.action_release("move_forward")
+ Input.action_press("move_left")
+ await create_timer(2.0).timeout
+ Input.action_release("move_left")
+ print("WING_DIAG: suite=", player.global_position, " target=", upstairs_target.global_position)
+ world.call("_interact_nearest")
+ check(world_mission.target_complete and upstairs_target.objective_completed, "player reaches and interacts with upper-room target through physical route")
+ SessionSnapshot.restore(before_suite, player, world_mission, spawned)
+ # Return to stair landing for descent.
+ player.global_position = Vector3(-38.5,3.65,3)
+ player.velocity = Vector3.ZERO
+ await physics_frame
  Input.action_press("move_right")
  await create_timer(6.0).timeout
  Input.action_release("move_right")

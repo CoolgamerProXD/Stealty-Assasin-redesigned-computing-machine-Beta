@@ -27,6 +27,8 @@ var instinct_yellow: StandardMaterial3D
 @export var instinct_target_range: float = 16.0
 @export var instinct_target_color: Color = Color(1.0, 0.08, 0.05)
 @export var instinct_item_color: Color = Color(1.0, 0.82, 0.05)
+var box_meshes: Dictionary = {}
+var box_materials: Dictionary = {}
 var message: String = ""
 var last_message: String = ""
 var message_remaining: float = 0.0
@@ -79,14 +81,19 @@ func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void
  var holder: Node3D = StaticBody3D.new() if solid else Node3D.new()
  holder.position = pos
  add_child(holder)
- var mesh := BoxMesh.new()
- mesh.size = size
+ if not box_meshes.has(size):
+  var mesh := BoxMesh.new()
+  mesh.size = size
+  box_meshes[size] = mesh
+ if not box_materials.has(color):
+  var material := StandardMaterial3D.new()
+  material.albedo_color = color
+  material.roughness = 0.85
+  box_materials[color] = material
  var visual := MeshInstance3D.new()
- visual.mesh = mesh
- var material := StandardMaterial3D.new()
- material.albedo_color = color
- material.roughness = 0.85
- visual.material_override = material
+ visual.mesh = box_meshes[size]
+ visual.material_override = box_materials[color]
+ if not solid: visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
  holder.add_child(visual)
  if solid:
   var collider := CollisionShape3D.new()
@@ -191,7 +198,7 @@ func _build_meridian_wing() -> void:
  for z: float in [-12.5,-7.0]: _box(Vector3(-34,5.25,z),Vector3(0.2,3.3,3.0),walls)
  _box(Vector3(-38,5.25,-14),Vector3(8,3.3,0.2),walls)
  _box(Vector3(-38,5.25,-5.5),Vector3(8,3.3,0.2),walls)
- _box(Vector3(-38,4.0,-11),Vector3(4,0.8,2.2),Color(0.62,0.58,0.48),false)
+ _box(Vector3(-38,4.0,-11),Vector3(4,0.8,2.2),Color(0.62,0.58,0.48),true)
  _box(Vector3(-38,4.45,-11.7),Vector3(4,0.15,0.6),Color(0.83,0.80,0.70),false)
  _box(Vector3(-40,4.05,-7),Vector3(1.3,0.9,0.8),dark,false)
  _box(Vector3(-39,3.63,-8.7),Vector3(4,0.04,2),Color(0.33,0.20,0.18),false)
@@ -203,13 +210,46 @@ func _build_meridian_wing() -> void:
    _box(Vector3(x,4.9,z),Vector3(2.1,1.8,0.06),dark,false)
    _box(Vector3(x,4.9,z + (0.04 if z < 0 else -0.04)),Vector3(1.7,1.35,0.04),Color(0.42,0.39,0.31),false)
  for x: float in [-38.0,-31.0,-24.0,-17.0]:
-  _box(Vector3(x,0.45,-10),Vector3(2.4,0.9,1.3),dark,false)
+  _box(Vector3(x,0.45,-10),Vector3(2.4,0.9,1.3),dark,true)
   _box(Vector3(x,0.95,-10),Vector3(2.5,0.12,1.4),Color(0.65,0.57,0.46),false)
   for z: float in [-11.5,-8.5]:
    _box(Vector3(x,0.35,z),Vector3(1.2,0.7,0.55),Color(0.22,0.30,0.29),false)
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
-  _box(Vector3(x,0.4,11),Vector3(2.3,0.8,0.8),Color(0.23,0.33,0.32),false)
+  _box(Vector3(x,0.4,11),Vector3(2.3,0.8,0.8),Color(0.23,0.33,0.32),true)
   _box(Vector3(x,0.8,11.3),Vector3(2.3,0.7,0.15),Color(0.20,0.28,0.28),false)
+ # Four pairs of guest rooms off a clear central upstairs gallery.
+ for x: float in [-6.0,0.0,6.0]:
+  for z: float in [-6.0,6.0]:
+   _box(Vector3(x,5.3,z),Vector3(0.18,3.4,4),walls)
+ for x: float in [-9.0,-3.0,3.0,9.0]:
+  for side: float in [-1.0,1.0]:
+   for dx: float in [-1.8,1.8]:
+    _box(Vector3(x+dx,5.3,side*4),Vector3(2.4,3.4,0.18),walls)
+   _box(Vector3(x,5.3,side*4),Vector3(1.2,0.45,0.18),dark,false)
+   _box(Vector3(x,4.0,side*6),Vector3(2.8,0.8,2.2),Color(0.58,0.55,0.47),true)
+   _box(Vector3(x,4.45,side*6.6),Vector3(2.5,0.16,0.65),Color(0.84,0.81,0.70),false)
+   _box(Vector3(x+2,3.95,side*6.8),Vector3(0.65,0.7,0.7),dark,false)
+  _box(Vector3(x,3.63,0),Vector3(4.8,0.04,5.6),Color(0.35,0.23,0.20),false)
+ # Warm shadowless pools of light, controlled by the existing quality preset.
+ for floor_y: float in [2.6,6.4]:
+  for x: float in [-37.0,-25.0,-14.0,-3.0,8.0]:
+   var light := OmniLight3D.new()
+   light.position = Vector3(x,floor_y,0)
+   light.light_color = Color(1.0,0.79,0.56)
+   light.light_energy = 0.65
+   light.omni_range = 8.0
+   light.shadow_enabled = false
+   light.add_to_group("quality_practicals")
+   light.visible = Campaign.settings["graphics"] != "LOW"
+   add_child(light)
+ for entry: Array in [["DINING / LOUNGE", Vector3(-18,2.4,-8.0)], ["GUEST ROOMS", Vector3(-10,6.5,0)], ["PRIVATE SUITE", Vector3(-33.8,6.5,-9.5)]]:
+  var sign := Label3D.new()
+  sign.text = entry[0]
+  sign.position = entry[1]
+  sign.font_size = 42
+  sign.pixel_size = 0.003
+  sign.modulate = Color(0.86,0.73,0.50)
+  add_child(sign)
  _box(Vector3(-27,7.1,0),Vector3(30,0.2,32),Color(0.32,0.32,0.30),false)
  _box(Vector3(0,7.1,0),Vector3(24,0.2,16),Color(0.32,0.32,0.30),false)
  # Navigation on the original floor remains untouched; the stationary target
