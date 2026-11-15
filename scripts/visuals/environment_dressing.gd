@@ -172,6 +172,39 @@ func _hotel() -> void:
 
 # West wing detail uses the same instanced box batches as the original lobby.
 # Furnishings are deliberately outside the circulation and scripted routes.
+func _dining_crockery() -> void:
+ var transforms: Array[Transform3D] = []
+ var colors: Array[Color] = []
+ for x: float in [-38.0,-31.0,-24.0,-17.0]:
+  for dx: float in [-0.8,0.8]:
+   for item: Array in [
+    [Vector3(x+dx,1.03,-10), Vector3(0.40,0.025,0.40), Color(0.93,0.90,0.82)],
+    [Vector3(x+dx+0.30,1.09,-10.30), Vector3(0.13,0.15,0.13), Color(0.88,0.85,0.77)],
+    [Vector3(x+dx+0.30,1.17,-10.30), Vector3(0.10,0.01,0.10), Color(0.25,0.17,0.12)]]:
+    transforms.append(Transform3D(Basis.IDENTITY.scaled(item[1]), item[0]))
+    colors.append(item[2])
+ var batch := MultiMesh.new()
+ batch.transform_format = MultiMesh.TRANSFORM_3D
+ batch.use_colors = true
+ var cylinder := CylinderMesh.new()
+ cylinder.height = 1.0
+ cylinder.radial_segments = 16
+ cylinder.rings = 1
+ var material := StandardMaterial3D.new()
+ material.vertex_color_use_as_albedo = true
+ material.roughness = 0.42
+ cylinder.material = material
+ batch.mesh = cylinder
+ batch.instance_count = transforms.size()
+ for i: int in range(transforms.size()):
+  batch.set_instance_transform(i, transforms[i])
+  batch.set_instance_color(i, colors[i])
+ var dishes := MultiMeshInstance3D.new()
+ dishes.name = "DiningCrockery"
+ dishes.multimesh = batch
+ dishes.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+ add_child(dishes)
+
 func _hotel_wing() -> void:
  var ivory := Color(0.76, 0.72, 0.63)
  var walnut := Color(0.25, 0.15, 0.11)
@@ -218,13 +251,14 @@ func _hotel_wing() -> void:
   for row: int in range(2):
    for col: int in range(3):
     _part(Vector3(x-0.45+float(col)*0.45,0.85+float(row)*0.52,17.74),Vector3(0.13,0.19,0.02),Color(0.75,0.65,0.43),true)
- # Dining place settings, table bases and distinct upholstered chair silhouettes.
+ # Dining table bases and small metal place-setting details. Round plates and
+ # cups are batched separately rather than represented by coloured squares.
  for x: float in [-38.0,-31.0,-24.0,-17.0]:
   _part(Vector3(x,0.16,-10),Vector3(1.9,0.30,0.9),walnut)
   for dx: float in [-0.8,0.8]:
-   _part(Vector3(x+dx,0.97,-10),Vector3(0.47,0.025,0.40),ivory)
-   _part(Vector3(x+dx,1.00,-10),Vector3(0.30,0.015,0.25),Color(0.94,0.90,0.80),true)
-   _part(Vector3(x+dx+0.26,1.02,-10),Vector3(0.055,0.08,0.055),bronze,true)
+   for side: float in [-1.0,1.0]:
+    _part(Vector3(x+dx+side*0.24,1.025,-10),Vector3(0.025,0.014,0.30),bronze,true)
+ _dining_crockery()
  # Framed prints and console cabinets subdivide the large room visually.
  for x: float in [-36.0,-26.0,-16.0]:
   _part(Vector3(x,1.85,-15.72),Vector3(2.25,1.4,0.08),bronze)

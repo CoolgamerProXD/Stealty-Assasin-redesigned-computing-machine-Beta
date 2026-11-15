@@ -173,17 +173,16 @@ func animate_motion(delta: float, speed: float) -> void:
  left_leg.position.y = lerpf(left_leg.position.y, 0.88 - 0.52 * crouch_amount + ground_adjust, blend)
  right_leg.position.y = left_leg.position.y
  var stride := swing * (1.0 - 0.45 * crouch_amount)
- left_leg.rotation.x = lerp_angle(left_leg.rotation.x, stride + 1.10 * crouch_amount, blend)
- right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -stride + 1.10 * crouch_amount, blend)
- left_knee.rotation.x = lerp_angle(left_knee.rotation.x, -2.20 * crouch_amount - maxf(0.0, -swing) * 0.65, blend)
- right_knee.rotation.x = lerp_angle(right_knee.rotation.x, -2.20 * crouch_amount - maxf(0.0, swing) * 0.65, blend)
+ left_leg.rotation.x = lerp_angle(left_leg.rotation.x, stride + 1.40 * crouch_amount, blend)
+ right_leg.rotation.x = lerp_angle(right_leg.rotation.x, -stride + 1.40 * crouch_amount, blend)
+ left_knee.rotation.x = lerp_angle(left_knee.rotation.x, -2.80 * crouch_amount - maxf(0.0, -swing) * 0.65, blend)
+ right_knee.rotation.x = lerp_angle(right_knee.rotation.x, -2.80 * crouch_amount - maxf(0.0, swing) * 0.65, blend)
  # Compensate the procedural stride for the lowest shoe, without moving the
  # collision capsule. This is a small visual hip offset, not full terrain IK.
  # Both feet previously floated together at the extremes of a stride.
- var correction := 0.0
- if crouch_amount < 0.05:
-  var low_foot := minf(_shoe_bottom(left_leg, left_knee), _shoe_bottom(right_leg, right_knee))
-  correction = clampf(-low_foot, -0.20, 0.04) * clampf(gait_speed / 0.5, 0.0, 1.0)
+ var low_foot := minf(_shoe_bottom(left_leg, left_knee), _shoe_bottom(right_leg, right_knee))
+ var correction := clampf(-low_foot, -0.20, 0.20)
+ if crouch_amount < 0.05: correction *= clampf(gait_speed / 0.5, 0.0, 1.0)
  var adjustment_delta := correction - ground_adjust
  upper_body.position.y += adjustment_delta
  left_leg.position.y += adjustment_delta

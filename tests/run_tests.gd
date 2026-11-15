@@ -14,6 +14,13 @@ func check(condition: bool, description: String) -> void:
   failures.append(description)
   printerr("FAIL: ", description)
 
+# Measure the low point directly from the rendered shoe transform, independent
+# of the character's own procedural contact calculation.
+func shoe_bottom(shoe: MeshInstance3D) -> float:
+ var basis := shoe.global_transform.basis
+ var vertical_radius := 0.5 * sqrt(basis.x.y * basis.x.y + basis.y.y * basis.y.y + basis.z.y * basis.z.y)
+ return shoe.global_position.y - vertical_radius
+
 func run() -> void:
  var settings_service: Node = root.get_node("Campaign")
  var settings_backup: Dictionary = settings_service.settings.duplicate(true)
@@ -139,15 +146,28 @@ func run() -> void:
  for frame: int in range(180):
   gait_figure.animate_motion(1.0 / 60.0, 3.8)
   if frame > 30:
-   var low_foot := minf(gait_figure._shoe_bottom(gait_figure.left_leg, gait_figure.left_knee), gait_figure._shoe_bottom(gait_figure.right_leg, gait_figure.right_knee)) + gait_figure.ground_adjust
+   var low_foot := minf(shoe_bottom(gait_figure.left_knee.get_child(1) as MeshInstance3D), shoe_bottom(gait_figure.right_knee.get_child(1) as MeshInstance3D))
    maximum_float = maxf(maximum_float, low_foot)
    maximum_sink = maxf(maximum_sink, -low_foot)
  print("GAIT_DIAG: float=", maximum_float, " sink=", maximum_sink)
  check(maximum_float < 0.035 and maximum_sink < 0.035, "procedural running stride keeps a shoe near the ground plane")
+ gait_figure.crouch_amount = 1.0
+ maximum_float = 0.0
+ maximum_sink = 0.0
+ for frame: int in range(180):
+  gait_figure.animate_motion(1.0 / 60.0, 1.5)
+  if frame > 30:
+   var low_foot := minf(shoe_bottom(gait_figure.left_knee.get_child(1) as MeshInstance3D), shoe_bottom(gait_figure.right_knee.get_child(1) as MeshInstance3D))
+   maximum_float = maxf(maximum_float, low_foot)
+   maximum_sink = maxf(maximum_sink, -low_foot)
+ print("GAIT_DIAG: crouch float=", maximum_float, " sink=", maximum_sink)
+ check(maximum_float < 0.035 and maximum_sink < 0.035, "procedural crouch gait keeps a shoe near the ground plane")
  gait_figure.queue_free()
  check(str(world.call("footstep_surface", Vector3(-25,0,-2))) == "carpet" and str(world.call("footstep_surface", Vector3(-25,0,-10))) == "wood", "hotel chooses footstep surfaces from local flooring")
  var furniture := world.get_node_or_null("EnvironmentDressing/HotelFurniture")
  check(furniture != null and furniture.get_child_count() >= 20, "Meridian instantiates authored seating, lamps and plants")
+ var crockery := world.find_child("DiningCrockery", true, false) as MultiMeshInstance3D
+ check(crockery != null and crockery.multimesh.instance_count == 24, "restaurant has batched round plates and cups")
  await physics_frame
  var furniture_query := PhysicsRayQueryParameters3D.create(Vector3(-38,0.5,-7.5), Vector3(-38,0.5,-8.45))
  var furniture_hit := player.get_world_3d().direct_space_state.intersect_ray(furniture_query)
