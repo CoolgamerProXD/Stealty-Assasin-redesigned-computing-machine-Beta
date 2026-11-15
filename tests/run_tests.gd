@@ -266,7 +266,7 @@ func run() -> void:
  SessionSnapshot.restore(snapshot, player, active_mission, objects)
  for suffix: String in ["", ".bak", ".tmp"]:
   if FileAccess.file_exists(world_save + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(world_save + suffix))
- check(active_mission.extracted and active_mission.clues.size() == 2 and player.role == "staff", "snapshot restores mission and disguise")
+ check(active_mission.extracted and active_mission.clues.size() == 2 and player.role == "staff" and active_mission.target_complete and primary.used, "snapshot restores mission, primary target and disguise")
  check(objects[0].used and not objects[0].visible and player.inventory.has_item("ledger"), "snapshot restores world markers and inventory")
  SessionSnapshot.restore({"clues": ["ledger", "ledger", "invalid"], "role": 42, "extracted": true, "position": ["invalid", 0, 0]}, player, active_mission, objects)
  check(active_mission.clues.size() == 1 and not active_mission.extracted and player.role == "visitor", "snapshot safely handles malformed data")

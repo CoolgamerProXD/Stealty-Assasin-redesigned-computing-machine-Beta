@@ -324,9 +324,17 @@ func _fire() -> void:
  if player.equipment.charges <= 0:
   message = "Training sidearm empty."
   return
- player.equipment.charges -= 1
  var screen_center := player.camera.get_viewport().get_visible_rect().size * 0.5
  var origin := player.camera.project_ray_origin(screen_center)
+ # A shoulder camera cannot fire from the far side of a wall when the
+ # character is still behind it. The shot itself remains the centre ray.
+ var eye := player.global_position + Vector3.UP * (player.stance_height * 0.8)
+ var camera_clearance := PhysicsRayQueryParameters3D.create(eye, origin)
+ camera_clearance.exclude = [player.get_rid()]
+ if not get_world_3d().direct_space_state.intersect_ray(camera_clearance).is_empty():
+  message = "Camera obstructed. Move to get a clear shot."
+  return
+ player.equipment.charges -= 1
  var direction := player.camera.project_ray_normal(screen_center)
  var end := origin + direction * 50.0
  var query := PhysicsRayQueryParameters3D.create(origin, end)
