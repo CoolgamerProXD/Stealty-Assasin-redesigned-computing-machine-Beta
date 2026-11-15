@@ -117,6 +117,9 @@ func run() -> void:
  var station_cam := shot_camera(station, Vector3(-18, 3.0, 7.0), Vector3(0, 1.6, -4.0))
  await capture("cinema_tung_chung")
  check(station_cam.current and station.get("npcs").size() == 16, "station preview renders with scheduled physical population")
+ for quality: String in ["LOW", "MEDIUM", "HIGH"]:
+  print("STATION_SAMPLE: ", quality)
+  await sample_preset(service, quality)
  station.queue_free()
  await process_frame
  var menu: Control = load("res://scenes/main_menu.tscn").instantiate()

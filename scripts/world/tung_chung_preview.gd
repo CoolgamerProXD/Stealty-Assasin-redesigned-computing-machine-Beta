@@ -116,6 +116,14 @@ func _station() -> void:
  _sign("PAPER & PRESS", Vector3(-3,3,-11.28), 30)
  _sign("TEA HOUSE", Vector3(4,3,-11.28), 30)
  _sign("MARKET", Vector3(11,3,-11.28), 30)
+ # Fictional, decorative escalator and mezzanine; neither represents railway access.
+ _box(Vector3(17,3.2,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47))
+ _box(Vector3(17,3.9,-3.95), Vector3(8,1.1,0.12), Color(0.31,0.47,0.49))
+ for i: int in range(11):
+  _box(Vector3(14.5, float(i)*0.29+0.1, 1.0-float(i)*0.44), Vector3(2.4,0.18,0.46), Color(0.34,0.39,0.38))
+  _box(Vector3(13.25,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
+  _box(Vector3(15.75,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
+ _sign("CONCOURSE  /  UPPER WALKWAY", Vector3(17,4.65,-3.85), 28)
  # A central information island and seating; kept non-solid in this blockout.
  _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38))
  _box(Vector3(-1,1.15,0), Vector3(5.2,0.12,2.2), Color(0.76,0.75,0.66))
@@ -135,6 +143,7 @@ func _station() -> void:
  _sign("PLATFORM  /  TRAINS", Vector3(1,4.2,7.86), 40)
 
 func _population() -> void:
+ var coats: Array[Color] = [Color(0.55,0.31,0.24), Color(0.25,0.36,0.46), Color(0.42,0.44,0.30), Color(0.48,0.36,0.46), Color(0.28,0.45,0.42), Color(0.60,0.52,0.38), Color(0.31,0.32,0.35)]
  for i: int in range(14):
   var profile := NpcProfile.new()
   profile.identity = "Passenger %02d" % i
@@ -147,6 +156,7 @@ func _population() -> void:
   npc.profile = profile
   npc.position = start
   add_child(npc)
+  npc.person.clothing.albedo_color = coats[i % coats.size()]
   npcs.append(npc)
  robber = _target("Station suspect", "manager", Vector3(-11,0.05,-2), Vector3(-5,0.05,-4))
  operative = _target("Unidentified operative", "security", Vector3(10,0.05,-3), Vector3(15,0.05,4))
