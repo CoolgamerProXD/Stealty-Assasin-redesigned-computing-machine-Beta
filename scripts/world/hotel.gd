@@ -172,10 +172,11 @@ func _build_environment() -> void:
  region.navigation_mesh = HotelLayout.navigation_mesh()
  add_child(region)
 
-func _hotel_window(pos: Vector3, size: Vector3) -> void:
+func _hotel_window(pos: Vector3, size: Vector3, new_partition: bool = false) -> void:
  var body := StaticBody3D.new()
  body.name = "GlazedWindow"
  body.add_to_group("hotel_windows")
+ if new_partition: body.add_to_group("new_furniture_collision")
  body.position = pos
  add_child(body)
  var shape := BoxShape3D.new()
@@ -254,6 +255,19 @@ func _build_meridian_wing() -> void:
  _box(Vector3(-38,4.45,-11.7),Vector3(4,0.15,0.6),Color(0.83,0.80,0.70),false)
  _box(Vector3(-40,4.05,-7),Vector3(1.3,0.9,0.8),dark,false)
  _box(Vector3(-39,3.63,-8.7),Vector3(4,0.04,2),Color(0.33,0.20,0.18),false)
+ # A glazed dining screen divides the large ground floor into recognisable
+ # public corridor and restaurant spaces. Two wide doors preserve circulation.
+ for span: Vector2 in [Vector2(-42,-37.25),Vector2(-34.75,-21.25),Vector2(-18.75,-12)]:
+  var mid := (span.x + span.y) * 0.5
+  var width := span.y - span.x
+  _box(Vector3(mid,0.55,-7),Vector3(width,1.10,0.18),dark,true)
+  get_child(get_child_count()-1).add_to_group("new_furniture_collision")
+  _hotel_window(Vector3(mid,1.93,-7),Vector3(width,1.66,0.10),true)
+  _box(Vector3(mid,2.80,-7),Vector3(width,0.16,0.22),brass,false)
+ for x: float in [-36.0,-20.0]:
+  for side: float in [-1.25,1.25]:
+   _box(Vector3(x+side,1.47,-7),Vector3(0.12,2.94,0.22),dark,false)
+  _box(Vector3(x,2.88,-7),Vector3(2.6,0.18,0.22),dark,false)
  # Upper guest gallery and lower dining / service lounge.
  for x: float in [-38.0,-30.0,-22.0,-15.0]:
   for y: float in [2.95,6.85]:
@@ -500,6 +514,15 @@ func _build_interactions() -> void:
   marker_visual.position.y = 2.05
   marker_visual.scale = Vector3.ONE * 0.35
 
+func footstep_surface(point: Vector3) -> String:
+ if mission_id() == "initiation": return "stone"
+ if point.y > 3.3:
+  return "carpet" if point.x > -12.0 and absf(point.z) < 1.3 else "wood"
+ if point.x < -12.0:
+  if point.z > -3.7 and point.z < -0.3: return "carpet"
+  return "wood" if point.z < -6.0 else "stone"
+ return "carpet" if point.x < 0.0 and absf(point.z) < 2.5 else "stone"
+
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()
  add_child(canvas)
@@ -614,7 +637,7 @@ func _build_ui() -> void:
  add_child(objective_audio)
  mission.changed.connect(objective_audio.play)
  ambience_audio = AudioStreamPlayer.new()
- ambience_audio.stream = ProceduralSound.tone(55.0 if mission_id() == "initiation" else 45.0, 1.0, 0.012, true)
+ ambience_audio.stream = ProceduralSound.ambience("initiation" if mission_id() == "initiation" else "hotel")
  add_child(ambience_audio)
  ambience_audio.play()
  prompt = Label.new()

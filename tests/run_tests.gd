@@ -121,6 +121,7 @@ func run() -> void:
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
  check(player != null and npcs.size() == 7, "hotel preserves existing NPCs and adds three wing visitors")
+ check(str(world.call("footstep_surface", Vector3(-25,0,-2))) == "carpet" and str(world.call("footstep_surface", Vector3(-25,0,-10))) == "wood", "hotel chooses footstep surfaces from local flooring")
  var furniture := world.get_node_or_null("EnvironmentDressing/HotelFurniture")
  check(furniture != null and furniture.get_child_count() >= 20, "Meridian instantiates authored seating, lamps and plants")
  await physics_frame
@@ -131,11 +132,37 @@ func run() -> void:
  var window_hit := player.get_world_3d().direct_space_state.intersect_ray(window_query)
  check(not window_hit.is_empty() and (window_hit.collider as Node).is_in_group("hotel_windows"), "visible window bays retain a physical exterior barrier")
  check(world.get("floor_finish") is ShaderMaterial, "Meridian stone and timber floors use the shared world-space finish")
+ var screen_query := PhysicsRayQueryParameters3D.create(Vector3(-26,1.3,-6.4),Vector3(-26,1.3,-7.5))
+ var screen_hit := player.get_world_3d().direct_space_state.intersect_ray(screen_query)
+ check(not screen_hit.is_empty() and (screen_hit.collider as Node).is_in_group("new_furniture_collision"), "restaurant divider is physically solid away from its doorways")
+ var approach := player.global_position
+ player.global_position = Vector3(-36,0.05,-5.5)
+ player.rotation.y = 0
+ player.velocity = Vector3.ZERO
+ await physics_frame
+ Input.action_press("move_forward")
+ await create_timer(1.4).timeout
+ Input.action_release("move_forward")
+ check(player.global_position.z < -7.5, "restaurant remains reachable through an open doorway")
+ player.global_position = approach
+ player.velocity = Vector3.ZERO
  var before_migration := player.global_position
  player.global_position = Vector3(-38,0.05,-8.45)
  check(world.call("_new_furniture_overlaps", player.global_position), "legacy position overlapping new chair is detected")
  var migrated: bool = world.call("_resolve_furniture_checkpoint")
  check(migrated and not bool(world.call("_new_furniture_overlaps", player.global_position)), "legacy checkpoint relocates out of new solid furniture")
+ var old_save_path: String = world.get("save_path")
+ var furniture_save := "user://furniture_migration_%d.json" % Time.get_ticks_usec()
+ player.global_position = Vector3(-38,0.05,-8.45)
+ var legacy_data := SessionSnapshot.capture(player, world.get("mission"))
+ check(SaveStore.write(furniture_save, legacy_data), "write legacy furniture-position checkpoint")
+ world.set("save_path", furniture_save)
+ player.global_position = before_migration
+ world.call("load_game")
+ check(not bool(world.call("_new_furniture_overlaps", player.global_position)) and player.global_position.distance_to(Vector3(-38,0.05,-8.45)) > 0.1, "loading an old checkpoint moves player clear without discarding state")
+ world.set("save_path", old_save_path)
+ for suffix: String in ["", ".bak", ".tmp"]:
+  if FileAccess.file_exists(furniture_save + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(furniture_save + suffix))
  player.global_position = before_migration
  player.velocity = Vector3.ZERO
  var spawned: Array[Interactable] = world.get("interactables")
@@ -622,6 +649,7 @@ func run() -> void:
  check(init_player.body_mesh is StylizedPerson and init_npcs[0].person is StylizedPerson, "player and guard spawn articulated visual characters")
  check(init_player.body_mesh.left_elbow != null and init_player.body_mesh.right_elbow != null and init_player.body_mesh.weapon.get_parent() == init_player.body_mesh.right_elbow, "articulated elbows carry the visible sidearm")
  check(init_player.body_mesh.left_knee.get_child(0) is MeshInstance3D and (init_player.body_mesh.left_knee.get_child(0) as MeshInstance3D).mesh is CylinderMesh, "character legs use tapered articulated geometry")
+ check(ProceduralSound.ambience("hotel").loop_mode == AudioStreamWAV.LOOP_FORWARD and ProceduralSound.ambience("hotel") == ProceduralSound.ambience("hotel"), "original ambient bed loops and is cached")
  var start_guard := init_npcs[0].global_position
  init_player.global_position = Vector3(-12, 0.05, 0)
  Input.action_press("crouch")
@@ -843,6 +871,7 @@ func run() -> void:
   current_scene.queue_free()
   current_scene = null
  # Exercise the actual map-selection buttons and Escape scene transitions.
+ var progress_before_previews := JSON.stringify(service.progress.snapshot())
  for preview_name: String in ["TUNG CHUNG", "HONG KONG", "NGONG PING"]:
   change_scene_to_file("res://scenes/main_menu.tscn")
   await process_frame
@@ -900,6 +929,7 @@ func run() -> void:
     if returned:
      returned = current_scene.get("panel").get_child(0).text == "MISSION SELECTION"
     check(returned, preview_name + " Escape returns to mission selection")
+ check(JSON.stringify(service.progress.snapshot()) == progress_before_previews, "exploration previews leave campaign progression unchanged")
  if current_scene != null:
   current_scene.queue_free()
   current_scene = null

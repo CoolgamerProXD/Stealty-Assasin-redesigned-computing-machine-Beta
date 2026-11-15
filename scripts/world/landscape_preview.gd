@@ -7,6 +7,7 @@ var canopy_transforms: Array[Transform3D] = []
 
 func _ready() -> void:
  _environment()
+ _start_ambience("city" if preview_kind == "city" else "mountain")
  if preview_kind == "city": _city()
  else: _mountain()
  _flush_accents()
@@ -25,6 +26,10 @@ func _ready() -> void:
  hud.add_theme_constant_override("shadow_offset_x", 2)
  hud.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(hud)
+
+func footstep_surface(point: Vector3) -> String:
+ if preview_kind == "mountain" and absf(point.x) > 5.5: return "grass"
+ return "stone"
 
 func _accent(pos: Vector3, size: Vector3, color: Color) -> void:
  accents.append(Transform3D(Basis.IDENTITY.scaled(size),pos))
@@ -210,6 +215,22 @@ func _city() -> void:
     for dx: float in [-3.0,0.0,3.0]:
      _box(Vector3(x+dx,2.0+level*2.0,z+4.54),Vector3(1.6,1.2,0.06),Color(0.22,0.34,0.38))
    _box(Vector3(x,0.3,z+4.9),Vector3(10,0.6,0.8),dark)
+   # Street-facing bays give the blocks readable fronts from the main road.
+   var face_x := x + (5.04 if x < 0.0 else -5.04)
+   var glass := Color(0.22,0.34,0.37) if z > 0.0 else Color(0.17,0.29,0.34)
+   for floor_index: int in range(1,4):
+    var y := 2.0 + float(floor_index)*1.65
+    if y + 0.6 < h:
+     for dz: float in [-2.8,0.0,2.8]:
+      _accent(Vector3(face_x,y,z+dz),Vector3(0.08,1.18,1.65),glass)
+      _accent(Vector3(face_x + (0.06 if x < 0.0 else -0.06),y,z+dz),Vector3(0.04,1.22,0.05),pale)
+    _accent(Vector3(face_x,y+0.72,z),Vector3(0.11,0.07,8.5),Color(0.58,0.57,0.50))
+   # Setback roof volumes vary the silhouette without creating fake interiors.
+   var extra_height := 2.5 + float(int(absf(x+z)) % 4) * 0.8
+   _accent(Vector3(x,h+extra_height*0.5,z),Vector3(7.8,extra_height,6.8),building.darkened(0.1))
+   _accent(Vector3(x,h+extra_height+0.25,z),Vector3(8.1,0.5,7.1),dark)
+   for dx: float in [-2.3,0.0,2.3]:
+    _accent(Vector3(x+dx,h+extra_height*0.55,z+3.43),Vector3(1.2,extra_height*0.6,0.04),glass)
  _city_walkway()
  # Market stalls, pedestrian streets and waterfront promenade.
  for x: float in [-30.0,-24.0,-18.0,-12.0]:
@@ -219,6 +240,15 @@ func _city() -> void:
  _sign("MARKET STREET",Vector3(-21,3.0,5),38)
  _sign("COMMERCIAL DISTRICT",Vector3(18,3.0,-6),38)
  _sign("BACKSTREETS",Vector3(-21,3.0,-8),38)
+ for entry: Array in [["JADE TEA",Vector3(-11.90,3.2,16.0),PI/2], ["NORTH MARKET",Vector3(-11.90,3.2,30.0),PI/2], ["HARBOUR OFFICE",Vector3(11.90,3.2,-16.0),-PI/2], ["CENTRAL ARCADE",Vector3(11.90,3.2,16.0),-PI/2]]:
+  var placard := Label3D.new()
+  placard.text = entry[0]
+  placard.position = entry[1]
+  placard.rotation.y = entry[2]
+  placard.font_size = 38
+  placard.pixel_size = 0.004
+  placard.modulate = Color(0.90,0.78,0.58)
+  add_child(placard)
  _box(Vector3(0,0.03,-40),Vector3(84,0.06,5),Color(0.27,0.38,0.40))
  _box(Vector3(0,0.03,-43),Vector3(84,0.06,3),Color(0.14,0.30,0.38))
  _sign("HARBOUR PROMENADE",Vector3(0,3,-37),38)
@@ -269,10 +299,17 @@ func _mountain() -> void:
  # Stylised seated figure: original abstract forms, never a destructive element.
  _sphere(Vector3(0,2.15,-29),Vector3(6.2,1.25,3.6),Color(0.38,0.31,0.23))
  _sphere(Vector3(0,3.35,-29),Vector3(3.6,2.8,2.0),Color(0.43,0.35,0.25))
- for x: float in [-2.0,2.0]:
-  _sphere(Vector3(x,2.85,-29),Vector3(1.0,2.0,0.9),Color(0.43,0.35,0.25))
-  _sphere(Vector3(x*0.55,2.25,-30),Vector3(1.2,0.55,0.7),Color(0.47,0.38,0.27))
- _sphere(Vector3(0,2.15,-30.1),Vector3(1.9,0.45,0.8),Color(0.47,0.38,0.27))
+ # A restrained seated silhouette with a raised right hand and a hand in the
+ # lap.  The landmark is purely scenic and has no target or damage behavior.
+ _sphere(Vector3(2.0,2.85,-29),Vector3(1.0,2.0,0.9),Color(0.43,0.35,0.25))
+ var raised_arm := _sphere(Vector3(-1.95,3.15,-28.75),Vector3(0.85,1.85,0.80),Color(0.43,0.35,0.25))
+ raised_arm.rotation.z = -0.22
+ _sphere(Vector3(-2.10,4.03,-28.50),Vector3(0.60,0.80,0.24),Color(0.47,0.38,0.27))
+ _sphere(Vector3(1.10,2.35,-27.78),Vector3(1.2,0.45,0.55),Color(0.47,0.38,0.27))
+ _sphere(Vector3(0,2.15,-27.85),Vector3(1.9,0.45,0.8),Color(0.47,0.38,0.27))
+ # Broad, low-contrast robe folds follow the chest rather than using signage.
+ for y: float in [2.9,3.25,3.6]:
+  _sphere(Vector3(0.25,y,-27.98),Vector3(2.5,0.10,0.12),Color(0.39,0.32,0.24))
  var head := MeshInstance3D.new()
  var sphere := SphereMesh.new()
  sphere.radius = 0.75
@@ -285,6 +322,12 @@ func _mountain() -> void:
  head.position = Vector3(0,5.0,-29)
  add_child(head)
  _sphere(Vector3(0,5.75,-29),Vector3(0.55,0.5,0.55),Color(0.37,0.30,0.22))
+ for x: float in [-0.72,0.72]:
+  _sphere(Vector3(x,4.93,-28.94),Vector3(0.23,0.47,0.20),Color(0.46,0.37,0.26))
+ for x: float in [-0.25,0.25]:
+  _sphere(Vector3(x,5.05,-28.29),Vector3(0.26,0.045,0.035),Color(0.28,0.24,0.20))
+ _sphere(Vector3(0,4.91,-28.22),Vector3(0.15,0.20,0.12),Color(0.45,0.36,0.25))
+ _sphere(Vector3(0,4.75,-28.33),Vector3(0.28,0.035,0.025),Color(0.31,0.25,0.20))
  for x: float in [-30.0,-20.0,-12.0,12.0,20.0,30.0]:
   for z: float in [-33.0,-17.0,0.0,26.0,36.0]:
    _box(Vector3(x,1.1,z),Vector3(0.45,2.2,0.45),Color(0.28,0.22,0.14))
@@ -311,7 +354,7 @@ func _mountain() -> void:
   _box(Vector3(x,6.6,29.08),Vector3(1.6,1.1,0.05),Color(0.30,0.46,0.48))
   _box(Vector3(x,7.8,30),Vector3(0.12,0.7,0.12),dark)
 
-func _sphere(pos: Vector3, dimensions: Vector3, color: Color) -> void:
+func _sphere(pos: Vector3, dimensions: Vector3, color: Color) -> MeshInstance3D:
  var visual := MeshInstance3D.new()
  var mesh := SphereMesh.new()
  mesh.radius = 0.5
@@ -326,6 +369,7 @@ func _sphere(pos: Vector3, dimensions: Vector3, color: Color) -> void:
  material.roughness = 0.92
  visual.material_override = material
  add_child(visual)
+ return visual
 
 func _peak(pos: Vector3, radius: float, height: float, color: Color) -> void:
  var visual := MeshInstance3D.new()

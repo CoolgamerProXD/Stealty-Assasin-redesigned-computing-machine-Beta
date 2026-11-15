@@ -68,7 +68,7 @@ func run() -> void:
  await capture("cinema_hotel_corridor")
  for quality: String in ["LOW", "MEDIUM", "HIGH"]:
   await sample_preset(service, quality)
- camera.global_position = Vector3(-16, 2.0, -3)
+ camera.global_position = Vector3(-16, 2.0, -8.0)
  camera.look_at(Vector3(-31,1.1,-10),Vector3.UP)
  await capture("cinema_hotel_wing")
  camera.global_position = Vector3(-28,1.7,6.8)
@@ -176,6 +176,9 @@ func run() -> void:
   root.add_child(scenery)
   for i: int in range(5): await physics_frame
   var scenery_cam := shot_camera(scenery, Vector3(0,4.0,24) if preview_name == "hong_kong" else Vector3(0,5.0,-11), Vector3(0,2.5,-20) if preview_name == "hong_kong" else Vector3(0,3.0,-29))
+  if preview_name == "hong_kong":
+   var camera_query := PhysicsRayQueryParameters3D.create(scenery_cam.global_position, Vector3(0,2.5,-20))
+   print("CITY_VIEW_DIAG: ", scenery.get_world_3d().direct_space_state.intersect_ray(camera_query))
   await capture("cinema_city" if preview_name == "hong_kong" else "cinema_ngong_ping")
   check(scenery_cam.current and scenery.get("player") != null, preview_name + " preview renders with player")
   scenery.queue_free()

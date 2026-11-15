@@ -10,6 +10,7 @@ var materials: Dictionary = {}
 
 func _ready() -> void:
  _environment()
+ _start_ambience("station")
  _station()
  player = HotelPlayer.new()
  player.position = Vector3(-17, 0.05, 8)
@@ -27,6 +28,16 @@ func _ready() -> void:
  hud.add_theme_constant_override("shadow_offset_x", 2)
  hud.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(hud)
+
+func _start_ambience(kind: String) -> void:
+ var ambience := AudioStreamPlayer.new()
+ ambience.name = "LocationAmbience"
+ ambience.stream = ProceduralSound.ambience(kind)
+ add_child(ambience)
+ ambience.play()
+
+func footstep_surface(_point: Vector3) -> String:
+ return "stone"
 
 func _environment() -> void:
  var env := WorldEnvironment.new()

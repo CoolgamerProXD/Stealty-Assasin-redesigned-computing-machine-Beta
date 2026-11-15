@@ -23,6 +23,7 @@ var stance_height: float = 1.8
 var camera_kick: float = 0.0
 var last_footstep_index: int = 0
 var footsteps: AudioStreamPlayer3D
+var step_streams: Dictionary = {}
 
 func _ready() -> void:
  var collision := CollisionShape3D.new()
@@ -51,7 +52,11 @@ func _ready() -> void:
  camera.current = true
  camera.fov = 68.0
  footsteps = AudioStreamPlayer3D.new()
- footsteps.stream = ProceduralSound.footstep()
+ step_streams["stone"] = ProceduralSound.footstep("stone")
+ step_streams["wood"] = ProceduralSound.footstep("wood")
+ step_streams["carpet"] = ProceduralSound.footstep("carpet")
+ step_streams["grass"] = ProceduralSound.footstep("grass")
+ footsteps.stream = step_streams["stone"]
  footsteps.max_distance = 6.0
  add_child(footsteps)
  pivot.rotation.x = -0.22
@@ -130,6 +135,9 @@ func _physics_process(delta: float) -> void:
  # Trigger steps from the same phase driving the legs, not a separate timer.
  var step_index := floori(body_mesh.phase / PI)
  if is_on_floor() and moving_speed > 0.5 and step_index != last_footstep_index:
+  var surface := "stone"
+  if get_parent().has_method("footstep_surface"): surface = str(get_parent().call("footstep_surface", global_position))
+  footsteps.stream = step_streams.get(surface, step_streams["stone"])
   footsteps.pitch_scale = 0.85 if crouching else (1.15 if moving_speed > 3.3 else 1.0)
   footsteps.play()
  last_footstep_index = step_index
