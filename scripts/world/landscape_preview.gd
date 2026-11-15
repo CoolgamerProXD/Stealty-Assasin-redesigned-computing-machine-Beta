@@ -125,7 +125,10 @@ func _terrain_patch(x0: float, z0: float, width: float, depth: float, height: fl
  for ix: int in range(divisions):
   for iz: int in range(divisions):
    var points: Array[Vector3] = []
-   for corner: Vector2i in [Vector2i(0,0),Vector2i(0,1),Vector2i(1,1),Vector2i(0,0),Vector2i(1,1),Vector2i(1,0)]:
+   # Godot's front-facing triangle winding also determines the solid side
+   # of the concave collision mesh. Reversing this makes an uphill walk hit
+   # the underside of the terrain and stick at the seam with the flat floor.
+   for corner: Vector2i in [Vector2i(0,0),Vector2i(1,1),Vector2i(0,1),Vector2i(0,0),Vector2i(1,0),Vector2i(1,1)]:
     var u := float(ix+corner.x)/float(divisions)
     var v := float(iz+corner.y)/float(divisions)
     var y := maxf(0.0, sin(PI*u) * sin(PI*v)) * height
