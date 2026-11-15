@@ -7,6 +7,7 @@ var settings_path: String = SETTINGS_PATH
 var progress: CampaignProgress = CampaignProgress.new()
 var active_mission: String = ""
 var load_checkpoint: bool = false
+var return_to_maps: bool = false
 var ending: Dictionary = {}
 var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "graphics": "MEDIUM", "show_fps": false}
 

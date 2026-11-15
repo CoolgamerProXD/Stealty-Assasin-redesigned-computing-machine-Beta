@@ -10,7 +10,11 @@ func _ready() -> void:
  ui_audio.stream = ProceduralSound.tone(520.0, 0.06, 0.025)
  add_child(ui_audio)
  _build_shell()
- _home()
+ if Campaign.return_to_maps:
+  Campaign.return_to_maps = false
+  _missions()
+ else:
+  _home()
 
 func _build_shell() -> void:
  var backdrop := preload("res://scripts/ui/menu_backdrop.gd").new()
@@ -78,7 +82,6 @@ func _home() -> void:
  var last := Campaign.progress.last_mission
  _button("CONTINUE  /  LOAD CHECKPOINT", func() -> void: _start(last, true), last.is_empty() or not Campaign.has_checkpoint(last))
  _button("MISSION SELECTION", _missions)
- _button("TUNG CHUNG  /  EARLY MAP PREVIEW", func() -> void: get_tree().change_scene_to_file("res://scenes/tung_chung_preview.tscn"))
  _button("LOADOUT", _loadout)
  _button("SETTINGS", _settings)
  _button("EXIT GAME", func() -> void: get_tree().quit())
@@ -89,6 +92,12 @@ func _missions() -> void:
  _text("MISSION SELECTION", 30)
  for entry: Dictionary in Campaign.progress.missions:
   var id := str(entry["id"])
+  var previews := {"tung_chung": "res://scenes/tung_chung_preview.tscn", "hong_kong": "res://scenes/hong_kong_preview.tscn", "ngong_ping": "res://scenes/ngong_ping_preview.tscn"}
+  if previews.has(id):
+   var path := str(previews[id])
+   _button("%s   —   EXPLORE PREVIEW" % entry.get("name", id), func() -> void: get_tree().change_scene_to_file(path))
+   _text("Exploration preview only — mission unavailable.", 15)
+   continue
   var unlocked: bool = Campaign.progress.is_unlocked(id)
   var status := "COMPLETED / REPLAY" if Campaign.progress.completed.has(id) else ("AVAILABLE" if unlocked else "LOCKED")
   var label := "%s   —   %s" % [entry.get("name", id), status]
