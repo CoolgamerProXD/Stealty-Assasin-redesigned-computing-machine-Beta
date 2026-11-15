@@ -280,6 +280,12 @@ func run() -> void:
  var init_objects: Array[Interactable] = initiation.get("interactables")
  var init_npcs: Array[HotelNpc] = initiation.get("npcs")
  check(init_mission.configured and init_npcs.size() == 2, "Initiation spawns configured mission and exactly two guards")
+ Input.action_press("crouch")
+ await create_timer(0.4).timeout
+ check(init_player.crouching and init_player.stance_height < 1.3 and init_player.pivot.position.y < 1.2, "crouch smoothly lowers collision and camera")
+ Input.action_release("crouch")
+ await create_timer(0.4).timeout
+ check(not init_player.crouching and init_player.stance_height > 1.75, "player stands after crouch when space is clear")
  var start_guard := init_npcs[0].global_position
  await create_timer(2.0).timeout
  check(init_npcs[0].global_position.distance_to(start_guard) > 0.2, "Initiation guard follows its route")

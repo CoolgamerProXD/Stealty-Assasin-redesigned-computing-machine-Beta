@@ -89,6 +89,19 @@ func _build_interactions() -> void:
   _add_interactable(_vector(record["position"]), record["label"], "clue", record["id"], Color(0.9, 0.72, 0.34))
  _add_interactable(Vector3(-5, 0, -2), "Disable assessment unit", "robot", "disable_assessment_unit", Color(0.38, 0.73, 0.83))
  robot = interactables.back()
+ # Distinct abstract machine silhouette, separate from the human NPC meshes.
+ var head := MeshInstance3D.new()
+ var head_mesh := SphereMesh.new()
+ head_mesh.radius = 0.26
+ head_mesh.height = 0.52
+ head.mesh = head_mesh
+ head.position.y = 1.05
+ var robot_material := StandardMaterial3D.new()
+ robot_material.albedo_color = Color(0.16, 0.55, 0.65)
+ robot_material.emission_enabled = true
+ robot_material.emission = Color(0.08, 0.3, 0.38)
+ head.material_override = robot_material
+ robot.add_child(head)
  _add_interactable(Vector3(-13, 0, 7), "Complete assessment", "extract", "exit", Color(0.4, 0.8, 0.5))
 
 func _on_interaction(object: Interactable) -> void:

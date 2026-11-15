@@ -11,9 +11,12 @@ var pivot: Node3D
 var camera: Camera3D
 var body_mesh: MeshInstance3D
 var crouching: bool = false
+var collision_shape: CollisionShape3D
+var stance_height: float = 1.8
 
 func _ready() -> void:
  var collision := CollisionShape3D.new()
+ collision_shape = collision
  var capsule := CapsuleShape3D.new()
  capsule.radius = 0.34
  capsule.height = 1.8
@@ -63,10 +66,32 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
  var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
  var direction := transform.basis * Vector3(input.x, 0, input.y)
- crouching = Input.is_action_pressed("crouch")
+ var wants_crouch := Input.is_action_pressed("crouch")
+ if not wants_crouch and stance_height < 1.79:
+  wants_crouch = not _can_stand()
+ crouching = wants_crouch
+ stance_height = move_toward(stance_height, 1.15 if crouching else 1.8, delta * 3.0)
+ var capsule := collision_shape.shape as CapsuleShape3D
+ capsule.height = stance_height
+ collision_shape.position.y = stance_height * 0.5
+ body_mesh.scale.y = stance_height / 1.8
+ body_mesh.position.y = stance_height * 0.5
+ pivot.position.y = 1.5 * stance_height / 1.8
  var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)
  velocity.x = move_toward(velocity.x, direction.x * speed, 12.0 * delta)
  velocity.z = move_toward(velocity.z, direction.z * speed, 12.0 * delta)
  if not is_on_floor(): velocity.y -= 9.8 * delta
  else: velocity.y = -0.1
  move_and_slide()
+
+# Test the full standing capsule against real geometry; never grow through a ceiling.
+func _can_stand() -> bool:
+ var shape := CapsuleShape3D.new()
+ shape.radius = 0.34
+ shape.height = 1.8
+ var query := PhysicsShapeQueryParameters3D.new()
+ query.shape = shape
+ query.transform = Transform3D(Basis.IDENTITY, global_position + Vector3.UP * 0.9)
+ query.exclude = [get_rid()]
+ query.collision_mask = collision_mask
+ return get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty()

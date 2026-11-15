@@ -60,6 +60,7 @@ func _button(text: String, callback: Callable) -> Button:
  return button
 
 func _main() -> void:
+ if world and world.player: world.player.mouse_sensitivity = float(Campaign.settings["sensitivity"])
  state = "main"
  _clear()
  _label("PAUSED")

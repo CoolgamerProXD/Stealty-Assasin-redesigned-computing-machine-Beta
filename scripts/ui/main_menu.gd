@@ -96,7 +96,7 @@ func _briefing(id: String) -> void:
  _text(str(entry.get("briefing", "")), 20)
  var item: String = Campaign.progress.selected
  var allowed: bool = Campaign.progress.item_allowed(item, id)
- _text("Loadout: %s%s" % [Campaign.item_label(item), "" if allowed else " (training sidearm substituted for this assignment)"], 17)
+ _text("Loadout: %s%s" % [Campaign.item_label(item), "" if allowed else " (not permitted for this assignment)"], 17)
  _button("BEGIN ASSIGNMENT", func() -> void: _start(id, false)).grab_focus()
  _button("BACK", _home)
 
@@ -108,7 +108,7 @@ func _start(id: String, resume: bool) -> void:
 func _loadout() -> void:
  _clear()
  _text("LOADOUT", 30)
- _text("Choose one item. Mission restrictions are checked at deployment.", 17)
+ _text("Equipment selection is saved; equipment use is not implemented yet.", 17)
  for entry: Dictionary in Campaign.progress.equipment:
   var id := str(entry["id"])
   var unlocked: bool = Campaign.progress.item_unlocked(id)
