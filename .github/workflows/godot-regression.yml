@@ -63,20 +63,20 @@ jobs:
           python3 - <<'PYCODE'
           import os, pathlib, re
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
+          # Emit compact, separate notices before detailed excerpts: checks API
+          # limits the number/size of annotations returned by some clients.
           for name in ("version", "environment", "import", "startup", "tests", "camera"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("import", "startup", "tests", "camera"):
-                  lines = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|^FAIL:|^PASS:|^RESULT:|^CAMERA PASS:|^CAMERA FAIL:|^CAMERA RESULT:|^EQUIP_DIAG:|WARNING:|parse_input_event|^DISPLAY_METRIC:|^DISPLAY_STARTUP:| at: |Headless 120|Virtual-display run|OpenGL API", line)]
-              text = "\n".join(lines)[:25000] or "No matching diagnostics."
+              if name in ("tests", "camera"):
+                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^EQUIP_DIAG:", line)]
+              elif name in ("import", "startup"):
+                  selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
+              else:
+                  selected = lines
+              text = "\n".join(selected)[-3500:] or "No matching diagnostics."
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-              print(f"::notice title={name}::{text}")
-              if name == "tests":
-                  tail = "\n".join(path.read_text(errors="replace").splitlines()[-30:])
-                  print(f"::notice title={name} tail::{tail.replace('%', '%25').replace(chr(10), '%0A')}")
-              for line in lines:
-                  if re.match(r"^(RESULT:|CAMERA RESULT:|DISPLAY_METRIC:|DISPLAY_STARTUP:|FAIL:|CAMERA FAIL:|SCRIPT ERROR|ERROR:|EQUIP_DIAG:)", line):
-                      print(f"::notice title={name} summary::{line.replace('%', '%25')}")
+              print(f"::notice title={name} summary::{text}")
           PYCODE

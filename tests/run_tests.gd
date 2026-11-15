@@ -350,6 +350,19 @@ func run() -> void:
  await physics_frame
  await process_frame
  check(meridian_mission.target_discovered and locke.person.torso.material_overlay == gadget_world.get("instinct_red"), "seen Meridian primary target highlights red")
+ var hotel_objects: Array[Interactable] = gadget_world.get("interactables")
+ var hotel_near: Interactable = hotel_objects[0]
+ var hotel_far: Interactable = hotel_objects[1]
+ var hotel_far_original := hotel_far.position
+ hotel_far.position = hotel_near.position + Vector3(0, 0, -3.5)
+ gadget_player.global_position = hotel_near.global_position + Vector3(0, 0.05, 1)
+ await physics_frame
+ gadget_player.camera.look_at(hotel_near.global_position + Vector3.UP * 0.4, Vector3.UP)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check((hotel_near.get_child(0) as MeshInstance3D).material_overlay != null and (hotel_far.get_child(0) as MeshInstance3D).material_overlay == null and bool(gadget_world.call("_in_player_view", hotel_far.global_position + Vector3.UP * 0.4)), "Meridian Instinct uses the same nearby-only item range")
+ hotel_far.position = hotel_far_original
  instinct_event.pressed = false
  Input.parse_input_event(instinct_event)
  await process_frame
@@ -406,6 +419,8 @@ func run() -> void:
  for init_guard: HotelNpc in init_npcs: init_guard.collision_layer = 0
  var nearby: Interactable = init_objects[0]
  var far_item: Interactable = init_objects[1]
+ var far_original := far_item.position
+ far_item.position = nearby.position + Vector3(0, 0, -3.5)
  init_player.global_position = nearby.global_position + Vector3(0, 0.05, 1.0)
  await physics_frame
  init_player.camera.look_at(nearby.global_position + Vector3.UP * 0.4, Vector3.UP)
@@ -420,9 +435,17 @@ func run() -> void:
  var nearby_visual := nearby.get_child(0) as MeshInstance3D
  var far_visual := far_item.get_child(0) as MeshInstance3D
  check(init_player.instinct_active and initiation.get("instinct_label").visible, "left control enables Instinct and its HUD indicator")
- check(nearby_visual.material_overlay != null and far_visual.material_overlay == null, "Instinct highlights only nearby important items")
+ check(nearby_visual.material_overlay != null and far_visual.material_overlay == null and bool(initiation.call("_in_player_view", far_item.global_position + Vector3.UP * 0.4)), "Instinct highlights nearby but not distant visible intel")
+ far_item.position = far_original
  check(init_npcs[0].person.torso.material_overlay == null, "ordinary NPCs are not highlighted")
  var robot_target: Interactable = initiation.get("robot")
+ init_mission.target_discovered = false
+ var away := init_player.camera.global_position - (robot_target.global_position - init_player.camera.global_position)
+ init_player.camera.look_at(away, Vector3.UP)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(not init_mission.target_discovered and (robot_target.get_child(0) as MeshInstance3D).material_overlay == null, "Instinct does not reveal an unseen primary target")
  init_player.global_position = robot_target.global_position + Vector3(0, 0.05, 2)
  await physics_frame
  init_player.camera.look_at(robot_target.global_position + Vector3.UP, Vector3.UP)
@@ -437,6 +460,17 @@ func run() -> void:
  await physics_frame
  await process_frame
  check(not init_player.instinct_active and nearby_visual.material_overlay == null, "releasing left control immediately clears Instinct")
+ var right_ctrl := InputEventKey.new()
+ right_ctrl.physical_keycode = KEY_CTRL
+ right_ctrl.location = KEY_LOCATION_RIGHT
+ right_ctrl.pressed = true
+ Input.parse_input_event(right_ctrl)
+ await process_frame
+ await physics_frame
+ await process_frame
+ check(not init_player.instinct_active, "right control does not activate left-control Instinct")
+ right_ctrl.pressed = false
+ Input.parse_input_event(right_ctrl.duplicate())
  for obj: Interactable in init_objects:
   if obj.kind == "clue": initiation.call("_on_interaction", obj)
  check(init_mission.clues.size() == 3 and not init_mission.can_extract(), "three records alone cannot complete assessment")
