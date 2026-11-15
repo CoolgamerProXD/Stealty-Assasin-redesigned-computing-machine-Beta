@@ -103,10 +103,12 @@ func _city_walkway() -> void:
   rail.position = Vector3(0,0.9,z)
   rail.material_override = material
   ramp.add_child(rail)
- _box(Vector3(19,2.25,0),Vector3(8.5,0.3,8),Color(0.44,0.45,0.41),true)
+ # The terrace overlaps the ramp slightly below its high end, so the
+ # character capsule does not collide with a raised vertical lip on ascent.
+ _box(Vector3(19,2.0,0),Vector3(8.5,0.3,8),Color(0.44,0.45,0.41),true)
  for z: float in [-4.0,4.0]:
-  _box(Vector3(19,2.95,z),Vector3(8.5,1.1,0.10),Color(0.25,0.32,0.32),true)
- _box(Vector3(23.2,2.95,0),Vector3(0.10,1.1,8),Color(0.25,0.32,0.32),true)
+  _box(Vector3(19,2.70,z),Vector3(8.5,1.1,0.10),Color(0.25,0.32,0.32),true)
+ _box(Vector3(23.2,2.70,0),Vector3(0.10,1.1,8),Color(0.25,0.32,0.32),true)
  _sign("PUBLIC WALKWAY", Vector3(16.5,4.2,-3.8),30)
 
 # Gently rolling terrain meshes meet the surrounding ground at their edges.

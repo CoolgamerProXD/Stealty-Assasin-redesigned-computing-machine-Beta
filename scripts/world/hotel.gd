@@ -407,10 +407,18 @@ func _add_interactable(pos: Vector3, title: String, kind: String, id: String, co
   mesh.size = Vector3(0.5, 0.07, 0.34)
   mat.albedo_color = Color(0.65, 0.48, 0.29)
   visual.position.y = 0.81
-  if id in ["archive", "sensor_log"]:
+  if id == "archive":
    mesh.size = Vector3(0.52,0.34,0.06)
    visual.position.y = 1.05
    mat.albedo_color = Color(0.12,0.18,0.19)
+  elif id == "sensor_log":
+   # A small portable data drive, not another generic terminal.
+   mesh.size = Vector3(0.20,0.045,0.08)
+   visual.position.y = 0.80
+   mat.albedo_color = Color(0.12,0.17,0.18)
+  elif id in ["memo", "evaluation"]:
+   mesh.size = Vector3(0.42,0.025,0.30)
+   mat.albedo_color = Color(0.82,0.79,0.69)
  elif kind == "disguise":
   mesh.size = Vector3(0.48, 0.65, 0.20)
   mat.albedo_color = Color(0.24, 0.36, 0.42)
@@ -432,13 +440,23 @@ func _add_interactable(pos: Vector3, title: String, kind: String, id: String, co
  object.add_child(visual)
  if kind == "clue":
   # Folder, layered paper and ink lines sit on a small desk-like surface.
-  if id in ["archive", "sensor_log"]:
+  if id == "archive":
    _pickup_detail(visual, Vector3(0,0,-0.04), Vector3(0.43,0.25,0.015), Color(0.22,0.45,0.45))
    _pickup_detail(visual, Vector3(0,-0.24,0), Vector3(0.06,0.18,0.06), Color(0.18,0.22,0.22))
+   _pickup_detail(visual, Vector3(0,-0.34,0), Vector3(0.28,0.025,0.18), Color(0.18,0.22,0.22))
+  elif id == "sensor_log":
+   _pickup_detail(visual, Vector3(0.125,0,0), Vector3(0.07,0.035,0.06), Color(0.65,0.68,0.65))
+   _pickup_detail(visual, Vector3(-0.035,0.024,0), Vector3(0.065,0.006,0.035), Color(0.38,0.59,0.57))
+   for z: float in [-0.018,0.018]:
+    _pickup_detail(visual, Vector3(0.145,0.019,z), Vector3(0.025,0.004,0.008), Color(0.18,0.23,0.23))
   else:
-   _pickup_detail(visual, Vector3(0, 0.05, 0), Vector3(0.42,0.03,0.27), Color(0.87,0.84,0.72))
+   var paper_y := 0.05 if id not in ["memo", "evaluation"] else 0.020
+   _pickup_detail(visual, Vector3(0,paper_y,0), Vector3(0.40,0.02,0.27), Color(0.91,0.88,0.77))
    for z: float in [-0.08, -0.02, 0.04]:
-    _pickup_detail(visual, Vector3(0,0.071,z), Vector3(0.27,0.005,0.01), Color(0.24,0.25,0.24))
+    _pickup_detail(visual, Vector3(0,paper_y+0.012,z), Vector3(0.27,0.003,0.008), Color(0.24,0.25,0.24))
+   if id == "ledger":
+    _pickup_detail(visual, Vector3(0,paper_y+0.015,0), Vector3(0.016,0.012,0.27), Color(0.37,0.28,0.20))
+    _pickup_detail(visual, Vector3(-0.18,paper_y+0.015,-0.09), Vector3(0.025,0.006,0.035), Color(0.62,0.22,0.17))
   _box(pos + Vector3(0,0.38,0), Vector3(0.9,0.76,0.65), Color(0.30,0.23,0.18), false)
  elif kind == "disguise":
   for x: float in [-0.29,0.29]: _pickup_detail(visual, Vector3(x,0,0), Vector3(0.16,0.58,0.18), Color(0.24,0.36,0.42))
