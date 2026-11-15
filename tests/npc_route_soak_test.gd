@@ -46,7 +46,7 @@ func exercise(scene_path: String, selected: Array[int], label: String) -> void:
 
 func run() -> void:
  Engine.time_scale = 4.0
- var hotel_indices: Array[int] = [4,5,6]
+ var hotel_indices: Array[int] = [3,4,5,6]
  await exercise("res://scenes/hotel.tscn", hotel_indices, "Meridian")
  var station_indices: Array[int] = []
  for i: int in range(16): station_indices.append(i)

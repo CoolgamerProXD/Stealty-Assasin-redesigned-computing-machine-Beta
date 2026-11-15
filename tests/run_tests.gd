@@ -185,6 +185,9 @@ func run() -> void:
    var chair_hit := player.get_world_3d().direct_space_state.intersect_ray(chair_query)
    if not visual_found or chair_hit.is_empty() or not (chair_hit.collider as Node).is_in_group("new_furniture_collision"): all_chairs_aligned = false
  check(all_chairs_aligned, "all dining chair visuals align with their collision envelopes")
+ var locke_route_query := PhysicsRayQueryParameters3D.create(Vector3(-38,4.4,-9), Vector3(-35.5,4.4,-9))
+ locke_route_query.exclude = [player.get_rid(), npcs[3].get_rid()]
+ check(player.get_world_3d().direct_space_state.intersect_ray(locke_route_query).is_empty(), "Locke's suite-local route clears solid furniture and walls")
  var window_query := PhysicsRayQueryParameters3D.create(Vector3(-30,2,15),Vector3(-30,2,17))
  var window_hit := player.get_world_3d().direct_space_state.intersect_ray(window_query)
  check(not window_hit.is_empty() and (window_hit.collider as Node).is_in_group("hotel_windows"), "visible window bays retain a physical exterior barrier")

@@ -45,12 +45,21 @@
     "schedule": [
       {
         "destination": [
-          -38,
+          -35.5,
           3.6,
           -9
         ],
         "activity": "working",
-        "duration": 300
+        "duration": 8
+      },
+      {
+        "destination": [
+          -38,
+          3.6,
+          -9
+        ],
+        "activity": "waiting",
+        "duration": 10
       }
     ]
   }

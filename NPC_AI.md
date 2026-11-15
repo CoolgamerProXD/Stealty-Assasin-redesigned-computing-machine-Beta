@@ -4,7 +4,7 @@ Two Meridian wing visitors use a dedicated ground-floor navigation strip, away f
 
 # Meridian upper floor
 
-Adrian Locke has one long-duration stationary schedule in his upper private suite. The original ground-floor agents retain their local routines. An upper navigation region supports the stationary target and one gallery guest, but cross-floor NPC routing and collision-aware pathfinding around all new furniture are not implemented. Completed targets remain terminal and checkpointed; ordinary temporary incapacitation still expires.
+Adrian Locke walks a short deterministic route entirely within his upper private suite, with pauses at each end. The original ground-floor agents retain their local routines. An upper navigation region supports the suite target and one gallery guest, but cross-floor NPC routing and collision-aware pathfinding around all new furniture are not implemented. Completed targets remain terminal and checkpointed; ordinary temporary incapacitation still expires.
 
 # NPC simulation
 
