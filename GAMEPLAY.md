@@ -1,0 +1,7 @@
+# Gameplay
+
+The Meridian Hotel's fictional archive has disappeared. Collect any two of the ledger, staff memo and archive terminal records, then interact with the exit. The blue marker changes the visitor into a staff role; the visitor has public access, staff can also enter the staff zone, and only security/manager roles can enter the secure zone. Access is independent from NPC suspicion. Entering without permission is possible but may be observed. HUD awareness is a prototype aggregate, not an in-world report.
+
+WASD, mouse look, Shift run, C crouch, E interact, F5 save, F9 load, Escape release mouse; click to recapture. Controls can be edited in the Godot Input Map. Gold markers are records, blue is the uniform and green is extraction. These markers, capsule characters, hard-coded positional area boundaries and abstract observations are placeholders. Crouching does not alter detection. There is no combat or graphic content.
+
+Two openings in each partition allow alternate routes; the walls also block vision and interaction rays. Saving covers mission clues, player position, role and collected markers. Loading leaves NPCs in their current transient states; settings, broader progression and NPC state are not yet persisted. This remains unverified in the Godot runtime.

@@ -1,0 +1,7 @@
+# NPC simulation
+
+Profiles contain identity, occupation, personality fields and an ordered schedule of destinations, activities and durations. The hotel JSON is loaded at startup into reusable Resources. The three example actors navigate on a manually tiled NavigationRegion3D around two physical partitions. They walk to each entry, remain for its duration, then advance cyclically.
+
+Every 0.4 seconds an NPC checks whether the player lacks permission at their current positional zone, then uses a 7 m, 120-degree horizontal field of view and a physics ray for line of sight. On observation it stores a local direct memory, increases suspicion using alertness, and moves to the observed position. The state sequence is suspicious → investigating → returning → walking / scheduled activity. Repeated visible trespass refreshes the investigation. Curiosity extends the investigation, after which suspicion falls and the interrupted schedule resumes. Memory expires independently.
+
+This is a deliberately small deterministic prototype. Perception only knows about player trespass, there are no hearing, direct social recognition, communications, beliefs, separate intentions, alert escalation, simulation tiers, day clock, group conversations or persistent NPC state. Other profile traits and category-specific policies remain future work. Routine activities are labels rather than animations or interactions. Schedules currently pause during interruptions rather than progressing on a shared clock.

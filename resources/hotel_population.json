@@ -1,0 +1,14 @@
+[
+  {"identity":"Mara Vale", "occupation":"security", "alertness":0.8, "start":[5,0.05,1], "schedule":[
+    {"destination":[4,0,1], "activity":"waiting", "duration":3},
+    {"destination":[9,0,2], "activity":"working", "duration":4}
+  ]},
+  {"identity":"Ivo Chen", "occupation":"employee", "alertness":0.4, "start":[-4,0.05,-2], "schedule":[
+    {"destination":[-5,0,-3], "activity":"working", "duration":5},
+    {"destination":[3,0,-4], "activity":"waiting", "duration":4}
+  ]},
+  {"identity":"Nadia Sol", "occupation":"civilian", "alertness":0.25, "start":[-8,0.05,1], "schedule":[
+    {"destination":[-8,0,0], "activity":"waiting", "duration":5},
+    {"destination":[-3,0,4], "activity":"conversing", "duration":5}
+  ]}
+]

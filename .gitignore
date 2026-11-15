@@ -1,0 +1,9 @@
+.godot/
+.import/
+*.tmp
+__pycache__/
+
+.mono/
+/build/
+/dist/
+/exports/
