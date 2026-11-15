@@ -87,5 +87,7 @@ func objective_text() -> String:
  if extracted: return "Investigation complete."
  if can_extract(): return "Evidence secured. Return to the exit."
  if not required_action.is_empty() and not action_complete:
-  return "Disable the assessment unit and collect %d different records." % required_records
+  if required_action == "disable_assessment_unit": return "Disable the assessment unit and collect %d different records." % required_records
+  if required_action == "interview_ivo": return "Question Ivo Chen and collect %d different records." % required_records
+  return "Complete the target objective and collect %d different records." % required_records
  return "Collect %d different records, then leave." % required_records

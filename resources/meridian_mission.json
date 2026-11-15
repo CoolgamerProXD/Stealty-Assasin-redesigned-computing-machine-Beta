@@ -1,8 +1,36 @@
 {
   "required_records": 2,
   "records": [
-    {"id": "ledger", "label": "Read guest ledger", "position": [-5, 0, -3.6], "message": "Ledger: a courier checked in under a false name."},
-    {"id": "memo", "label": "Read staff memo", "position": [4.5, 0, -4], "message": "Memo: the archive was moved before the night shift."},
-    {"id": "archive", "label": "Inspect archive terminal", "position": [9.5, 0, -4], "message": "Terminal: a manager authorized the transfer."}
-  ]
+    {
+      "id": "ledger",
+      "label": "Read guest ledger",
+      "position": [
+        -5,
+        0,
+        -3.6
+      ],
+      "message": "Ledger: a courier checked in under a false name."
+    },
+    {
+      "id": "memo",
+      "label": "Read staff memo",
+      "position": [
+        4.5,
+        0,
+        -4
+      ],
+      "message": "Memo: the archive was moved before the night shift."
+    },
+    {
+      "id": "archive",
+      "label": "Inspect archive terminal",
+      "position": [
+        9.5,
+        0,
+        -4
+      ],
+      "message": "Terminal: a manager authorized the transfer."
+    }
+  ],
+  "required_action": "interview_ivo"
 }

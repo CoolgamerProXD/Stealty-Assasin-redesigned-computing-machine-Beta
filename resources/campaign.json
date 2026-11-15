@@ -2,12 +2,55 @@
   "employer": "BLACKLINE",
   "handler": "Ruby",
   "missions": [
-    {"id":"initiation", "name":"01  /  INITIATION", "description":"A controlled assessment at the fictional Civic Evaluation Annex.", "scene":"res://scenes/initiation.tscn", "briefing":"Ruby: Blackline doesn't hire on a promise. Disable the assessment unit, recover its three records, and leave through the marked exit. Stay observant; the guards are part of the evaluation.", "debrief":"Ruby: You kept your head. Blackline can use that. The next file is already on your desk.", "unlock":"quiet_line"},
-    {"id":"meridian", "name":"02  /  THE MERIDIAN", "description":"Trace a missing archive through a luxury hotel.", "scene":"res://scenes/hotel.tscn", "briefing":"Ruby: A courier vanished at the Meridian, and an archive moved without a paper trail. Bring back two records. Someone calling themselves the Covenant is interested too; we don't know why yet.", "debrief":"Ruby: The records point beyond the hotel. The Covenant is not our employer, and I intend to learn who is paying them.", "unlock":""},
-    {"id":"future", "name":"03  /  CLASSIFIED", "description":"Further assignment unavailable.", "scene":"", "briefing":"", "debrief":"", "unlock":""}
+    {
+      "id": "initiation",
+      "name": "01  /  INITIATION",
+      "description": "A controlled assessment at the fictional Civic Evaluation Annex.",
+      "scene": "res://scenes/initiation.tscn",
+      "briefing": "Ruby: Blackline doesn't hire on a promise. Disable the assessment unit, recover its three records, and leave through the marked exit. Stay observant; the guards are part of the evaluation.",
+      "debrief": "Ruby: You kept your head. Blackline can use that. The next file is already on your desk.",
+      "unlock": "quiet_line"
+    },
+    {
+      "id": "meridian",
+      "name": "02  /  THE MERIDIAN",
+      "description": "Trace a missing archive through a luxury hotel.",
+      "scene": "res://scenes/hotel.tscn",
+      "briefing": "Ruby: Ivo Chen manages the Meridian's records. Find him and ask about the missing archive, then bring back two records. The Covenant is interested too; we don't know why yet.",
+      "debrief": "Ruby: Chen's account and the records point beyond the hotel. The Covenant is not our employer, and I intend to learn who is paying them.",
+      "unlock": ""
+    },
+    {
+      "id": "future",
+      "name": "03  /  CLASSIFIED",
+      "description": "Further assignment unavailable.",
+      "scene": "",
+      "briefing": "",
+      "debrief": "",
+      "unlock": ""
+    }
   ],
   "equipment": [
-    {"id":"training_sidearm", "name":"Training sidearm", "description":"Fictional assessment equipment. Five abstract charges.", "unlock_after":"", "missions":["initiation", "meridian"], "charges":5},
-    {"id":"quiet_line", "name":"Quiet line", "description":"An abstract stealth gadget. Unlocked after Initiation.", "unlock_after":"initiation", "missions":["meridian"], "charges":0}
+    {
+      "id": "training_sidearm",
+      "name": "Training sidearm",
+      "description": "Unsuppressed fictional assessment pulse. Five charges; Q uses one.",
+      "unlock_after": "",
+      "missions": [
+        "initiation",
+        "meridian"
+      ],
+      "charges": 5
+    },
+    {
+      "id": "quiet_line",
+      "name": "Quiet line",
+      "description": "Temporarily disables one nearby person without graphic effects. Q uses it.",
+      "unlock_after": "initiation",
+      "missions": [
+        "meridian"
+      ],
+      "charges": 0
+    }
   ]
 }

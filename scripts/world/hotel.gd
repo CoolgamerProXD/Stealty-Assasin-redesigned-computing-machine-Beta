@@ -158,6 +158,16 @@ func _build_interactions() -> void:
   _add_interactable(_vector(record["position"]), record["label"], "clue", record["id"], Color(0.9, 0.72, 0.34))
  _add_interactable(Vector3(-1, 0, 5.5), "Change into staff uniform", "disguise", "staff", Color(0.3, 0.6, 0.85))
  _add_interactable(Vector3(-10, 0, 5.5), "Leave hotel", "extract", "exit", Color(0.4, 0.8, 0.5))
+ # The existing records employee is now the named witness to the archive transfer.
+ for npc: HotelNpc in npcs:
+  if npc.profile.identity == "Ivo Chen":
+   _add_interactable(Vector3.ZERO, "Question Ivo Chen", "target", "interview_ivo", Color(0.9, 0.55, 0.2))
+   var target := interactables.back()
+   target.reparent(npc, false)
+   target.position = Vector3.ZERO
+   var marker := target.get_child(0) as Node3D
+   marker.position.y = 2.15
+   break
 
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()
@@ -262,7 +272,10 @@ func _nearest() -> Interactable:
   var d := player.global_position.distance_to(object.global_position)
   if d < distance and object.available(player.role):
    var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, object.global_position + Vector3.UP * 0.4)
-   query.exclude = [player.get_rid()]
+   var excluded: Array[RID] = [player.get_rid()]
+   if object.kind == "target" and object.get_parent() is HotelNpc:
+    excluded.append((object.get_parent() as HotelNpc).get_rid())
+   query.exclude = excluded
    if get_world_3d().direct_space_state.intersect_ray(query).is_empty():
     best = object
     distance = d
@@ -286,6 +299,11 @@ func _on_interaction(object: Interactable) -> void:
     if record["id"] == object.identifier:
      message = record["message"]
      break
+  "target":
+   if mission.mark_action(object.identifier):
+    object.used = true
+    object.visible = false
+    message = "Ivo: The archive left before my shift. A manager signed it out."
   "disguise":
    player.set_disguise("staff")
    object.used = true
@@ -313,7 +331,7 @@ func load_game() -> void:
  if data.is_empty():
   message = "No valid compatible save found."
  else:
-  SessionSnapshot.restore(data, player, mission, interactables, safe_position)
+  SessionSnapshot.restore(data, player, mission, interactables, safe_position, Campaign.progress)
   message = "Progress loaded. NPCs continue their current routines."
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -328,9 +346,8 @@ func _process(_delta: float) -> void:
  var highest := 0.0
  for npc: HotelNpc in npcs: highest = maxf(highest, npc.suspicion)
  var title := "01  /  INITIATION" if mission_id() == "initiation" else "02  /  THE MERIDIAN"
- var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "MISSING ARCHIVE"
- var target_state := "OFFLINE" if mission.action_complete else "ACTIVE"
- if mission_id() != "initiation": target_state = "EVIDENCE SEARCH"
+ var target := "ASSESSMENT UNIT" if mission_id() == "initiation" else "IVO CHEN  /  RECORDS EMPLOYEE"
+ var target_state := "COMPLETE" if mission.action_complete else "LOCATE AND INTERACT"
  hud.text = title + "\nTARGET  /  " + target + "  ·  " + target_state + "\n" + mission.progress_text() + "\n" + mission.objective_text() + "\n" + "%s  /  %s  ·  AWARENESS %.0f%%" % [player.role.to_upper(), access, highest]
  var slots := "1  TRAINING SIDEARM"
  if player.equipment.available.has("quiet_line"): slots += "\n2  QUIET LINE"

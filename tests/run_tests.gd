@@ -41,7 +41,8 @@ func run() -> void:
  check(not mission.record_clue("unknown"), "unconfigured record rejected")
  check(mission.record_clue("ledger") and not mission.record_clue("ledger"), "duplicate clue cannot be recorded")
  check(not mission.extract(), "one unique clue cannot unlock extraction")
- check(mission.record_clue("memo") and mission.extract() and mission.extracted and not mission.extract(), "two clues unlock one extraction")
+ check(mission.record_clue("memo") and not mission.extract(), "two clues alone cannot replace the target objective")
+ check(mission.mark_action("interview_ivo") and mission.extract() and mission.extracted and not mission.extract(), "two clues and the witness unlock one extraction")
  check(mission.record_clue("archive") and mission.progress_text().contains("3 / 3") and mission.progress_text().contains("Required: 2"), "progress distinguishes available and required after third clue")
  var memory := NpcMemory.new()
  memory.retention_seconds = 2.0
@@ -209,6 +210,14 @@ func run() -> void:
  check(active_mission.clues.has("ledger") and player.inventory.has_item("ledger"), "world interaction records clue and item")
  player.global_position = objects[1].global_position + Vector3(0, 0.1, 0.5)
  world.call("_interact_nearest")
+ player.global_position = objects[4].global_position + Vector3(0, 0.1, 0.5)
+ world.call("_interact_nearest")
+ check(not active_mission.extracted, "Meridian exit requires target as well as records")
+ var witness: Interactable = objects[5]
+ player.global_position = witness.global_position + Vector3(0, 0.1, 0.7)
+ await physics_frame
+ world.call("_interact_nearest")
+ check(active_mission.action_complete, "physical Ivo target can be questioned")
  player.global_position = objects[4].global_position + Vector3(0, 0.1, 0.5)
  world.call("_interact_nearest")
  check(active_mission.extracted, "world interactions complete mission")
