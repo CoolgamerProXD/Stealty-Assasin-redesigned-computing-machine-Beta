@@ -53,6 +53,13 @@ jobs:
           timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/run_tests.gd 2>&1 | tee "$RUNNER_TEMP/tests.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^FAIL:' "$RUNNER_TEMP/tests.log"; then exit 1; fi
           grep -E '^RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/tests.log"
+      - name: Physical NPC route cycles
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/npc_route_soak_test.gd 2>&1 | tee "$RUNNER_TEMP/soak.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^SOAK FAIL:' "$RUNNER_TEMP/soak.log"; then exit 1; fi
+          grep -E '^SOAK RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/soak.log"
       - name: Automated camera and virtual-display sampling
         shell: bash
         run: |
@@ -96,13 +103,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "environment", "import", "startup", "tests", "camera", "visual", "cinema"):
+          for name in ("version", "environment", "import", "startup", "tests", "soak", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+              if name in ("tests", "soak", "camera", "visual", "cinema"):
+                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
