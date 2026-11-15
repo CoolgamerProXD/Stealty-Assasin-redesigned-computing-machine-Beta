@@ -26,6 +26,10 @@ var phase: float = 0.0
 var idle_phase: float = 0.0
 var idle_activity: String = "idle"
 var clothing: StandardMaterial3D
+# Identical immutable primitive meshes are reused across the population. Each
+# person retains independent materials, transforms and animated joints.
+static var primitive_meshes: Dictionary = {}
+static var jacket_mesh: ArrayMesh
 
 func _ready() -> void:
  upper_body = Node3D.new()
@@ -160,6 +164,7 @@ func animate_motion(delta: float, speed: float) -> void:
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
 
 func _jacket_mesh() -> ArrayMesh:
+ if jacket_mesh: return jacket_mesh
  # Tapered shoulders and waist, flat normals: original low-poly tailoring.
  var points: Array[Vector3] = [
   Vector3(-0.20, -0.30, -0.12), Vector3(0.20, -0.30, -0.12),
@@ -171,7 +176,8 @@ func _jacket_mesh() -> ArrayMesh:
  surface.begin(Mesh.PRIMITIVE_TRIANGLES)
  for index: int in faces: surface.add_vertex(points[index])
  surface.generate_normals()
- return surface.commit()
+ jacket_mesh = surface.commit()
+ return jacket_mesh
 
 func _material(color: Color) -> StandardMaterial3D:
  var mat := StandardMaterial3D.new()
@@ -181,9 +187,12 @@ func _material(color: Color) -> StandardMaterial3D:
 
 func _box(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshInstance3D:
  var part := MeshInstance3D.new()
- var mesh := BoxMesh.new()
- mesh.size = size
- part.mesh = mesh
+ var key := "box:" + str(size)
+ if not primitive_meshes.has(key):
+  var mesh := BoxMesh.new()
+  mesh.size = size
+  primitive_meshes[key] = mesh
+ part.mesh = primitive_meshes[key]
  part.material_override = mat
  part.position = pos
  parent.add_child(part)
@@ -191,12 +200,14 @@ func _box(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshIns
 
 func _ellipsoid(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> MeshInstance3D:
  var part := MeshInstance3D.new()
- var mesh := SphereMesh.new()
- mesh.radius = 0.5
- mesh.height = 1.0
- mesh.radial_segments = 10
- mesh.rings = 5
- part.mesh = mesh
+ if not primitive_meshes.has("ellipsoid"):
+  var mesh := SphereMesh.new()
+  mesh.radius = 0.5
+  mesh.height = 1.0
+  mesh.radial_segments = 10
+  mesh.rings = 5
+  primitive_meshes["ellipsoid"] = mesh
+ part.mesh = primitive_meshes["ellipsoid"]
  part.scale = size
  part.position = pos
  part.material_override = mat
@@ -205,12 +216,15 @@ func _ellipsoid(parent: Node3D, pos: Vector3, size: Vector3, mat: Material) -> M
 
 func _tapered(parent: Node3D, pos: Vector3, top_radius: float, bottom_radius: float, length: float, mat: Material) -> MeshInstance3D:
  var part := MeshInstance3D.new()
- var mesh := CylinderMesh.new()
- mesh.top_radius = top_radius
- mesh.bottom_radius = bottom_radius
- mesh.height = length
- mesh.radial_segments = 8
- part.mesh = mesh
+ var key := "taper:" + str(Vector3(top_radius,bottom_radius,length))
+ if not primitive_meshes.has(key):
+  var mesh := CylinderMesh.new()
+  mesh.top_radius = top_radius
+  mesh.bottom_radius = bottom_radius
+  mesh.height = length
+  mesh.radial_segments = 8
+  primitive_meshes[key] = mesh
+ part.mesh = primitive_meshes[key]
  part.position = pos
  part.material_override = mat
  parent.add_child(part)

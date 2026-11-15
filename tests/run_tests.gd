@@ -121,6 +121,10 @@ func run() -> void:
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")
  check(player != null and npcs.size() == 7, "hotel preserves existing NPCs and adds three wing visitors")
+ var first_leg_mesh: Mesh = (npcs[0].person.left_leg.get_child(0) as MeshInstance3D).mesh
+ var second_leg_mesh: Mesh = (npcs[1].person.left_leg.get_child(0) as MeshInstance3D).mesh
+ check(first_leg_mesh == second_leg_mesh and npcs[0].person.torso.mesh == npcs[1].person.torso.mesh, "identical character primitives share immutable mesh resources")
+ check(npcs[0].person.clothing != npcs[1].person.clothing, "shared character meshes retain independent clothing materials")
  check(str(world.call("footstep_surface", Vector3(-25,0,-2))) == "carpet" and str(world.call("footstep_surface", Vector3(-25,0,-10))) == "wood", "hotel chooses footstep surfaces from local flooring")
  var furniture := world.get_node_or_null("EnvironmentDressing/HotelFurniture")
  check(furniture != null and furniture.get_child_count() >= 20, "Meridian instantiates authored seating, lamps and plants")

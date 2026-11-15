@@ -93,19 +93,18 @@ func _missions() -> void:
  # Five entries plus descriptions and Back must fit the 720p design canvas.
  panel.add_theme_constant_override("separation", 3)
  _text("MISSION SELECTION", 30)
+ _text("Assignments and exploration previews", 15)
  for entry: Dictionary in Campaign.progress.missions:
   var id := str(entry["id"])
   var previews := {"tung_chung": "res://scenes/tung_chung_preview.tscn", "hong_kong": "res://scenes/hong_kong_preview.tscn", "ngong_ping": "res://scenes/ngong_ping_preview.tscn"}
   if previews.has(id):
    var path := str(previews[id])
    _button("%s   —   EXPLORE PREVIEW" % entry.get("name", id), func() -> void: get_tree().change_scene_to_file(path))
-   _text("Exploration preview only — mission unavailable.", 15)
    continue
   var unlocked: bool = Campaign.progress.is_unlocked(id)
   var status := "COMPLETED / REPLAY" if Campaign.progress.completed.has(id) else ("AVAILABLE" if unlocked else "LOCKED")
   var label := "%s   —   %s" % [entry.get("name", id), status]
   _button(label, func() -> void: _briefing(id), not unlocked)
-  _text(str(entry.get("description", "")), 15)
  _button("BACK", _home).grab_focus()
 
 func _briefing(id: String) -> void:

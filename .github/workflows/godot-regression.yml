@@ -134,18 +134,6 @@ jobs:
               for index in range(0, len(encoded), 3000):
                   print(f"::notice title=preview_{path.stem}_{index // 3000}::{encoded[index:index + 3000]}")
           PYCODE
-      - name: Preview environment captures
-        if: always()
-        shell: bash
-        run: |
-          python3 - <<'PYCODE'
-          import base64, pathlib
-          for name in ("cinema_hotel_lobby", "cinema_initiation"):
-              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
-              if not path.exists(): continue
-              data = base64.b64encode(path.read_bytes()).decode("ascii")
-              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
-          PYCODE
       - name: Preview gameplay captures
         if: always()
         shell: bash
