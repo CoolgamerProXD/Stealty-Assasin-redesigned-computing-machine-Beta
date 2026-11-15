@@ -280,10 +280,23 @@ func run() -> void:
  var init_objects: Array[Interactable] = initiation.get("interactables")
  var init_npcs: Array[HotelNpc] = initiation.get("npcs")
  check(init_mission.configured and init_npcs.size() == 2, "Initiation spawns configured mission and exactly two guards")
+ init_player.global_position = Vector3(-12, 0.05, 0)
  Input.action_press("crouch")
  await create_timer(0.4).timeout
  check(init_player.crouching and init_player.stance_height < 1.3 and init_player.pivot.position.y < 1.2, "crouch smoothly lowers collision and camera")
+ var ceiling := StaticBody3D.new()
+ var ceiling_collision := CollisionShape3D.new()
+ var ceiling_box := BoxShape3D.new()
+ ceiling_box.size = Vector3(2, 0.2, 2)
+ ceiling_collision.shape = ceiling_box
+ ceiling.add_child(ceiling_collision)
+ initiation.add_child(ceiling)
+ ceiling.global_position = init_player.global_position + Vector3.UP * 1.4
+ await physics_frame
  Input.action_release("crouch")
+ await create_timer(0.4).timeout
+ check(init_player.crouching and init_player.stance_height < 1.3, "ceiling prevents standing into solid geometry")
+ ceiling.queue_free()
  await create_timer(0.4).timeout
  check(not init_player.crouching and init_player.stance_height > 1.75, "player stands after crouch when space is clear")
  var start_guard := init_npcs[0].global_position
@@ -324,7 +337,10 @@ func run() -> void:
    if child.get_script() and child.get_script().resource_path == "res://scripts/ui/pause_menu.gd": pause_menu = child
   check(pause_menu != null, "campaign mission creates pause menu")
   if pause_menu:
-   pause_menu.call("_open")
+   var escape_event := InputEventAction.new()
+   escape_event.action = "release_mouse"
+   escape_event.pressed = true
+   pause_menu.call("_input", escape_event)
    check(paused and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE, "pause stops simulation and releases mouse")
    pause_menu.call("_resume")
    check(not paused, "resume restarts simulation")

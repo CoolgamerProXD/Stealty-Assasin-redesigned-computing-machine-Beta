@@ -1,5 +1,10 @@
 # Changelog
 
+## Campaign foundation (unreleased)
+- Add original BLACKLINE/Ruby/Covenant campaign data, progression/unlock/replay and persistent settings, main menu, pause and results/debrief screen.
+- Add Initiation greybox with two scheduled guards, moving assessment unit and three required records; reuse existing player, NPC, interaction and save systems, preserving the Meridian save path.
+- Smooth crouch dimensions and camera pivot with a standing clearance check. Add campaign and mission runtime checks. Equipment is not usable; large requested systems and final production work remain incomplete (see README).
+
 ## 2026-11-15 — initial prototype
 
 - Established Godot project, third-person player and primitive hotel greybox.

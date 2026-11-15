@@ -1,5 +1,8 @@
 # NPC simulation
 
+## Initiation reuse and remaining work
+The two Initiation guards reuse the same deterministic individual perception, memory and navigation implementation. They use positional visitor/staff/secure areas, not a mission-specific permission model. Existing simulation is not full warning/escalation or reliable blocked/unreachable recovery; investigate/recovery and last known locations remain basic. The moving assessment unit is not an NPC and does not react to observations. Crouch changes physical stance; there is no special detection multiplier.
+
 Profiles contain identity, occupation, personality fields and an ordered schedule of destinations, activities and durations. The hotel JSON is loaded at startup into reusable Resources. The three example actors navigate on a manually tiled NavigationRegion3D around two physical partitions. They walk to each entry, remain for its duration, then advance cyclically.
 
 Every 0.4 seconds an NPC checks whether the player lacks permission at their current positional zone, then uses a 7 m, 120-degree horizontal field of view and a physics ray for line of sight. On observation it stores a local direct memory, increases suspicion using alertness, and moves to the observed position. The state sequence is suspicious → investigating → returning → walking / scheduled activity. Repeated visible trespass refreshes the investigation. Curiosity extends the investigation, after which suspicion falls and the interrupted schedule resumes. Memory expires independently.

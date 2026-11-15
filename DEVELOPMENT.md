@@ -1,5 +1,8 @@
 # Development status
 
+## Campaign expansion status
+The entry scene is now the main menu. To develop the two greyboxes directly, run `scenes/initiation.tscn` or `scenes/hotel.tscn`; campaign completion transitions and pause integration are enabled when the campaign launches them. The existing player and NPC capsule models and spring-arm controller are retained. Crouch modifies their dimensions/eye pivot, not the basic controller. The additional content is an incremental foundation; see README for missing deliverables.
+
 ## First session — 2026-11-15
 
 The workspace was an empty repository except for a README. This session adds a Godot project and an initial hotel prototype. Checkpoints A–D are **partial**; E is a primitive greybox; F has not been completed. See TESTING.md for verification status.

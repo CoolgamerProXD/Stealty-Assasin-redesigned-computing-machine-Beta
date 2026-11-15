@@ -1,5 +1,8 @@
 # PROJECT ASSASSIN — audit and stabilisation
 
+## Campaign expansion status
+The campaign/menu, Initiation greybox and persistence changes are incremental. The Meridian layout is reused rather than expanded; equipment is metadata only, and ending is a text/results fade rather than a camera cinematic. The Initiation robot is moving but not reactive. Full NPC escalation, blocked-navigation recovery, audio and graphics quality settings remain incomplete. There has been no manual Windows playtest or target GPU measurement. Historical findings below apply to the earlier prototype and should be read alongside these changes.
+
 Date: 2026-11-15. Starting commit `1ae17eafc89e7af26bb972b9ab6f485181c5ca13` on `arena/1ba0f585-stealty-assasin-redesigned-com`. The tree was clean at the start. The original audit was based on source inspection, the user's reported playtest and static/data checks. The following status has been updated with the Godot runtime results from the subsequent regression session.
 
 ## Architecture and evidence

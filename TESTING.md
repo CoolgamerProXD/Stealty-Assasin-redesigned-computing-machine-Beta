@@ -1,5 +1,8 @@
 # Testing
 
+## Campaign expansion verification scope
+The Godot 4.4.1 workflow runs the existing Meridian regression suite and added checks for campaign order/restore, equipment metadata restrictions, Initiation's two NPCs and one moving guard, objective gating, checkpoint restoration, crouch, and campaign scene transitions/pause/debrief. See the Actions run for exact results for the commit being evaluated; earlier runs below describe earlier commits. Direct calls to interaction handlers and scene transitions are automated functional checks, not a human playthrough. GUI usability, full routes, overhead-clearance edge cases, AI escalation and blocked paths, Windows export/content packaging, real audio and target-device performance still require further work and manual verification. Isolated campaign saves in the integration test are deleted after use.
+
 ## Automated
 
 With Godot 4.4.1 installed, from the repository root:
