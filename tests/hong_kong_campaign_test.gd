@@ -152,6 +152,7 @@ func run() -> void:
   await process_frame
   var player: HotelPlayer = world.get("player")
   if id == "tung_chung":
+   world.call("_build_train")
    var carriage_windows := world.find_children("CarriageWindowGlass","MeshInstance3D",true,false)
    var seated_passengers: Array[StylizedPerson] = world.get("train_passengers")
    check(carriage_windows.size() == 16, "two connected carriages expose materialized windows without removing collision shells")
@@ -380,7 +381,7 @@ func run() -> void:
    player.velocity = Vector3.ZERO
    await physics_frame
    Engine.time_scale = 3.0
-   await walk_steps([["move_back",0.45]])
+   await walk_steps([["move_back",0.85]])
    Engine.time_scale = 1.0
    print("HK TRAIN BOARD DIAG: ", player.global_position)
    check(world.get("train_stage") == "aboard" and player.global_position.z > 15.0, "player physically walks from platform into train")
