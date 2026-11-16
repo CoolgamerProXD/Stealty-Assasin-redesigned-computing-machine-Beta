@@ -346,6 +346,19 @@ func _process(delta: float) -> void:
   ray.exclude = excluded
   key_visible = get_world_3d().direct_space_state.intersect_ray(ray).is_empty()
  _overlay(key_marker, yellow_overlay if key_visible else null)
+ _highlight_optional(intel_marker, not intel_found)
+ if uniform_marker: _highlight_optional(uniform_marker, not uniform_found)
+
+# Optional clues and disguises follow the same nearby, visible-only Instinct
+# rule as ordinary mission items; they do not reveal objects through walls.
+func _highlight_optional(node: Node3D, available: bool) -> void:
+ var item_visible := false
+ var point := node.global_position + Vector3.UP * 0.7
+ if available and player.instinct_active and player.global_position.distance_to(node.global_position) < 4.0 and not player.camera.is_position_behind(point):
+  var query := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, point)
+  query.exclude = [player.get_rid()]
+  item_visible = get_world_3d().direct_space_state.intersect_ray(query).is_empty()
+ _overlay(node, yellow_overlay if item_visible else null)
 
 func _overlay(node: Node, material: Material) -> void:
  if node is MeshInstance3D: (node as MeshInstance3D).material_overlay = material

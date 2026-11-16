@@ -136,7 +136,7 @@ func _loadout() -> void:
  _clear()
  panel.add_theme_constant_override("separation", 5)
  _text("LOADOUT", 30)
- _text("Training sidearm is standard; select your optional item.", 16)
+ _text(notice if not notice.is_empty() else "Training sidearm is standard; select your optional item.", 16)
  for entry: Dictionary in Campaign.progress.equipment:
   var id := str(entry["id"])
   var unlocked: bool = Campaign.progress.item_unlocked(id)
@@ -158,6 +158,7 @@ func _cycle_coins() -> void:
  if not Campaign.persist():
   Campaign.progress.set_equipped_coins(previous)
   notice = "Could not save coin loadout."
+ else: notice = ""
  _loadout()
 
 func _select_item(id: String) -> void:
@@ -165,6 +166,7 @@ func _select_item(id: String) -> void:
  if Campaign.progress.select_item(id) and not Campaign.persist():
   Campaign.progress.selected = previous
   notice = "Could not save loadout."
+ else: notice = ""
  _loadout()
 
 func _settings() -> void:
