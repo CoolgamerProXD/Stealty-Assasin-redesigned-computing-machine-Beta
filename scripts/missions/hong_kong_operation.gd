@@ -280,7 +280,8 @@ func _interact() -> void:
   elif operation_id == "tung_chung" and not train_contact_complete:
    message = "Ruby: Speak to the train contact before leaving the carriage."
   elif Campaign.complete(operation_id, 0):
-   get_tree().change_scene_to_file("res://scenes/ending.tscn")
+   var next := "res://scenes/usb_decryption.tscn" if operation_id == "ngong_ping" and Campaign.progress.usb_ready() and not Campaign.progress.usb_decryption_seen else "res://scenes/ending.tscn"
+   get_tree().change_scene_to_file(next)
   else: message = "Campaign progress could not be saved."
   return
  message = str(config["clue"])

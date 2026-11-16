@@ -254,7 +254,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $path = "$env:GITHUB_WORKSPACE\build\windows"
-          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_the_streets', 'mission_the_district', 'mission_the_harbour', 'mission_ngong_ping')
+          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_the_streets', 'mission_the_district', 'mission_the_harbour', 'mission_ngong_ping', 'usb_decryption')
           foreach ($scene in $scenes) {
             $log = "$path\smoke-$scene.log"
             $arguments = @('--headless', '--quit-after', '120', '--log-file', $log, "res://scenes/$scene.tscn")

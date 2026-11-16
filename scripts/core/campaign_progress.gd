@@ -5,6 +5,7 @@ var missions: Array[Dictionary] = []
 var equipment: Array[Dictionary] = []
 var completed: Array[String] = []
 var recovered_keys: Array[String] = []
+var usb_decryption_seen: bool = false
 var selected: String = "training_sidearm"
 var last_mission: String = ""
 
@@ -85,6 +86,7 @@ func usb_ready() -> bool:
 func restore(data: Dictionary) -> void:
  completed.clear()
  recovered_keys.clear()
+ usb_decryption_seen = false
  var raw_keys: Variant = data.get("recovered_keys", [])
  if raw_keys is Array:
   for entry: Dictionary in missions:
@@ -97,6 +99,7 @@ func restore(data: Dictionary) -> void:
    if id in raw and is_unlocked(id):
     var key_id := str(entry.get("key_id", ""))
     if key_id.is_empty() or recovered_keys.has(key_id): completed.append(id)
+ usb_decryption_seen = data.get("usb_decryption_seen", false) == true and usb_ready() and completed.has("ngong_ping")
  var desired: Variant = data.get("selected", "training_sidearm")
  selected = "training_sidearm"
  if desired is String: select_item(desired)
@@ -104,4 +107,4 @@ func restore(data: Dictionary) -> void:
  last_mission = last if last is String and is_unlocked(last) else ""
 
 func snapshot() -> Dictionary:
- return {"completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "selected": selected, "last_mission": last_mission}
+ return {"completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission}

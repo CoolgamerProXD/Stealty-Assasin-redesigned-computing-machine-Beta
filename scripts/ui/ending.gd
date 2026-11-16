@@ -20,7 +20,7 @@ func _ready() -> void:
  _label("Records secured: %d" % Campaign.ending.get("records", 0), 20)
  _label("RUBY  /  DEBRIEF\n" + str(Campaign.ending.get("debrief", "")), 21)
  if str(Campaign.ending.get("id", "")) in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
-  _label("USB KEYS  /  %d OF 5%s" % [Campaign.progress.recovered_keys.size(), "  —  DECRYPTION READY" if Campaign.progress.usb_ready() else ""], 19)
+  _label("USB KEYS  /  %d OF 5%s" % [Campaign.progress.recovered_keys.size(), ("  —  DECRYPTION INITIATED" if Campaign.progress.usb_decryption_seen else "  —  DECRYPTION READY") if Campaign.progress.usb_ready() else ""], 19)
  var unlock := str(Campaign.ending.get("unlock", ""))
  if not unlock.is_empty(): _label("LOADOUT UNLOCKED  /  " + Campaign.item_label(unlock), 20)
  skip = Button.new()

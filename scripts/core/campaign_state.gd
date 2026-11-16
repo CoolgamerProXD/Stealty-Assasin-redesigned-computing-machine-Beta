@@ -57,6 +57,15 @@ func secure_mission_key(id: String, key_id: String) -> bool:
   return false
  return true
 
+func acknowledge_usb_decryption() -> bool:
+ if not progress.usb_ready() or not progress.completed.has("ngong_ping"): return false
+ var previous := progress.usb_decryption_seen
+ progress.usb_decryption_seen = true
+ if not persist():
+  progress.usb_decryption_seen = previous
+  return false
+ return true
+
 func complete(id: String, count: int) -> bool:
  if id != active_mission: return false
  var already := progress.completed.has(id)

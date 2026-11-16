@@ -23,6 +23,7 @@ func run() -> void:
  var temp := "user://assassin_hk_test_%d" % Time.get_ticks_usec()
  service.campaign_path = temp + "_campaign.json"
  service.progress.restore({})
+ check(not service.acknowledge_usb_decryption(), "USB story event remains locked before the five keys and final operation")
  var test_guard := HotelNpc.new()
  test_guard.profile = NpcProfile.new()
  test_guard.profile.occupation = "security"
@@ -159,7 +160,15 @@ func run() -> void:
    await move_near(world, (world.get("exit_marker") as Node3D).global_position)
    world.call("_interact")
    await process_frame
+   await process_frame
    check(service.progress.completed.has(id), "final physical extraction completes the operation")
+   check(current_scene != null and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn" and not service.progress.usb_decryption_seen, "five keys trigger the secure-channel story event")
+   if current_scene and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn":
+    current_scene.call("_finish")
+    await process_frame
+    await process_frame
+    check(service.progress.usb_decryption_seen and current_scene.scene_file_path == "res://scenes/ending.tscn", "skipping the story event persists it and opens the debrief")
+   else: check(false, "skipping the story event persists it and opens the debrief")
   check(service.complete(id, 0), id + " completes after target/key and saves progression")
   if i < 4: check(service.progress.is_unlocked(ids[i+1]), id + " unlocks next operation")
   world.queue_free()
@@ -169,7 +178,7 @@ func run() -> void:
  var restored := CampaignProgress.new()
  restored.configure(JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json")))
  restored.restore(snapshot)
- check(restored.usb_ready() and restored.completed.has("ngong_ping"), "all keys and mission completion survive campaign restore")
+ check(restored.usb_ready() and restored.completed.has("ngong_ping") and restored.usb_decryption_seen, "all keys, final completion and decryption event survive campaign restore")
  var paths: Array[String] = []
  for id: String in ids: paths.append(service.checkpoint_path(id))
  check(paths.size() == 5 and not paths.has(service.checkpoint_path("meridian")) and not paths.has(service.checkpoint_path("initiation")), "Hong Kong checkpoints do not overwrite legacy missions")

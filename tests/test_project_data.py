@@ -73,6 +73,19 @@ class PopulationDataTests(unittest.TestCase):
         self.assertEqual(initiation["primary_target"]["id"], "assessment_unit")
         self.assertEqual(initiation["required_action"], "disable_assessment_unit")
 
+    def test_hong_kong_has_five_distinct_ordered_keys_and_placements(self):
+        campaign = json.loads((ROOT / "resources/campaign.json").read_text())
+        ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())
+        ids = ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
+        entries = [entry for entry in campaign["missions"] if entry["id"] in ids]
+        self.assertEqual([entry["id"] for entry in entries], ids)
+        self.assertEqual([entry["key_id"] for entry in entries], [f"key_{i:02d}" for i in range(1, 6)])
+        self.assertEqual(set(ops), set(ids))
+        self.assertEqual({ops[id]["placement"] for id in ids}, {"target", "guard", "safe"})
+        for entry in entries:
+            self.assertTrue((ROOT / entry["scene"].removeprefix("res://")).is_file())
+            self.assertTrue(ops[entry["id"]]["clue"])
+
     def test_main_scene_and_script_exist(self):
         self.assertIn('run/main_scene="res://scenes/main_menu.tscn"', (ROOT / "project.godot").read_text())
         self.assertIn('res://scripts/world/hotel.gd', (ROOT / "scenes/hotel.tscn").read_text())
