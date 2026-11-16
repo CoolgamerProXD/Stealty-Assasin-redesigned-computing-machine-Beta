@@ -407,6 +407,10 @@ func _mountain() -> void:
  # Original abstract seated figure, with no interaction or damage behavior.
  _landmark_part(landmark, Vector3(0,2.15,-29),Vector3(6.2,1.25,3.6),Color(0.38,0.31,0.23))
  _landmark_part(landmark, Vector3(0,3.35,-29),Vector3(3.6,2.8,2.0),Color(0.43,0.35,0.25))
+ # Overlapping folded legs give the seated figure a distinct cross-legged base.
+ for side: float in [-1.0,1.0]:
+  var folded_leg := _landmark_part(landmark, Vector3(side*1.45,2.18,-27.72),Vector3(3.3,0.65,1.25),Color(0.41,0.33,0.24))
+  folded_leg.rotation.z = side * 0.12
  # A restrained seated silhouette with a raised right hand and a hand in the
  # lap.  The landmark is purely scenic and has no target or damage behavior.
  _landmark_part(landmark, Vector3(2.0,2.85,-29),Vector3(1.0,2.0,0.9),Color(0.43,0.35,0.25))
@@ -420,14 +424,20 @@ func _mountain() -> void:
  thumb.rotation.z = -0.75
  _landmark_part(landmark, Vector3(1.10,2.35,-27.78),Vector3(1.2,0.45,0.55),Color(0.47,0.38,0.27))
  _landmark_part(landmark, Vector3(0,2.15,-27.85),Vector3(1.9,0.45,0.8),Color(0.47,0.38,0.27))
+ for finger: int in range(4):
+  _landmark_part(landmark, Vector3(0.58+float(finger)*0.13,2.42,-27.41),Vector3(0.10,0.10,0.38),Color(0.47,0.38,0.27))
  # Broad, low-contrast robe folds follow the chest rather than using signage.
  for y: float in [2.9,3.25,3.6]:
-  _landmark_part(landmark, Vector3(0.25,y,-27.98),Vector3(2.5,0.10,0.12),Color(0.39,0.32,0.24))
+  var fold := _landmark_part(landmark, Vector3(0.25,y,-27.98),Vector3(2.5,0.10,0.12),Color(0.39,0.32,0.24))
+  fold.rotation.z = -0.14
  var head := MeshInstance3D.new()
  var sphere := SphereMesh.new()
  sphere.radius = 0.75
  sphere.height = 1.5
+ sphere.radial_segments = 24
+ sphere.rings = 12
  head.mesh = sphere
+ head.scale = Vector3(0.86,1.0,0.90)
  var material := StandardMaterial3D.new()
  material.albedo_color = Color(0.47,0.38,0.27)
  material.roughness = 0.9
@@ -440,7 +450,7 @@ func _mountain() -> void:
   for column: int in range(-2,3):
    var x := float(column) * 0.24
    var y := 5.53 + float(row) * 0.12
-   var z := -29.48 + float(row) * 0.10
+   var z := -28.48 - float(row) * 0.10
    _landmark_part(landmark, Vector3(x,y,z),Vector3(0.18,0.18,0.18),Color(0.36,0.30,0.22))
  for x: float in [-0.72,0.72]:
   _landmark_part(landmark, Vector3(x,4.93,-28.94),Vector3(0.23,0.47,0.20),Color(0.46,0.37,0.26))
