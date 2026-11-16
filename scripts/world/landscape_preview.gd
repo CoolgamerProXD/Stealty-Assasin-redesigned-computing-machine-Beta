@@ -198,11 +198,13 @@ func _ground(color: Color) -> void:
  _box(Vector3(0,-0.2,0), Vector3(90,0.4,90), color, true)
  var op := str(get_meta("operation_id", "")) if preview_kind == "city" else ""
  for x: float in [-45.0,45.0]:
-  if (x < 0.0 and op == "the_streets") or (x > 0.0 and op == "the_district"):
+  var open_gateway := op == "hong_kong_sandbox" or (x < 0.0 and op == "the_streets") or (x > 0.0 and op == "the_district")
+  if open_gateway:
+   # Paired walls leave a 12 m pedestrian gateway, aligned to the annex street.
    for z: float in [-25.5,25.5]: _box(Vector3(x,2,z),Vector3(0.3,4,39),color.darkened(0.2),true)
   else: _box(Vector3(x,2,0),Vector3(0.3,4,90),color.darkened(0.2),true)
  for z: float in [-45.0,45.0]:
-  if z < 0.0 and op == "the_harbour":
+  if z < 0.0 and (op == "the_harbour" or op == "hong_kong_sandbox"):
    for x: float in [-25.5,25.5]: _box(Vector3(x,2,z),Vector3(39,4,0.3),color.darkened(0.2),true)
   else: _box(Vector3(0,2,z),Vector3(90,4,0.3),color.darkened(0.2),true)
 
@@ -288,7 +290,7 @@ func _city() -> void:
   var x := -45.0 + float(i)*7.5
   var h := 10.0 + float((i*11)%7)*1.3
   # Keep the waterfront gateway visibly open as well as physically open.
-  if str(get_meta("operation_id", "")) == "the_harbour" and absf(x) < 8.0: continue
+  if str(get_meta("operation_id", "")) in ["the_harbour", "hong_kong_sandbox"] and absf(x) < 8.0: continue
   _accent(Vector3(x,h*0.5,-49),Vector3(6.8,h,3.0),Color(0.20+float(i%3)*0.025,0.28,0.31))
   for y: float in [4.0,7.0,10.0]:
    if y < h - 0.5:
@@ -342,20 +344,29 @@ func _city() -> void:
   _box(Vector3(x,2.85,-38),Vector3(0.7,0.1,0.7),Color(0.95,0.80,0.58))
  var op := str(get_meta("operation_id", ""))
  if op in ["the_streets", "the_district", "the_harbour"]:
-  var annex := preload("res://scripts/world/hong_kong_annex.gd").new()
-  annex.operation_id = op
-  annex.name = "MissionNeighbourhood"
-  if op == "the_streets":
-   annex.position = Vector3(-45,0,0)
-   annex.rotation.y = -PI/2.0
-  elif op == "the_district":
-   annex.position = Vector3(45,0,0)
-   annex.rotation.y = PI/2.0
-  else:
-   annex.position = Vector3(0,0,-45)
-   annex.rotation.y = PI
-  add_child(annex)
-  annex.build()
+  _attach_city_district(op)
+ elif op == "hong_kong_sandbox":
+  # The three neighbourhood builders join the shared city through open,
+  # walkable gateways. They are all instanced in this one scene and one save.
+  _attach_city_district("the_streets")
+  _attach_city_district("the_district")
+  _attach_city_district("the_harbour")
+
+func _attach_city_district(district_id: String) -> void:
+ var annex := preload("res://scripts/world/hong_kong_annex.gd").new()
+ annex.operation_id = district_id
+ annex.name = "District_" + district_id
+ if district_id == "the_streets":
+  annex.position = Vector3(-45,0,0)
+  annex.rotation.y = -PI/2.0
+ elif district_id == "the_district":
+  annex.position = Vector3(45,0,0)
+  annex.rotation.y = PI/2.0
+ else:
+  annex.position = Vector3(0,0,-45)
+  annex.rotation.y = PI
+ add_child(annex)
+ annex.build()
 
 # Three mission-specific, walk-in interiors replace (rather than overlap) a
 # solid scenic block. The surrounding city remains a shared destination.

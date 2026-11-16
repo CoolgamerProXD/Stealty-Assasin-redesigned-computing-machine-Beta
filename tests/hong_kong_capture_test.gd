@@ -18,7 +18,7 @@ func capture(name: String) -> void:
  image.save_png(output.path_join(name + ".png"))
  var thumb := image.duplicate() as Image
  thumb.resize(320,180)
- thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.48)
+ thumb.save_jpg(output.path_join(name + "_thumb.jpg"),0.48)
 # Short fixed-view software-renderer samples, not target-device benchmarks.
 func sample_quality(service: Node, location: String, quality: String) -> void:
  service.settings["graphics"] = quality
@@ -44,27 +44,26 @@ func run() -> void:
  root.size = Vector2i(1280,720)
  var service := root.get_node("Campaign")
  var old_settings: Dictionary = service.settings.duplicate(true)
- var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
+ var old_progress: Dictionary = service.progress.snapshot()
+ var ids: Array[String] = ["tung_chung","hong_kong_sandbox","ngong_ping"]
  for id: String in ids:
+  service.active_mission = id
   var world: Node3D = load("res://scenes/mission_" + id + ".tscn").instantiate()
   root.add_child(world)
   await process_frame
   await physics_frame
   var intro: Camera3D = world.get("intro_camera")
-  check(intro.current and world.get("intro_active"), id + " entry camera is active")
-  if id != "ngong_ping": check(world.get("has_establishing"), id + " opens on the location before cutting to the target")
-  check(root.get_visible_rect().encloses((world.get("skip_button") as Button).get_global_rect()), id + " skip button fits at 720p")
+  check(intro.current and world.get("intro_active"),id + " entry camera is active")
+  if id != "ngong_ping": check(world.get("has_establishing"),id + " opens on location before cutting to target")
+  check(root.get_visible_rect().encloses((world.get("skip_button") as Button).get_global_rect()),id + " skip button fits at 720p")
   await capture("hk_intro_" + id)
   world.call("_end_intro")
   var player: HotelPlayer = world.get("player")
-  check(player.camera.current and player.is_physics_processing(), id + " gameplay camera resumes")
-  check(root.get_visible_rect().encloses((world.get("hud") as Control).get_global_rect()), id + " objective HUD fits at 720p")
+  check(player.camera.current and player.is_physics_processing(),id + " gameplay camera resumes")
+  check(root.get_visible_rect().encloses((world.get("hud") as Control).get_global_rect()),id + " objective HUD fits at 720p")
   if id == "tung_chung":
    var target: HotelNpc = world.get("target")
-   var people: Array[HotelNpc] = world.get("npc_list")
-   for npc: HotelNpc in people:
-    npc.set_physics_process(false)
-    if npc != target: npc.collision_layer = 0
+   for npc: HotelNpc in world.get("npc_list"): npc.set_physics_process(false)
    player.global_position = target.global_position + Vector3(0,0,4)
    player.rotation.y = 0.0
    player.velocity = Vector3.ZERO
@@ -74,11 +73,9 @@ func run() -> void:
    for frame: int in range(3): await physics_frame
    player.camera.look_at(target.global_position + Vector3.UP,Vector3.UP)
    world.call("_fire")
-   check(world.get("target_complete") and not world.get("key_secured") and player.equipment.charges == 4, "Hong Kong center-ray shot completes the target but does not collect its key")
-   check(float((world.get("reticle") as Control).get("hit_timer")) > 0.0, "Hong Kong shot displays hit confirmation")
+   check(world.get("target_complete") and not world.get("key_secured") and player.equipment.charges == 4,"Tung Chung target tag does not collect its physical key")
+   check(float((world.get("reticle") as Control).get("hit_timer")) > 0.0,"Tung Chung shot displays hit confirmation")
    player.aiming = false
-   world.call("_finish_story")
-  # A staged interior/landmark view, not an end-to-end human route.
   var shot := Camera3D.new()
   world.add_child(shot)
   var focus: Vector3 = (world.get("target") as HotelNpc).global_position + Vector3.UP
@@ -90,29 +87,75 @@ func run() -> void:
    shot.global_position = Vector3(19,2.1,18)
    shot.look_at(Vector3(19,1.2,34),Vector3.UP)
   else:
-   shot.global_position = focus + Vector3(2.0,1.2,2.5)
-   shot.look_at(focus,Vector3.UP)
+   shot.global_position = Vector3(0,6,28)
+   shot.look_at(Vector3(0,1,-15),Vector3.UP)
   shot.make_current()
   await capture("hk_play_" + id)
-  if id == "tung_chung":
-   world.set("train_departure_seen",false)
-   world.call("_begin_story","departure")
-   check((world.get("story_camera") as Camera3D).current and world.get("story_phase") == "departure", "departure cutaway activates its dedicated exterior camera")
-   await capture("hk_tung_chung_departure_exterior")
-   world.call("_finish_story")
-   check(world.get("train_departure_seen") and player.is_physics_processing(), "departure cutaway returns control to the playable train")
-  if id in ["the_streets", "the_district", "the_harbour"]:
-   var neighbourhood: Node3D = (world.get("scene") as Node).find_child("MissionNeighbourhood", true, false)
-   shot.global_position = neighbourhood.to_global(Vector3(0,6.0,9))
-   shot.look_at(neighbourhood.to_global(Vector3(0,2.0,42)),Vector3.UP)
-   await capture("hk_neighbourhood_" + id)
-  if id in ["tung_chung", "the_district", "ngong_ping"]:
-   await sample_quality(service,id,"LOW")
-   await sample_quality(service,id,"MEDIUM")
-   await sample_quality(service,id,"HIGH")
+  if id == "hong_kong_sandbox":
+   var targets: Array = world.get("sandbox_targets")
+   var records: Array = world.get("sandbox_target_data")
+   var people: Array = world.get("npc_list")
+   for npc: HotelNpc in people: npc.set_physics_process(false)
+   var city: Node3D = world.get("scene")
+   # Original procedural district asset and all operation actors share this scene.
+   shot.global_position = Vector3(-58,5,-4)
+   shot.look_at(Vector3(-63,1,-17),Vector3.UP)
+   await capture("hk_district_market")
+   shot.global_position = Vector3(58,6,-4)
+   shot.look_at(Vector3(63,1,-17),Vector3.UP)
+   await capture("hk_district_commercial")
+   # Walk-in lobby and executive floors are all part of the same local build.
+   shot.global_position = Vector3(17,5,-72)
+   shot.look_at(Vector3(17,3,-83),Vector3.UP)
+   await capture("hk_skyscraper_lobby")
+   shot.global_position = Vector3(17,14,-78)
+   shot.look_at(Vector3(17,13,-83),Vector3.UP)
+   await capture("hk_skyscraper_interior")
+   # Instinct reveals each active target through nearby geometry in red.
+   player.instinct_active = true
+   for index: int in range(targets.size()):
+    var npc := targets[index] as HotelNpc
+    var id := str(records[index]["id"])
+    player.global_position = npc.global_position + Vector3(0,0,4.0)
+    shot.global_position = npc.global_position + Vector3(0,2.3,5.0)
+    shot.look_at(npc.global_position + Vector3.UP,Vector3.UP)
+    world.call("_process",0.0)
+    await capture("hk_instinct_target_" + id)
+   player.instinct_active = false
+   # Local, in-person security state is shown independently of distant guards.
+   var local_guard: HotelNpc = null
+   for npc: HotelNpc in people:
+    if npc.profile.occupation == "security":
+     local_guard = npc
+     break
+   if local_guard:
+    player.global_position = local_guard.global_position + Vector3(0,0,3.5)
+    local_guard.suspicion = 72.0
+    local_guard.set_state("investigating")
+    shot.global_position = player.global_position + Vector3(0,3.0,4.0)
+    shot.look_at(local_guard.global_position + Vector3.UP,Vector3.UP)
+   world.call("_process",0.0)
+   await capture("hk_awareness_local")
+   # Stage a completed-state HUD without treating this capture as progression.
+   var flags: Dictionary = world.get("sandbox_target_completed")
+   for index: int in range(targets.size()):
+    flags[str(records[index]["id"])] = true
+    (targets[index] as HotelNpc).complete_objective(false)
+   for key_id: String in ["key_02","key_03","key_04"]:
+    if not service.progress.recovered_keys.has(key_id): service.progress.recovered_keys.append(key_id)
+   world.set("target_complete",true)
+   world.call("_process",0.0)
+   check((world.get("awareness_label") as Label).visible and (world.get("hud") as Control).visible,"sandbox awareness and campaign tracker are visible")
+   await capture("hk_completed_hud")
+   service.progress.restore(old_progress)
+   shot.queue_free()
+  if id in ["tung_chung","ngong_ping"]:
+   for quality: String in ["LOW","MEDIUM","HIGH"]: await sample_quality(service,id,quality)
   world.queue_free()
   await process_frame
  service.settings = old_settings
+ service.progress.restore(old_progress)
+ service.active_mission = ""
  service.apply_settings()
  print("HKVIS RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)

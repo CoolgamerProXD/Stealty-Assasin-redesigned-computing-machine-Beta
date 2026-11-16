@@ -25,7 +25,7 @@ func persist() -> bool:
 func checkpoint_path(id: String) -> String:
  if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
  if id == "initiation": return "user://initiation_save.json"
- if id in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
+ if id in ["tung_chung", "hong_kong_sandbox", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
   return "user://blackline_" + id + "_save.json"
  return ""
 

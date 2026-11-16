@@ -213,5 +213,200 @@
     ],
     "witness_line": "Field workers used an archive office near the village, not the monument. Ruby: The safe is our priority.",
     "extraction_line": "Ruby: The coordinator is contained and the final key is secure. Return to the secure channel."
+  },
+  "hong_kong_sandbox": {
+    "map": "city",
+    "target": "The Businessman",
+    "placement": "safe",
+    "clue": "Complete every mandatory target and physically secure Keys 02, 03, and 04. Any district order is valid.",
+    "target_pos": [
+      17,
+      12.85,
+      -83
+    ],
+    "guard_pos": [
+      23,
+      0.05,
+      -80
+    ],
+    "safe_pos": [
+      0,
+      0.05,
+      0
+    ],
+    "spawn": [
+      0,
+      0.05,
+      20
+    ],
+    "exit": [
+      0,
+      0.05,
+      20
+    ],
+    "target_line": "This conversation is background only; the operation requires permanent objective completion.",
+    "intel_text": "Physical evidence links the three city operations. Find evidence unlocked by completed targets.",
+    "witness": "Neighbourhood contact",
+    "witness_pos": [
+      3,
+      0.05,
+      20
+    ],
+    "witness_line": "Three district contacts describe one connected criminal network.",
+    "extraction_line": "Ruby: Three targets and three city keys are confirmed. The mountain archive is next.",
+    "targets": [
+      {
+        "id": "loan_shark",
+        "name": "The Loan Shark",
+        "identity": "Chan Wai, market lender",
+        "occupation": "manager",
+        "start": [
+          -63,
+          0.05,
+          -17
+        ],
+        "routine": [
+          [
+            -63,
+            0.05,
+            -17
+          ],
+          [
+            -62.1,
+            0.05,
+            -17
+          ],
+          [
+            -62.1,
+            0.05,
+            -18.2
+          ],
+          [
+            -63,
+            0.05,
+            -18.2
+          ]
+        ],
+        "dialogue": "A polite market trader whose back ledger records coercive debts and a rival’s removal.",
+        "intel_id": "market_ledger",
+        "intel_name": "Debt ledger page",
+        "intel_position": [
+          -66,
+          0.05,
+          -17
+        ]
+      },
+      {
+        "id": "corporate_fixer",
+        "name": "The Corporate Fixer",
+        "identity": "Vivian Tse, corporate fixer",
+        "occupation": "manager",
+        "start": [
+          63,
+          0.05,
+          -17
+        ],
+        "routine": [
+          [
+            63,
+            0.05,
+            -17
+          ],
+          [
+            62.0,
+            0.05,
+            -17
+          ],
+          [
+            62.0,
+            0.05,
+            -18.2
+          ],
+          [
+            63,
+            0.05,
+            -18.2
+          ]
+        ],
+        "dialogue": "A well-connected fixer keeps the financial routing concealed behind legitimate office work.",
+        "intel_id": "fixer_schedule",
+        "intel_name": "Meeting schedule",
+        "intel_position": [
+          66,
+          0.05,
+          -17
+        ]
+      },
+      {
+        "id": "harbour_businessman",
+        "name": "The Businessman",
+        "identity": "Adrian Yuen, executive chairman",
+        "occupation": "manager",
+        "start": [
+          17,
+          12.85,
+          -83
+        ],
+        "routine": [
+          [
+            17,
+            12.85,
+            -83
+          ],
+          [
+            16.2,
+            12.85,
+            -83
+          ],
+          [
+            16.2,
+            12.85,
+            -84.2
+          ],
+          [
+            17,
+            12.85,
+            -84.2
+          ]
+        ],
+        "dialogue": "The executive’s private files tie the market and commercial districts to the harbour operation.",
+        "intel_id": "executive_brief",
+        "intel_name": "Executive brief",
+        "intel_position": [
+          19,
+          12.85,
+          -84
+        ]
+      }
+    ],
+    "keys": [
+      {
+        "id": "key_02",
+        "name": "Key 02  /  MARKET OFFICE",
+        "position": [
+          -65,
+          0.05,
+          -14
+        ]
+      },
+      {
+        "id": "key_03",
+        "name": "Key 03  /  FIXER OFFICE",
+        "position": [
+          65,
+          0.05,
+          -14
+        ]
+      },
+      {
+        "id": "key_04",
+        "name": "Key 04  /  EXECUTIVE SUITE",
+        "position": [
+          14,
+          12.85,
+          -87
+        ]
+      }
+    ]
   }
 }

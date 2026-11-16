@@ -70,6 +70,9 @@ func build() -> void:
  # Open rooms have front/back access and separate pedestrian alleys.
  for x: float in [-17.0,17.0]:
   for z: float in [18.0,38.0,58.0]:
+   if operation_id == "the_harbour" and x == -17.0 and z == 38.0:
+    _harbour_tower()
+    continue
    # Different open plazas interrupt the grid and preserve varied views.
    if (operation_id == "the_harbour" and x > 0.0 and z == 58.0) or (operation_id == "the_district" and x < 0.0 and z == 38.0):
     _box(Vector3(x,0.035,z),Vector3(10,0.05,10),paving.lightened(0.15))
@@ -167,6 +170,89 @@ func build() -> void:
    _box(Vector3(x,0.9,67.5),Vector3(0.1,1.8,0.1),Color(0.68,0.72,0.67))
   _box(Vector3(0,1.65,67.5),Vector3(60,0.08,0.08),Color(0.68,0.72,0.67))
 
+func _harbour_tower() -> void:
+ # Five accessible, moderate-height levels (about 16 m), with a separate
+ # executive suite, street-facing lobby, meeting floors and a switchback stair.
+ var center := Vector3(-17, 0, 38)
+ var stone := Color(0.45,0.51,0.51)
+ var trim := Color(0.15,0.23,0.26)
+ var glass_tint := Color(0.34,0.64,0.70,0.64)
+ for level: int in range(5):
+  var floor_y := float(level) * 3.2
+  _box(center + Vector3(0,floor_y-0.12,0),Vector3(18,0.24,20),stone.darkened(0.08),true)
+  # Solid side and rear shells; the front lobby has an open, readable entrance.
+  _box(center + Vector3(-8.85,floor_y+1.6,0),Vector3(0.3,3.2,20),stone,true)
+  _box(center + Vector3(8.85,floor_y+1.6,0),Vector3(0.3,3.2,20),stone,true)
+  _box(center + Vector3(0,floor_y+1.6,9.85),Vector3(18,3.2,0.3),stone,true)
+  if level == 0:
+   for side: float in [-1.0,1.0]:
+    _box(center + Vector3(side*6.25,floor_y+1.6,-9.85),Vector3(5.5,3.2,0.3),stone,true)
+   _box(center + Vector3(0,floor_y+3.02,-9.85),Vector3(6.8,0.36,0.3),trim,true)
+   for x: float in [-4.0,4.0]:
+    var pane := DestructibleGlass.new()
+    pane.position = center + Vector3(x,floor_y+1.65,-9.66)
+    pane.configure(Vector3(2.0,2.55,0.08),glass_tint)
+    add_child(pane)
+  else:
+   _box(center + Vector3(0,floor_y+0.24,-9.85),Vector3(18,0.48,0.3),trim,true)
+   _box(center + Vector3(0,floor_y+2.98,-9.85),Vector3(18,0.44,0.3),trim,true)
+   for x: float in [-5.7,-2.0,2.0,5.7]:
+    _box(center + Vector3(x,floor_y+1.6,-9.85),Vector3(0.36,2.75,0.3),trim,true)
+   for x: float in [-3.85,0.0,3.85]:
+    var pane := DestructibleGlass.new()
+    pane.position = center + Vector3(x,floor_y+1.62,-9.66)
+    pane.configure(Vector3(3.2,2.25,0.08),glass_tint)
+    add_child(pane)
+  for side: float in [-1.0,1.0]:
+   _box(center + Vector3(side*9.08,floor_y+1.6,0),Vector3(0.08,2.65,19),Color(0.27,0.43,0.48))
+  # Floor-local navigation keeps the executive's short work routine on the
+  # accessible level rather than asking the street agent to jump storeys.
+  var floor_region := NavigationRegion3D.new()
+  floor_region.name = "CorporateFloorNavigation_%d" % level
+  floor_region.position = center + Vector3(0,floor_y,0)
+  var floor_nav := NavigationMesh.new()
+  floor_nav.vertices = PackedVector3Array([Vector3(-7.4,0,-8.5),Vector3(7.4,0,-8.5),Vector3(7.4,0,8.5),Vector3(-7.4,0,8.5)])
+  floor_nav.add_polygon(PackedInt32Array([0,3,2,1]))
+  floor_region.navigation_mesh = floor_nav
+  add_child(floor_region)
+  # Switchback ramp flights are built from collision-backed, sloped slabs.
+  if level < 4:
+   var angle := atan(3.2 / 9.0)
+   var stair_x := -23.6 if level % 2 == 0 else -20.8
+   var flight := _box(center + Vector3(stair_x+17.0,floor_y+1.6,0),Vector3(2.25,sqrt(3.2*3.2+9.0*9.0),9.0),Color(0.36,0.43,0.44),true)
+   flight.rotation.x = -angle if level % 2 == 0 else angle
+   for side: float in [-1.0,1.0]:
+    _box(flight.position + Vector3(side*1.15,0,0),Vector3(0.08,1.0,9.0),trim)
+  var level_sign := Label3D.new()
+  level_sign.text = ["LOBBY  /  RECEPTION", "OFFICES  /  FINANCE", "MEETING FLOOR", "OPERATIONS", "EXECUTIVE SUITE"][level]
+  level_sign.position = center + Vector3(0,2.6,floor_y*0.0-8.5)
+  level_sign.font_size = 20
+  level_sign.pixel_size = 0.005
+  level_sign.modulate = Color(0.88,0.78,0.58)
+  level_sign.rotation.y = PI
+  add_child(level_sign)
+ # Reception, working offices, meeting suite and the private executive office.
+ _box(center + Vector3(3.0,0.52,-5.0),Vector3(6.0,1.0,1.5),Color(0.28,0.23,0.18),true)
+ _box(center + Vector3(3.0,1.06,-5.0),Vector3(5.8,0.12,1.3),Color(0.55,0.43,0.29))
+ for floor_index: int in range(1,4):
+  var floor_y := float(floor_index)*3.2
+  _box(center + Vector3(2.0,floor_y+0.55,2.6),Vector3(4.0,1.1,1.5),Color(0.29,0.26,0.22),true)
+  _box(center + Vector3(-3.8,floor_y+0.50,-2.7),Vector3(3.0,1.0,1.3),Color(0.30,0.25,0.20),true)
+  for side: float in [-1.0,1.0]:
+   _box(center + Vector3(2.0+side*2.7,floor_y+0.55,2.6),Vector3(0.55,1.0,0.55),Color(0.31,0.38,0.36))
+ # Executive office furniture; maintain an unobstructed walk from the stair.
+ _box(center + Vector3(-13.0+17.0,13.35,3.8),Vector3(5.2,0.9,1.6),Color(0.24,0.20,0.16),true)
+ _box(center + Vector3(-12.8+17.0,13.85,3.8),Vector3(4.8,0.12,1.4),Color(0.49,0.39,0.26))
+ _box(center + Vector3(3.4,13.25,4.0),Vector3(3.8,0.72,2.4),Color(0.32,0.29,0.25),true)
+ _box(center + Vector3(3.4,13.65,4.0),Vector3(3.4,0.12,2.0),Color(0.47,0.40,0.31))
+ _sign("VANTAGE HOUSE  /  EXECUTIVE ENTRANCE",center+Vector3(0,6.4,-10.2),PI)
+ _sign("PRIVATE OFFICE  /  LEVEL 05",center+Vector3(-17.0,15.3,4.2),PI)
+ # Reception security and office staff give the tower a lived-in schedule.
+ var scene := get_parent()
+ scene.call("_target","Vantage House lobby security","security",to_global(center+Vector3(-3,0.05,2)),to_global(center+Vector3(-3,0.05,-2)))
+ scene.call("_target","Finance floor analyst","employee",to_global(center+Vector3(3,3.25,3)),to_global(center+Vector3(3,3.25,-2)))
+ scene.call("_target","Executive assistant","employee",to_global(center+Vector3(-3,12.85,-2)),to_global(center+Vector3(-3,12.85,2)))
+
 func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
  for side: float in [-1.0,1.0]:
   _box(Vector3(x,1.9,z+side*5.0),Vector3(10,3.8,0.2),wall,true)
@@ -203,6 +289,13 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   for dx: float in [-3.0,0.0,3.0]:
    _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
    _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
+ var room_region := NavigationRegion3D.new()
+ room_region.position = Vector3(x,0.05,z)
+ var room_nav := NavigationMesh.new()
+ room_nav.vertices = PackedVector3Array([Vector3(-4.5,0,-4.0),Vector3(4.5,0,-4.0),Vector3(4.5,0,4.0),Vector3(-4.5,0,4.0)])
+ room_nav.add_polygon(PackedInt32Array([0,3,2,1]))
+ room_region.navigation_mesh = room_nav
+ add_child(room_region)
  _sign("TEA / MARKET" if operation_id == "the_streets" else ("OFFICE / RECORDS" if operation_id == "the_district" else "PIER / SERVICES"),Vector3(x,2.7,z+4.86))
 
 func intel_world_position() -> Vector3:

@@ -84,6 +84,10 @@ func _environment() -> void:
  elif operation == "the_harbour":
   sun.light_color = Color(0.70,0.84,1.0)
   sun.light_energy = 0.75
+ elif operation == "hong_kong_sandbox":
+  # Clear late-day light keeps the connected skyline readable across districts.
+  sun.light_color = Color(1.0,0.88,0.72)
+  sun.light_energy = 0.92
  elif operation == "ngong_ping":
   sun.light_color = Color(1.0,0.91,0.75)
  sun.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])

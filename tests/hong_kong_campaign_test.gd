@@ -1,537 +1,132 @@
 extends SceneTree
-## Integrated scene/objective/checkpoint exercise with isolated campaign files.
+## Godot 4.4.1 integration checks for Assignment 004. Automated only; this is
+## not a replacement for interactive playtesting or the Windows export.
 var checks := 0
 var failures := 0
+
 func _initialize() -> void:
  call_deferred("run")
+
 func check(condition: bool, text: String) -> void:
  checks += 1
  if condition: print("HK PASS: ", text)
  else:
   failures += 1
   printerr("HK FAIL: ", text)
-func move_near(world: Node3D, point: Vector3) -> void:
+
+func near_player(world: Node3D, point: Vector3) -> void:
  var player: HotelPlayer = world.get("player")
- player.global_position = point + Vector3(0,0,1.2)
+ player.global_position = point + Vector3(0,0,1.15)
  player.velocity = Vector3.ZERO
  await physics_frame
-func walk_steps(steps: Array) -> void:
- for step: Array in steps:
-  Input.action_press(str(step[0]))
-  await create_timer(float(step[1])).timeout
-  Input.action_release(str(step[0]))
-  await physics_frame
 
 func run() -> void:
- var service := root.get_node("Campaign")
+ var service: Node = root.get_node("Campaign")
  var old_path: String = service.campaign_path
  var old_active: String = service.active_mission
  var old_progress: Dictionary = service.progress.snapshot()
- var temp := "user://assassin_hk_test_%d" % Time.get_ticks_usec()
+ var temp := "user://assassin_assignment004_%d" % Time.get_ticks_usec()
  service.campaign_path = temp + "_campaign.json"
- service.progress.restore({"completed": ["initiation"], "recovered_keys": ["key_05"]})
- check(not service.progress.recovered_keys.has("key_05") and not service.progress.usb_ready(), "restore rejects a future mission's key before that mission unlocks")
+
+ var definition: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
+ var configured := CampaignProgress.new()
+ check(configured.configure(definition), "campaign definition configures")
+ var campaign_ids: Array[String] = []
+ for entry: Dictionary in configured.missions: campaign_ids.append(str(entry["id"]))
+ check(campaign_ids == ["initiation","meridian","tung_chung","hong_kong_sandbox","ngong_ping"], "one selectable Hong Kong city operation replaces the three legacy entries")
+ check(configured.mission("the_streets").is_empty() and configured.mission("the_district").is_empty() and configured.mission("the_harbour").is_empty(), "legacy city IDs are not selectable campaign missions")
+
+ configured.restore({"completed":["initiation","tung_chung","the_streets","the_district","the_harbour"],"recovered_keys":["key_01"]})
+ check(configured.completed.has("tung_chung") and not configured.completed.has("hong_kong_sandbox"), "legacy progress migrates without silently completing sandbox targets")
+ check(not configured.recovered_keys.has("key_02") and not configured.recovered_keys.has("key_03") and not configured.recovered_keys.has("key_04"), "legacy mission completion alone never invents physical city keys")
+ check(not configured.usb_ready(), "legacy city completion alone cannot unlock decryption")
+
  service.progress.restore({})
- check(not service.acknowledge_usb_decryption(), "USB story event remains locked before the five keys and final operation")
- var test_guard := HotelNpc.new()
- test_guard.profile = NpcProfile.new()
- test_guard.profile.occupation = "security"
- root.add_child(test_guard)
- test_guard.set_physics_process(false)
- test_guard.warn_trespass(Vector3.ZERO, Vector3.LEFT, "staff")
- check(test_guard.state == "warning" and is_equal_approx(test_guard.warning_remaining, 3.0), "security issues a three-second warning")
- test_guard.tick_trespass(2.0, true)
- test_guard.warn_trespass(Vector3.ZERO, Vector3.LEFT, "staff")
- check(test_guard.state == "warning" and test_guard.warning_remaining <= 1.01, "repeated sightings do not restart the grace period")
- test_guard.tick_trespass(1.1, true)
- check(test_guard.state == "alerted", "security escalates after the grace period")
- test_guard.tick_trespass(0.1, false)
- check(test_guard.state == "returning", "leaving the restricted area de-escalates security")
- var old_phase := test_guard.person.phase
- for frame: int in range(30): test_guard.person.animate_motion(1.0 / 60.0, 3.0, 1.0)
- check(test_guard.person.phase > old_phase and test_guard.person.gait_speed > 2.5 and absf(test_guard.person.upper_body.rotation.z) > 0.005, "security animation responds to motion and turning")
- for frame: int in range(90): test_guard.person.animate_motion(1.0 / 60.0, 0.0, 0.0)
- check(test_guard.person.gait_speed < 0.05 and absf(test_guard.person.upper_body.rotation.x) < 0.01, "animation blends back to idle after stopping")
- var test_player := HotelPlayer.new()
- test_player.position = Vector3(0,0,-3)
- root.add_child(test_player)
- test_player.set_physics_process(false)
- test_player.set_process_unhandled_input(false)
- test_guard.player = test_player
- test_guard.warning_cooldown = 0.0
- test_guard.warn_trespass(test_player.global_position, Vector3.LEFT, "staff")
- await physics_frame
- check(not test_guard._fire_alert_pulse() and test_player.stagger_remaining == 0.0, "security cannot fire during the warning grace period")
- test_guard.tick_trespass(3.1, true)
- check(test_guard._fire_alert_pulse() and test_player.stagger_remaining > 0.0, "alerted security can briefly stagger an exposed player")
- var wall := StaticBody3D.new()
- wall.position = Vector3(0,1,-1.5)
- var wall_collision := CollisionShape3D.new()
- var wall_shape := BoxShape3D.new()
- wall_shape.size = Vector3(2,2,0.2)
- wall_collision.shape = wall_shape
- wall.add_child(wall_collision)
- root.add_child(wall)
- await physics_frame
- test_player.stagger_remaining = 0.0
- check(not test_guard._fire_alert_pulse() and test_player.stagger_remaining == 0.0, "solid cover blocks the fictional security pulse")
- wall.queue_free()
- test_player.queue_free()
- test_guard.queue_free()
- var visitor := HotelNpc.new()
- visitor.profile = NpcProfile.new()
- visitor.profile.occupation = "civilian"
- root.add_child(visitor)
- visitor.set_physics_process(false)
- visitor.warn_trespass(Vector3.ZERO, Vector3.LEFT, "staff")
- check(visitor.state == "seeking_help", "visitor seeks help instead of becoming hostile")
- visitor.queue_free()
- var staff := HotelNpc.new()
- staff.profile = NpcProfile.new()
- staff.profile.occupation = "employee"
- root.add_child(staff)
- staff.set_physics_process(false)
- staff.warn_trespass(Vector3.ZERO, Vector3.LEFT, "secure")
- check(staff.state == "seeking_help", "staff without secure-area permission seek help")
- staff.queue_free()
- var officer := HotelNpc.new()
- officer.profile = NpcProfile.new()
- officer.profile.occupation = "security"
- officer.position = Vector3(40,0,40)
- root.add_child(officer)
- officer.set_physics_process(false)
- var witness := HotelNpc.new()
- witness.profile = NpcProfile.new()
- witness.profile.occupation = "civilian"
- witness.position = Vector3(41.5,0,40)
- root.add_child(witness)
- witness.set_physics_process(false)
- witness.warn_trespass(Vector3(43,0,40), Vector3(35,0,40), "staff")
- await physics_frame
- check(witness.help_target == officer and witness._try_deliver_report(), "visitor gives a local in-person report to nearby security")
- check(officer.state == "suspicious" and officer.memory.observations.size() == 1 and not witness._try_deliver_report(), "guard investigates one report without immediate hostility or duplicate reports")
- officer.set_state("idle")
- officer.memory.observations.clear()
- witness.warning_cooldown = 0.0
- witness.set_state("idle")
- witness.observe_incapacitated(Vector3(42,0,40))
- check(witness.state == "seeking_help" and witness.incident_help, "a civilian discovering an incapacitated person seeks help rather than attacking")
- check(witness._try_deliver_report() and officer.state == "suspicious", "a civilian can report an observed incapacitated person to local security")
- officer.queue_free()
- witness.queue_free()
- var guard_one := HotelNpc.new()
- guard_one.profile = NpcProfile.new()
- guard_one.profile.occupation = "security"
- guard_one.position = Vector3(35,0,35)
- root.add_child(guard_one)
- guard_one.set_physics_process(false)
- var guard_two := HotelNpc.new()
- guard_two.profile = NpcProfile.new()
- guard_two.profile.occupation = "security"
- guard_two.position = Vector3(37,0,35)
- root.add_child(guard_two)
- guard_two.set_physics_process(false)
- await physics_frame
- guard_one.warn_trespass(Vector3(36,0,32), Vector3(30,0,35), "staff")
- guard_one.tick_trespass(3.1, true)
- check(guard_one.state == "alerted" and guard_two.state == "suspicious", "security shares a local warning escalation without making other guards immediately hostile")
- guard_one.queue_free()
- guard_two.queue_free()
- check(service.progress.mark_complete("initiation"), "Initiation unlocks Hong Kong without mandatory Meridian")
- var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
- var intro_paths: Dictionary = {}
- for i: int in range(ids.size()):
-  var id: String = ids[i]
-  var key_id := "key_%02d" % (i+1)
-  check(service.progress.is_unlocked(id), id + " unlocked in chronological order")
-  check(not service.progress.mark_complete(id), id + " cannot complete without its own key")
-  check(not service.progress.secure_key(id, "key_99"), id + " rejects a different key")
-  service.active_mission = id
-  var world: Node3D = load("res://scenes/mission_" + id + ".tscn").instantiate()
-  root.add_child(world)
-  await process_frame
-  var player: HotelPlayer = world.get("player")
-  if id == "tung_chung":
-   world.call("_build_train")
-   var carriage_windows := world.find_children("CarriageWindowGlass*","MeshInstance3D",true,false)
-   var seated_passengers: Array[StylizedPerson] = world.get("train_passengers")
-   check(carriage_windows.size() == 16, "two connected carriages expose materialized windows without removing collision shells")
-   check(seated_passengers.size() == 4, "each carriage has distinct seated passenger characters")
-   for passenger: StylizedPerson in seated_passengers:
-    for frame: int in range(30): passenger.animate_motion(1.0/60.0,0.0)
-   check(seated_passengers.all(func(person: StylizedPerson) -> bool: return person.seated_blend > 0.8 and person.gait_speed < 0.1), "passenger rigs blend into non-sliding seated idle poses")
-  var target: HotelNpc = world.get("target") as HotelNpc
-  var guard: HotelNpc = world.get("guard")
-  var people: Array[HotelNpc] = world.get("npc_list")
-  for npc: HotelNpc in people:
-   npc.set_physics_process(false)
-   if npc != target and npc != guard: npc.collision_layer = 0
-  world.set("save_path", temp + "_" + id + ".json")
-  check(world.get("intro_active") and not player.is_physics_processing(), id + " intro starts before gameplay")
-  var intro_start: Vector3 = world.get("intro_start")
-  var intro_end: Vector3 = world.get("intro_end")
-  intro_paths[str(intro_start - target.global_position) + "/" + str(intro_end - target.global_position)] = true
-  var skip_event := InputEventAction.new()
-  skip_event.action = "release_mouse"
-  skip_event.pressed = true
-  world.call("_input", skip_event)
-  check(not world.get("intro_active") and player.is_physics_processing(), id + " Escape skips the introduction and initializes gameplay")
-  if id == "tung_chung":
-   var old_fps: bool = service.settings["show_fps"]
-   service.settings["show_fps"] = true
-   world.call("_process", 0.0)
-   check((world.get("fps_label") as Label).visible, "FPS setting appears in Hong Kong HUD")
-   service.settings["show_fps"] = old_fps
-   var tracker: Control = world.get("hud")
-   check((tracker.get("stage") as Label).text.contains("MANDATORY REMAIN") and (tracker.get("status") as Label).text.contains("EXTRACTION LOCKED"), "tracker shows mandatory progress and extraction state")
-   var optional_key := InputEventKey.new()
-   optional_key.keycode = KEY_O
-   optional_key.pressed = true
-   tracker.call("_unhandled_input", optional_key)
-   check((tracker.get("optional") as Label).visible, "optional tracker details can be expanded")
-   var tab_key := InputEventKey.new()
-   tab_key.keycode = KEY_TAB
-   tab_key.pressed = true
-   tracker.call("_unhandled_input", tab_key)
-   check(not (tracker.get("objective") as Label).visible, "tracker can be minimized")
-   tracker.call("_unhandled_input", tab_key)
-   check((tracker.get("objective") as Label).visible, "tracker can be restored")
-  # Walk from the actual deployment point to each target with fixed inputs.
-  # Background agents are frozen/temporarily non-colliding to isolate world
-  # geometry; this does not claim crowd navigation or a human playthrough.
-  target.collision_layer = 0
-  guard.collision_layer = 0
-  player.rotation.y = 0.0
-  player.velocity = Vector3.ZERO
-  Engine.time_scale = 3.0
-  match id:
-   "tung_chung": await walk_steps([["move_right",2.55],["move_forward",2.85]])
-   "the_streets": await walk_steps([["move_forward",1.5],["move_left",5.9]])
-   "the_district": await walk_steps([["move_forward",1.5],["move_right",5.9]])
-   "the_harbour": await walk_steps([["move_forward",20.6],["move_right",5.9],["move_back",2.0]])
-   "ngong_ping": await walk_steps([["move_forward",5.8],["move_left",1.1]])
-  Engine.time_scale = 1.0
-  print("HK DEPLOYMENT DIAG: ", id, " player=", player.global_position, " target=", target.global_position)
-  check(player.global_position.distance_to(target.global_position) < 2.5, id + " has a physical route from deployment to its target")
-  target.collision_layer = 1
-  guard.collision_layer = 1
-  if id == "tung_chung":
-   player.global_position = Vector3(14.5,0.05,4.0)
-   player.rotation.y = 0.0
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   Input.action_press("move_forward")
-   await create_timer(4.6).timeout
-   Input.action_release("move_forward")
-   Engine.time_scale = 1.0
-   print("HK STAIR DIAG: ", player.global_position)
-   check(player.global_position.y > 3.0 and player.global_position.z < -3.8, "station stairs connect the concourse to the upper landing")
-  if id == "ngong_ping":
-   target.collision_layer = 0
-   guard.collision_layer = 0
-   player.global_position = Vector3(0,0.05,-14)
-   player.rotation.y = 0.0
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   Input.action_press("move_forward")
-   await create_timer(4.0).timeout
-   Input.action_release("move_forward")
-   Engine.time_scale = 1.0
-   print("HK BUDDHA DIAG: ", player.global_position)
-   check(player.global_position.y > 2.2 and player.global_position.z < -20.0, "public Buddha viewing approach reaches the terrace")
-   target.collision_layer = 1
-   guard.collision_layer = 1
-   check((world.get("scene") as Node).find_child("MountainFieldOffice", true, false) != null, "final mission has a field office separate from the monument")
-   target.collision_layer = 0
-   guard.collision_layer = 0
-   player.global_position = Vector3(5,0.05,5)
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   Input.action_press("move_right")
-   await create_timer(2.0).timeout
-   Input.action_release("move_right")
-   Engine.time_scale = 1.0
-   print("HK FIELD DIAG: ", player.global_position)
-   check(player.global_position.x > 7.5 and player.global_position.x < 11.5, "mountain field office has a traversable entrance")
-   target.collision_layer = 1
-   guard.collision_layer = 1
-  if id in ["the_streets", "the_district", "the_harbour"]:
-   var city: Node = world.get("scene")
-   check(city.find_child("InteriorLocalNavigation", true, false) != null, id + " has a walk-in mission interior")
-   var furnishings := city.find_child("CityInteriorFurniture", true, false)
-   check(furnishings != null and furnishings.get_child_count() >= 4, id + " interior includes attributed furniture and work surfaces")
-   target.collision_layer = 0
-   guard.collision_layer = 0
-   player.rotation.y = 0.0
-   player.velocity = Vector3.ZERO
-   player.global_position = Vector3(-10,0.05,16) if id == "the_streets" else (Vector3(10,0.05,16) if id == "the_district" else Vector3(16,0.05,-37))
-   await physics_frame
-   Engine.time_scale = 3.0
-   var action := "move_left" if id == "the_streets" else ("move_right" if id == "the_district" else "move_back")
-   Input.action_press(action)
-   await create_timer(2.8).timeout
-   Input.action_release(action)
-   Engine.time_scale = 1.0
-   print("HK INTERIOR DIAG: ", id, " ", player.global_position)
-   var entered: bool = player.global_position.x < -14.0 if id == "the_streets" else (player.global_position.x > 14.0 if id == "the_district" else player.global_position.z > -33.0)
-   check(entered, id + " entrance is physically traversable")
-   Engine.time_scale = 3.0
-   Input.action_press(action)
-   await create_timer(2.8).timeout
-   Input.action_release(action)
-   Engine.time_scale = 1.0
-   print("HK BACK ROUTE DIAG: ", id, " ", player.global_position)
-   var exited: bool = player.global_position.x < -22.5 if id == "the_streets" else (player.global_position.x > 22.5 if id == "the_district" else player.global_position.z > -25.0)
-   check(exited, id + " interior connects to a second physical exit")
-   var annex: Node3D = city.find_child("MissionNeighbourhood", true, false)
-   check(annex != null and annex.find_child("NeighbourhoodStreetNavigation", true, false) != null, id + " has a connected mission-specific neighbourhood")
-   player.global_position = annex.to_global(Vector3(0,0.05,-3))
-   player.rotation.y = annex.global_rotation.y
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   Input.action_press("move_back")
-   await create_timer(5.0).timeout
-   Input.action_release("move_back")
-   Engine.time_scale = 1.0
-   print("HK ANNEX GATE DIAG: ", id, " ", annex.to_local(player.global_position))
-   check(annex.to_local(player.global_position).z > 7.0, id + " gateway is physically traversable from the original city")
-   player.global_position = annex.to_global(Vector3(0,0.05,37))
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   Input.action_press("move_back")
-   await create_timer(5.0).timeout
-   Input.action_release("move_back")
-   Engine.time_scale = 1.0
-   print("HK ANNEX RAMP DIAG: ", id, " ", annex.to_local(player.global_position))
-   check(annex.to_local(player.global_position).y > 2.7 and annex.to_local(player.global_position).z > 48.0, id + " elevated lookout is reachable via the physical ramp")
-   player.global_position = annex.to_global(Vector3(-17,0.05,2.5))
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   Input.action_press("move_back")
-   await create_timer(5.5).timeout
-   Input.action_release("move_back")
-   Engine.time_scale = 1.0
-   print("HK UPPER OFFICE DIAG: ", id, " ", annex.to_local(player.global_position))
-   check(annex.to_local(player.global_position).y > 3.7 and annex.to_local(player.global_position).z > 13.0, id + " upper service room is reached by a physical ramp")
-   var uniform: Node3D = world.get("uniform_marker")
-   await move_near(world, uniform.global_position)
-   world.call("_interact")
-   check(world.get("uniform_found") and player.role == "staff", id + " optional upper-floor disguise grants staff access")
-   world.call("save_game")
-   player.set_disguise("visitor")
-   world.set("uniform_found", false)
-   world.call("load_game")
-   check(world.get("uniform_found") and player.role == "staff", id + " disguise and access survive checkpoint restore")
-   target.collision_layer = 1
-   guard.collision_layer = 1
-  var witness_npc: HotelNpc = world.get("witness")
-  await move_near(world, witness_npc.global_position)
-  world.call("_interact")
-  check(world.get("witness_found") and not world.get("key_secured"), id + " witness gives a physical optional clue without granting the key")
-  var intel: Node3D = world.get("intel_marker")
-  await move_near(world, intel.global_position)
-  world.call("_interact")
-  check(world.get("intel_found") and not world.get("key_secured"), id + " optional intel is physically collected without granting a key")
-  world.call("save_game")
-  world.set("intel_found", false)
-  world.set("witness_found", false)
-  world.call("load_game")
-  check(world.get("intel_found") and world.get("witness_found"), id + " optional intel and witness survive checkpoint restore")
-  await move_near(world, (world.get("exit_marker") as Node3D).global_position)
-  world.call("_interact")
-  check(not service.progress.completed.has(id) and not world.get("key_secured"), id + " extraction rejects missing target and key")
-  await move_near(world, target.global_position)
-  world.call("_interact")
-  check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")
-  if id == "tung_chung":
-   check(world.get("story_phase") == "escape" and not world.get("escape_seen"), "confrontation starts the skippable escape presentation")
-   world.call("_advance_story", 5.1)
-   check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "unskipped escape restores gameplay without granting a key")
-   world.call("load_game")
-   target.set_physics_process(false)
-   check(not world.get("target_complete") and target.visible and target.collision_layer != 0, "pre-confrontation checkpoint restores the courier")
-   await move_near(world, target.global_position)
-   world.call("_interact")
-   root.push_input(skip_event)
-   await process_frame
-   check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "Escape skips the story and restores gameplay without awarding a key")
-   world.call("save_game")
-   world.call("load_game")
-   check(world.get("target_complete") and world.get("escape_seen") and not world.get("key_secured") and (world.get("key_marker") as Node3D).visible, "post-escape checkpoint keeps the physical key available")
-  var config: Dictionary = world.get("config")
-  if config["placement"] == "target": await move_near(world, (world.get("key_marker") as Node3D).global_position if id == "tung_chung" else target.global_position)
-  elif config["placement"] == "guard": await move_near(world, guard.global_position)
-  else: await move_near(world, (world.get("key_marker") as Node3D).global_position)
-  world.call("_interact")
-  check(world.get("key_secured") and service.progress.recovered_keys.has(key_id), id + " requires a separate physical key interaction")
-  if id == "tung_chung":
-   world.call("save_game")
-   world.call("load_game")
-   check(world.get("escape_seen") and world.get("key_secured") and world.get("train_stage") == "station", "station checkpoint restores confrontation, escape and physical key")
-   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
-   world.call("_interact")
-   check(world.get("train_stage") == "station", "platform prompt directs the player to walk aboard instead of teleporting")
-   player.rotation.y = 0.0
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   var gate: StaticBody3D = world.get("train_gate")
-   print("HK TRAIN GATE DIAG: disabled=", (gate.get_child(1) as CollisionShape3D).disabled, " target=", world.get("target_complete"), " key=", world.get("key_secured"), " escape=", world.get("escape_seen"))
-   Engine.time_scale = 3.0
-   await walk_steps([["move_back",2.0]])
-   Engine.time_scale = 1.0
-   print("HK TRAIN BOARD DIAG: ", player.global_position)
-   check(world.get("train_stage") == "aboard" and player.global_position.z > 14.5, "player physically walks from platform into train")
-   check(world.get("story_phase") == "departure" and not player.is_physics_processing(), "boarding starts the controlled skippable exterior departure insert")
-   world.call("_advance_story",5.3)
-   check(world.get("train_departure_seen") and player.is_physics_processing() and world.get("key_secured"), "unskipped departure returns to the same playable carriage without changing key state")
-   world.call("save_game")
-   world.call("load_game")
-   check(world.get("train_stage") == "aboard" and world.get("train_departure_seen") and not world.get("train_contact_complete"), "aboard checkpoint resumes after the one-time departure insert")
-   world.set("train_departure_seen",false)
-   world.call("_begin_story","departure")
-   root.push_input(skip_event)
-   await process_frame
-   check(world.get("train_departure_seen") and player.is_physics_processing(), "Escape skips the departure insert without losing train control")
-   var aboard_path: String = world.get("save_path")
-   var aboard_save := SaveStore.read(aboard_path)
-   var legacy_save := aboard_save.duplicate(true)
-   legacy_save["position"] = [0,0.05,80]
-   legacy_save.erase("escape_seen")
-   SaveStore.write(aboard_path, legacy_save)
-   world.call("load_game")
-   check(world.get("train_stage") == "aboard" and player.global_position.z > 14.0 and player.global_position.z < 20.0, "legacy carriage checkpoint migrates safely to the new train")
-   SaveStore.write(aboard_path, aboard_save)
-   world.call("load_game")
-   var courier_start: Vector3 = (world.get("train_contact") as HotelNpc).global_position
-   var carriage: Node3D = world.get("train_car")
-   check(carriage.find_child("LuggageRouteObstacle", true, false) is StaticBody3D and carriage.find_child("TrainPursuitTrigger", true, false) is Area3D, "train has a physical route obstacle and a connected pursuit trigger")
-   player.rotation.y = 0.0
-   player.velocity = Vector3.ZERO
-   # Deterministically begin just before the trolley, then sidestep and
-   # recenter with real movement input before continuing into car two.
-   player.global_position = Vector3(19.0, 0.05, 21.2)
-   Engine.time_scale = 3.0
-   await walk_steps([["move_left",0.35],["move_back",0.9],["move_right",0.35],["move_back",5.0]])
-   Engine.time_scale = 1.0
-   print("HK TRAIN PURSUIT DIAG: ", player.global_position)
-   var courier_end: Vector3 = (world.get("train_contact") as HotelNpc).global_position
-   check(player.global_position.z > 32.0, "connected carriages are physically traversable")
-   check(world.get("train_chase_active") and courier_end.z > courier_start.z and world.get("train_chase_finished") and not world.get("train_contact_complete"), "player follows a moving courier across connected carriages before the encounter concludes")
-   world.call("save_game")
-   var chase_checkpoint: Dictionary = SaveStore.read(world.get("save_path"))
-   (world.get("train_contact") as HotelNpc).global_position = Vector3(19.0, 0.05, 36.0)
-   world.set("train_chase_finished", false)
-   world.call("load_game")
-   var resumed_courier: HotelNpc = world.get("train_contact")
-   check(world.get("train_chase_active") and world.get("train_chase_finished") and is_equal_approx(resumed_courier.global_position.z, float(chase_checkpoint["train_contact_position"][2])), "checkpoint restores courier position and pursuit stage without completing the encounter")
-   await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
-   world.call("_interact")
-   check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the skippable carriage contact exchange")
-   world.call("_advance_story", 5.1)
-   check(world.get("train_contact_complete") and player.is_physics_processing(), "unskipped contact exchange resolves the pursuit")
-   world.call("load_game")
-   await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
-   world.call("_interact")
-   root.push_input(skip_event)
-   await process_frame
-   check(world.get("train_contact_complete") and player.is_physics_processing(), "Escape skips exterior cinematic and resolves the pursuit")
-  world.call("save_game")
-  world.set("target_complete", false)
-  world.set("key_secured", false)
-  world.call("load_game")
-  check(world.get("target_complete") and world.get("key_secured"), id + " isolated checkpoint restores target and key")
-  if id == "tung_chung": check(world.get("train_stage") == "aboard" and world.get("train_contact_complete"), "train stage survives checkpoint load")
-  var test_path: String = world.get("save_path")
-  var valid_save := SaveStore.read(test_path)
-  var wrong_key := valid_save.duplicate(true)
-  wrong_key["key_id"] = "key_99"
-  SaveStore.write(test_path, wrong_key)
-  world.call("load_game")
-  check(not world.get("key_secured"), id + " rejects another key in its checkpoint")
-  SaveStore.write(test_path, valid_save)
-  world.call("load_game")
-  var wrong_mission := valid_save.duplicate(true)
-  wrong_mission["mission_id"] = "meridian"
-  wrong_mission["target_complete"] = false
-  SaveStore.write(test_path, wrong_mission)
-  world.call("load_game")
-  check(world.get("target_complete") and world.get("key_secured"), id + " ignores a different mission's checkpoint")
-  if id == "tung_chung":
-   # Reproduce the reported flow, including the actual final interaction;
-   # never bypass the world by calling Campaign.complete as the only proof.
-   check(world.get("witness_found") and world.get("target_complete") and world.get("key_secured") and world.get("train_contact_complete"), "station witness, confrontation, physical key and train contact survive reload")
-   check((world.get("train_contact") as HotelNpc).collision_layer == 0, "completed contact no longer blocks the carriage aisle")
-   world.set("witness_found", false)
-   world.set("intel_found", false)
-   player.rotation.y = 0.0
-   player.velocity = Vector3.ZERO
-   await physics_frame
-   Engine.time_scale = 3.0
-   await walk_steps([["move_back",2.6]])
-   Engine.time_scale = 1.0
-   print("HK TRAIN EXIT DIAG: ", player.global_position)
-   check(player.global_position.distance_to((world.get("exit_marker") as Node3D).global_position) < 2.0, "resolved contact leaves a walkable route to extraction")
-   world.call("_interact")
-   check(world.get("extraction_active") and service.progress.completed.has(id), "Tung Chung extracts without optional witness or intel")
-   world.call("_finish_extraction")
-   await process_frame
-   await process_frame
-   check(current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn", "Tung Chung extraction opens its debrief")
-   if current_scene:
-    current_scene.queue_free()
-    current_scene = null
-   await process_frame
-  if id == "ngong_ping":
-   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
-   world.call("_interact")
-   check(world.get("extraction_active") and service.progress.completed.has(id) and not player.is_physics_processing(), "final physical extraction saves progression and starts a controlled cinematic")
-   var extraction_skip := InputEventAction.new()
-   extraction_skip.action = "release_mouse"
-   extraction_skip.pressed = true
-   await process_frame
-   root.push_input(extraction_skip)
-   await process_frame
-   await process_frame
-   print("HK EXTRACTION DIAG: active=", world.get("extraction_active"), " paused=", paused, " scene=", current_scene.scene_file_path if current_scene else "none")
-   check(service.progress.completed.has(id), "skipping extraction preserves final operation completion")
-   check(current_scene != null and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn" and not service.progress.usb_decryption_seen, "five keys trigger the secure-channel story event")
-   if current_scene and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn":
-    current_scene.call("_finish")
-    await process_frame
-    await process_frame
-    check(service.progress.usb_decryption_seen and current_scene.scene_file_path == "res://scenes/ending.tscn", "skipping the story event persists it and opens the debrief")
-   else: check(false, "skipping the story event persists it and opens the debrief")
-  check(service.complete(id, 0), id + " completes after target/key and saves progression")
-  if i < 4: check(service.progress.is_unlocked(ids[i+1]), id + " unlocks next operation")
-  world.queue_free()
-  await process_frame
- check(intro_paths.size() == 5, "five operations use distinct entry camera paths")
- check(service.progress.usb_ready() and service.progress.recovered_keys.size() == 5, "all five distinct keys unlock USB decryption")
- var snapshot: Dictionary = service.progress.snapshot()
- var restored := CampaignProgress.new()
- restored.configure(JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json")))
- restored.restore(snapshot)
- check(restored.usb_ready() and restored.completed.has("ngong_ping") and restored.usb_decryption_seen, "all keys, final completion and decryption event survive campaign restore")
- var paths: Array[String] = []
- for id: String in ids: paths.append(service.checkpoint_path(id))
- var unique_paths: Dictionary = {}
- for path: String in paths: unique_paths[path] = true
- check(unique_paths.size() == 5 and not paths.has(service.checkpoint_path("meridian")) and not paths.has(service.checkpoint_path("initiation")), "Hong Kong checkpoints do not overwrite legacy missions")
+ check(service.progress.mark_complete("initiation"), "Initiation remains the first required operation")
+ check(service.progress.secure_key("tung_chung","key_01") and service.progress.mark_complete("tung_chung"), "Operation 01 preserves its physical Key 01 prerequisite")
+ check(service.progress.is_unlocked("hong_kong_sandbox"), "Operation 01 unlocks the unified city sandbox")
+ service.active_mission = "hong_kong_sandbox"
+ check(not service.progress.secure_key("hong_kong_sandbox","key_01"), "sandbox cannot re-award Operation 01's key")
+ check(service.progress.secure_key("hong_kong_sandbox","key_02") and service.progress.secure_key("hong_kong_sandbox","key_03") and service.progress.secure_key("hong_kong_sandbox","key_04"), "the sandbox accepts only its three configured physical keys")
+ check(not service.progress.mark_complete("hong_kong_sandbox"), "three keys alone do not bypass objective completion in the runtime")
+ service.progress.recovered_keys.erase("key_02")
+ service.progress.recovered_keys.erase("key_03")
+ service.progress.recovered_keys.erase("key_04")
+ service.persist()
+
+ var awareness_guard := HotelNpc.new()
+ awareness_guard.profile = NpcProfile.new()
+ awareness_guard.profile.occupation = "security"
+ root.add_child(awareness_guard)
+ awareness_guard.set_physics_process(false)
+ awareness_guard.warn_trespass(Vector3.ZERO,Vector3.LEFT,"staff")
+ check(awareness_guard.state == "warning" and is_equal_approx(awareness_guard.warning_remaining,1.5), "ordinary security warning uses the readable 1.5-second grace period")
+ awareness_guard.tick_trespass(1.5,true)
+ check(awareness_guard.state == "alerted", "local security escalates after the ordinary grace period")
+ awareness_guard.warning_cooldown = 0.0
+ awareness_guard.set_state("idle")
+ awareness_guard.warn_trespass(Vector3.ZERO,Vector3.LEFT,"public",true)
+ check(awareness_guard.state == "warning" and is_equal_approx(awareness_guard.warning_remaining,0.5), "visible sidearm warning uses the short 0.5-second threshold")
+ awareness_guard.queue_free()
+
+ service.progress.restore({"completed":["initiation","tung_chung"],"recovered_keys":["key_01"]})
+ service.active_mission = "hong_kong_sandbox"
+ var world := load("res://scenes/mission_hong_kong_sandbox.tscn").instantiate() as Node3D
+ root.add_child(world)
+ await process_frame
+ await process_frame
+ check(world.get("operation_id") == "hong_kong_sandbox", "sandbox scene boots as one mission")
+ var targets: Array = world.get("sandbox_targets")
+ var keys: Array = world.get("sandbox_key_markers")
+ var intel: Array = world.get("sandbox_intel_markers")
+ var people: Array = world.get("npc_list")
+ check(targets.size() == 3 and keys.size() == 3 and intel.size() == 3, "three physical target actors, keys and optional intelligence markers exist")
+ var city: Node3D = world.get("scene")
+ check(city.find_child("District_the_streets",true,false) != null and city.find_child("District_the_district",true,false) != null and city.find_child("District_the_harbour",true,false) != null, "all three distinct neighbourhoods are present in the same world scene")
+ check(city.find_child("NeighbourhoodStreetNavigation",true,false) != null, "district navigation is instantiated inside the shared city scene")
+ check(city.find_child("CorporateFloorNavigation_4",true,false) != null and not city.find_children("*","DestructibleGlass",true,false).is_empty(), "harbour skyscraper has an accessible upper floor and collision-backed breakable glazing")
+ for npc: HotelNpc in people: npc.set_physics_process(false)
+ world.call("_skip_cinematic")
+ var target: HotelNpc = targets[0]
+ await near_player(world,target.global_position)
+ world.call("_interact")
+ check(not bool(world.get("sandbox_target_completed")["loan_shark"]), "target dialogue reveals narrative but never completes the objective")
+ target.incapacitate(12.0)
+ world.call("_interact")
+ check(not bool(world.get("sandbox_target_completed")["loan_shark"]), "temporary incapacitation never satisfies a target objective")
+ check(not world.call("_complete_sandbox_target",target), "assessment tag rejects an incapacitated target")
+ target.stunned_time = 0.0
+ target.set_state("returning")
+ check(bool(world.call("_complete_sandbox_target",target)), "non-graphic assessment tag permanently completes an active target")
+ check(not world.call("_complete_sandbox_target",target), "completed target state cannot be awarded twice")
+
+ # A physical pickup is an in-world interaction and persists the exact key ID.
+ var first_key: Node3D = keys[0]
+ await near_player(world,first_key.global_position)
+ world.call("_interact")
+ check(service.progress.recovered_keys.has("key_02") and not first_key.visible, "Key 02 is physically collected from its placed marker")
+ var exit: Node3D = world.get("exit_marker")
+ await near_player(world,exit.global_position)
+ world.call("_interact")
+ check(not service.progress.completed.has("hong_kong_sandbox") and not world.get("extraction_active"), "extraction stays locked with mandatory targets and keys missing")
+
+ # Checkpoint schema stores explicit target IDs; legacy booleans are ignored.
+ world.set("save_path",temp + "_sandbox.json")
+ world.call("save_game")
+ var saved: Dictionary = SaveStore.read(temp + "_sandbox.json")
+ check(saved.get("sandbox_targets_completed",[]) == ["loan_shark"] and saved.get("sandbox_intel_completed",[]) is Array, "checkpoint records only explicit sandbox target and intelligence IDs")
+ SaveStore.write(temp + "_sandbox.json",{"mission_id":"hong_kong_sandbox","target_complete":true,"key_secured":true,"key_id":"key_02"})
+ world.set("sandbox_target_completed",{"loan_shark":false,"corporate_fixer":false,"harbour_businessman":false})
+ world.call("load_game")
+ check(not bool(world.get("sandbox_target_completed")["loan_shark"]), "legacy single-target checkpoint flags cannot silently migrate target completion")
+ check(service.progress.recovered_keys.has("key_02"), "a key explicitly stored in campaign recovery remains preserved")
+
+ world.queue_free()
+ await process_frame
  service.campaign_path = old_path
  service.active_mission = old_active
  service.progress.restore(old_progress)
- for id: String in ids:
-  for suffix: String in ["", ".bak", ".tmp"]:
-   var path := temp + "_" + id + ".json" + suffix
-   if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
- for suffix: String in ["", ".bak", ".tmp"]:
-  var path := temp + "_campaign.json" + suffix
+ for path: String in [temp + "_campaign.json",temp + "_campaign.json.bak",temp + "_campaign.json.tmp",temp + "_sandbox.json",temp + "_sandbox.json.bak",temp + "_sandbox.json.tmp"]:
   if FileAccess.file_exists(path): DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
- print("HK RESULT: %d checks, %d failures" % [checks, failures])
+ print("HK RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)

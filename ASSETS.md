@@ -20,3 +20,17 @@ library script `tools/generate_tung_chung_textures.py` and consumed through
 `scripts/visuals/station_materials.gd`. They are original stylized albedo
 patterns, not third-party scans or textures copied from a reference game. See
 `assets/procedural/PROVENANCE.md` for exact filenames and regeneration steps.
+
+## Assignment 004 city sandbox additions
+
+The market/commercial/harbour streetscape, Vantage House tower, floor furniture,
+labels, targets, collectibles, optional evidence, cyan/red Instinct overlays,
+and breakable glass fragments are authored at runtime in
+`scripts/world/hong_kong_annex.gd`, `scripts/world/destructible_glass.gd`, and
+`scripts/missions/hong_kong_operation.gd`. They use primitive meshes,
+project-authored colors/materials, and existing Kenney furniture where the
+world builder references it. No new downloaded or unverified asset was added.
+The city and organization are fictional; this content is not a licensed
+photogrammetry/map asset or a literal real-world building. `ASSETS.md` records
+provenance, not a claim of visual sign-off; the new district/tower views still
+need review from executed Godot captures.

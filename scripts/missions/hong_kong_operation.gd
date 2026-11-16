@@ -19,6 +19,7 @@ var exit_marker: Node3D
 var hud: Control
 var fps_label: Label
 var briefing: Label
+var awareness_label: Label
 var skip_button: Button
 var intro_start: Vector3
 var intro_end: Vector3
@@ -61,8 +62,16 @@ var story_runner: StylizedPerson
 var story_player: StylizedPerson
 var message: String = ""
 var npc_list: Array[HotelNpc] = []
+var sandbox_targets: Array[HotelNpc] = []
+var sandbox_target_data: Array[Dictionary] = []
+var sandbox_target_completed: Dictionary = {}
+var sandbox_routine_indices: Dictionary = {}
+var sandbox_key_markers: Array[Node3D] = []
+var sandbox_intel_markers: Array[Node3D] = []
+var sandbox_intel_completed: Dictionary = {}
 var red_overlay: StandardMaterial3D
 var yellow_overlay: StandardMaterial3D
+var intel_overlay: StandardMaterial3D
 var shot_audio: AudioStreamPlayer
 var gadget_audio: AudioStreamPlayer
 var train_departure_seen: bool = false
@@ -104,6 +113,7 @@ func _ready() -> void:
  var witness_at := _vec(config["witness_pos"])
  witness = scene.call("_target", str(config["witness"]), "civilian", witness_at, witness_at + Vector3(0,0,1.4)) as HotelNpc
  npc_list = scene.get("npcs")
+ if operation_id == "hong_kong_sandbox": _setup_sandbox()
  var restricted_center := _vec(config["target_pos"])
  scene.set_meta("restricted_rect", Rect2(restricted_center.x-3.0, restricted_center.z-3.0, 6.0, 6.0))
  for npc: HotelNpc in npc_list:
@@ -123,7 +133,52 @@ func _ready() -> void:
   Campaign.load_checkpoint = false
  _begin_intro()
 
+func _setup_sandbox() -> void:
+ # Remove the legacy single-target placeholders; only these three actors are
+ # authoritative in the unified operation.
+ for obsolete: HotelNpc in [target, guard]:
+  if obsolete and npc_list.has(obsolete):
+   npc_list.erase(obsolete)
+   obsolete.visible = false
+   obsolete.collision_layer = 0
+   obsolete.set_physics_process(false)
+ var target_records: Array = config.get("targets", [])
+ for record_variant: Variant in target_records:
+  if not record_variant is Dictionary: continue
+  var record: Dictionary = record_variant
+  var start := _vec(record["start"])
+  var route: Array = record.get("routine", [])
+  var first_route := _vec(route[1]) if route.size() > 1 else start + Vector3(1,0,0)
+  var npc := scene.call("_target", str(record["identity"]), str(record.get("occupation", "manager")), start, first_route) as HotelNpc
+  npc.profile.alertness = 0.35
+  npc.profile.curiosity = 0.45
+  npc.profile.schedule.clear()
+  for route_index: int in range(1,route.size()):
+   npc.profile.schedule.append(ScheduleEntry.new(_vec(route[route_index]), "working" if route_index % 2 == 0 else "conversing", 3.0 + float(route_index)))
+  npc.profile.schedule.append(ScheduleEntry.new(start, "idle", 3.5))
+  npc.schedule_index = 0
+  npc.name = "MandatoryTarget_" + str(record["id"])
+  npc.person.clothing.albedo_color = Color(0.57,0.31,0.24) if str(record["id"]) == "loan_shark" else (Color(0.24,0.38,0.52) if str(record["id"]) == "corporate_fixer" else Color(0.24,0.43,0.40))
+  var identity_tag := Label3D.new()
+  identity_tag.name = "TargetIdentity"
+  identity_tag.text = str(record["name"])
+  identity_tag.position = Vector3(0,2.05,0)
+  identity_tag.font_size = 24
+  identity_tag.pixel_size = 0.004
+  identity_tag.modulate = Color(0.96,0.79,0.53)
+  npc.add_child(identity_tag)
+  npc_list.append(npc)
+  sandbox_targets.append(npc)
+  sandbox_target_data.append(record)
+  sandbox_target_completed[str(record["id"])] = false
+  sandbox_routine_indices[str(record["id"])] = 0
+ target = sandbox_targets.back() if not sandbox_targets.is_empty() else null
+ target_complete = false
+
 func _build_markers() -> void:
+ if operation_id == "hong_kong_sandbox":
+  _build_sandbox_markers()
+  return
  var placement := str(config["placement"])
  key_marker = Node3D.new()
  key_marker.name = "MissionKeyLocation"
@@ -176,6 +231,56 @@ func _build_markers() -> void:
  exit_label.pixel_size = 0.004
  exit_marker.add_child(exit_label)
 
+func _build_sandbox_markers() -> void:
+ for record_variant: Variant in config.get("keys", []):
+  if not record_variant is Dictionary: continue
+  var record: Dictionary = record_variant
+  var marker := Node3D.new()
+  marker.name = "Physical_" + str(record["id"])
+  marker.set_meta("key_id", str(record["id"]))
+  marker.position = _vec(record["position"])
+  marker.visible = not Campaign.progress.recovered_keys.has(str(record["id"]))
+  add_child(marker)
+  _part(marker, Vector3(0,0.65,0), Vector3(0.62,1.3,0.58), Color(0.22,0.27,0.28))
+  _part(marker, Vector3(0,0.82,-0.30), Vector3(0.42,0.28,0.04), Color(0.77,0.58,0.28))
+  _part(marker, Vector3(0,1.12,0), Vector3(0.20,0.08,0.36), Color(0.92,0.70,0.24))
+  var label := Label3D.new()
+  label.text = str(record["name"])
+  label.position = Vector3(0,1.65,0)
+  label.font_size = 24
+  label.pixel_size = 0.004
+  label.modulate = Color(0.96,0.82,0.48)
+  marker.add_child(label)
+  sandbox_key_markers.append(marker)
+ for record_variant: Variant in config.get("targets", []):
+  if not record_variant is Dictionary: continue
+  var record: Dictionary = record_variant
+  var marker := Node3D.new()
+  marker.name = "Intel_" + str(record["intel_id"])
+  marker.set_meta("intel_id", str(record["intel_id"]))
+  marker.position = _vec(record["intel_position"])
+  add_child(marker)
+  _part(marker, Vector3(0,0.25,0), Vector3(0.5,0.5,0.12), Color(0.18,0.49,0.57))
+  var label := Label3D.new()
+  label.text = str(record["intel_name"])
+  label.position = Vector3(0,0.8,0)
+  label.font_size = 22
+  label.pixel_size = 0.004
+  label.modulate = Color(0.52,0.88,0.91)
+  marker.add_child(label)
+  sandbox_intel_markers.append(marker)
+ exit_marker = Node3D.new()
+ exit_marker.name = "Extraction"
+ exit_marker.position = _vec(config["exit"])
+ add_child(exit_marker)
+ _part(exit_marker, Vector3(0,0.04,0), Vector3(2.0,0.06,2.0), Color(0.28,0.65,0.62))
+ var exit_label := Label3D.new()
+ exit_label.text = "CITY EXTRACTION"
+ exit_label.position = Vector3(0,1.5,0)
+ exit_label.font_size = 30
+ exit_label.pixel_size = 0.004
+ exit_marker.add_child(exit_label)
+
 func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, finish: String = "plain") -> MeshInstance3D:
  var part := MeshInstance3D.new()
  part.mesh = StationMaterials.box_mesh(size)
@@ -197,6 +302,18 @@ func _build_ui() -> void:
  fps_label.add_theme_constant_override("shadow_offset_x", 2)
  fps_label.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(fps_label)
+ awareness_label = Label.new()
+ awareness_label.position = Vector2(880,55)
+ awareness_label.size = Vector2(360,84)
+ awareness_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+ awareness_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+ awareness_label.add_theme_font_size_override("font_size",15)
+ awareness_label.add_theme_color_override("font_color",Color(0.85,0.91,0.85))
+ awareness_label.add_theme_color_override("font_shadow_color",Color.BLACK)
+ awareness_label.add_theme_constant_override("shadow_offset_x",2)
+ awareness_label.add_theme_constant_override("shadow_offset_y",2)
+ awareness_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ canvas.add_child(awareness_label)
  briefing = Label.new()
  briefing.position = Vector2(110,545)
  briefing.size = Vector2(1060,150)
@@ -250,6 +367,12 @@ func _build_ui() -> void:
  yellow_overlay.albedo_color = Color(1.0,0.82,0.05,0.8)
  yellow_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  yellow_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ yellow_overlay.no_depth_test = true
+ intel_overlay = StandardMaterial3D.new()
+ intel_overlay.albedo_color = Color(0.08,0.88,1.0,0.82)
+ intel_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ intel_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ intel_overlay.no_depth_test = true
  shot_audio = AudioStreamPlayer.new()
  shot_audio.bus = "SFX"
  shot_audio.stream = ProceduralSound.tone(180.0,0.12,0.14)
@@ -345,6 +468,14 @@ func _unhandled_input(event: InputEvent) -> void:
 # A single source of truth for the next mandatory step. Optional witnesses and
 # intel never participate in this decision.
 func _next_objective() -> String:
+ if operation_id == "hong_kong_sandbox":
+  for record: Dictionary in sandbox_target_data:
+   if not bool(sandbox_target_completed.get(str(record["id"]), false)):
+    return "Locate and permanently complete: " + str(record["name"]) + "."
+  for key_record: Dictionary in config.get("keys", []):
+   if not Campaign.progress.recovered_keys.has(str(key_record["id"])):
+    return "Physically recover " + str(key_record["name"]) + "."
+  return "All three targets and city keys secured. Reach extraction and press E."
  if not target_complete: return "Confront or tag " + str(config["target"]) + "."
  if not key_secured:
   if operation_id == "tung_chung" and target_complete: return "Recover Key 01 from the concourse."
@@ -393,30 +524,71 @@ func _process(delta: float) -> void:
   for passenger: StylizedPerson in train_passengers: passenger.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
- var total := 5 if operation_id == "tung_chung" else 3
+ var total := 5 if operation_id == "tung_chung" else (7 if operation_id == "hong_kong_sandbox" else 3)
  var remaining := int(not target_complete) + int(not key_secured) + 1
- if operation_id == "tung_chung": remaining += int(train_stage == "station") + int(not train_contact_complete)
+ if operation_id == "hong_kong_sandbox":
+  remaining = 1
+  for record: Dictionary in sandbox_target_data:
+   if not bool(sandbox_target_completed.get(str(record["id"]), false)): remaining += 1
+  for key_record: Dictionary in config.get("keys", []):
+   if not Campaign.progress.recovered_keys.has(str(key_record["id"])): remaining += 1
+ elif operation_id == "tung_chung": remaining += int(train_stage == "station") + int(not train_contact_complete)
  var current := total - remaining + 1
  var extraction := "AVAILABLE" if remaining == 1 else "LOCKED"
  var equipment_text := Campaign.item_label(player.equipment.selected)
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
- hud.call("set_state", str(entry.get("name", operation_id)), "STAGE %d / %d   ·   %d MANDATORY REMAIN" % [current,total,remaining], _next_objective(), "%s %s   ·   EXTRACTION %s\n%s   ·   G COIN %d" % [key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "MISSING", extraction, equipment_text, player.equipment.coins_remaining], "OPTIONAL INTEL: %s   ·   WITNESS: %s" % ["SECURED" if intel_found else "OPEN", "SPOKEN" if witness_found else "OPEN"], message)
+ var key_status := "%s %s" % [key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "MISSING"]
+ var optional_status := "OPTIONAL INTEL: %s   ·   WITNESS: %s" % ["SECURED" if intel_found else "OPEN", "SPOKEN" if witness_found else "OPEN"]
+ if operation_id == "hong_kong_sandbox":
+  var secured_count := 0
+  for key_record: Dictionary in config.get("keys", []):
+   if Campaign.progress.recovered_keys.has(str(key_record["id"])): secured_count += 1
+  key_status = "CITY KEYS %d / 3" % secured_count
+  var complete_count := 0
+  for target_id: Variant in sandbox_target_completed:
+   if sandbox_target_completed[target_id]: complete_count += 1
+  var intel_count := sandbox_intel_completed.size()
+  optional_status = "TARGETS: %d / 3   ·   INTEL: %d / 3   ·   CONTACT: %s" % [complete_count, intel_count, "SPOKEN" if witness_found else "OPEN"]
+ hud.call("set_state", str(entry.get("name", operation_id)), "STAGE %d / %d   ·   %d MANDATORY REMAIN" % [current,total,remaining], _next_objective(), "%s   ·   EXTRACTION %s\n%s   ·   G COIN %d" % [key_status, extraction, equipment_text, player.equipment.coins_remaining], optional_status, message)
+ awareness_label.visible = operation_id == "hong_kong_sandbox"
+ if awareness_label.visible:
+  var highest_awareness := 0.0
+  var nearest_alert := "CLEAR"
+  for npc: HotelNpc in npc_list:
+   if npc.objective_completed or npc.global_position.distance_to(player.global_position) > 14.0: continue
+   if npc.suspicion > highest_awareness:
+    highest_awareness = npc.suspicion
+    nearest_alert = npc.state.to_upper().replace("_", " ")
+  awareness_label.text = "LOCAL SECURITY  /  %s\nAWARENESS  %d%%  ·  VISIBLE SIDEARM: %s" % [nearest_alert,roundi(highest_awareness),"OUT" if player.aiming and player.equipment.selected == "training_sidearm" else "HOLSTERED"]
+  awareness_label.add_theme_color_override("font_color",Color(1.0,0.54,0.38) if highest_awareness >= 60.0 else (Color(1.0,0.78,0.43) if highest_awareness > 0.0 else Color(0.83,0.91,0.86)))
  reticle.visible = player.aiming and not intro_active and not extraction_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
- _overlay(target.person, red_overlay if player.instinct_active and not target_complete else null)
- var key_pos := key_marker.global_position
- var key_visible := false
- if player.instinct_active and not key_secured and player.global_position.distance_to(key_pos) < 4.0 and not player.camera.is_position_behind(key_pos):
-  var ray := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, key_pos)
-  var excluded: Array[RID] = [player.get_rid()]
-  if key_marker.get_parent() is HotelNpc: excluded.append((key_marker.get_parent() as HotelNpc).get_rid())
-  ray.exclude = excluded
-  key_visible = get_world_3d().direct_space_state.intersect_ray(ray).is_empty()
- _overlay(key_marker, yellow_overlay if key_visible else null)
- _highlight_optional(intel_marker, not intel_found)
- if uniform_marker: _highlight_optional(uniform_marker, not uniform_found)
+ if operation_id == "hong_kong_sandbox":
+  for index: int in range(sandbox_targets.size()):
+   var target_id := str(sandbox_target_data[index]["id"])
+   _overlay(sandbox_targets[index].person, red_overlay if player.instinct_active and not bool(sandbox_target_completed.get(target_id, false)) else null)
+  for index: int in range(sandbox_key_markers.size()):
+   var key_id := str(sandbox_key_markers[index].get_meta("key_id", ""))
+   var active := not Campaign.progress.recovered_keys.has(key_id)
+   _overlay(sandbox_key_markers[index], yellow_overlay if player.instinct_active and active else null)
+  for index: int in range(sandbox_intel_markers.size()):
+   var intel_id := str(sandbox_intel_markers[index].get_meta("intel_id", ""))
+   _overlay(sandbox_intel_markers[index], intel_overlay if player.instinct_active and not sandbox_intel_completed.has(intel_id) else null)
+ else:
+  _overlay(target.person, red_overlay if player.instinct_active and not target_complete else null)
+  var key_pos := key_marker.global_position
+  var key_visible := false
+  if player.instinct_active and not key_secured and player.global_position.distance_to(key_pos) < 4.0 and not player.camera.is_position_behind(key_pos):
+   var ray := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, key_pos)
+   var excluded: Array[RID] = [player.get_rid()]
+   if key_marker.get_parent() is HotelNpc: excluded.append((key_marker.get_parent() as HotelNpc).get_rid())
+   ray.exclude = excluded
+   key_visible = get_world_3d().direct_space_state.intersect_ray(ray).is_empty()
+  _overlay(key_marker, yellow_overlay if key_visible else null)
+  _highlight_optional(intel_marker, not intel_found)
+  if uniform_marker: _highlight_optional(uniform_marker, not uniform_found)
 
 # Optional clues and disguises follow the same nearby, visible-only Instinct
 # rule as ordinary mission items; they do not reveal objects through walls.
@@ -443,6 +615,9 @@ func _reachable(pos: Vector3, excluded: RID = RID()) -> bool:
 
 func _interact() -> void:
  if intro_active or extraction_active or not story_phase.is_empty(): return
+ if operation_id == "hong_kong_sandbox":
+  _interact_sandbox()
+  return
  var placement := str(config["placement"])
  if _reachable(target.global_position, target.get_rid()):
   if not target_complete:
@@ -503,6 +678,60 @@ func _interact() -> void:
   else: message = "Campaign progress could not be saved."
   return
  message = str(config["clue"])
+
+func _interact_sandbox() -> void:
+ for index: int in range(sandbox_targets.size()):
+  var npc := sandbox_targets[index]
+  if _reachable(npc.global_position, npc.get_rid()):
+   var record: Dictionary = sandbox_target_data[index]
+   if bool(sandbox_target_completed.get(str(record["id"]), false)):
+    message = str(record["name"]) + "  /  OBJECTIVE COMPLETE."
+   elif npc.stunned_time > 0.0:
+    message = str(record["name"]) + " is temporarily incapacitated. That does not complete the objective."
+   else:
+    message = str(record["identity"]) + ": " + str(record["dialogue"]) + "  /  Dialogue is intelligence only; use the assessment tag to complete the objective."
+   return
+ for index: int in range(sandbox_key_markers.size()):
+  var marker := sandbox_key_markers[index]
+  var key_id := str(marker.get_meta("key_id", ""))
+  if Campaign.progress.recovered_keys.has(key_id): continue
+  if _reachable(marker.global_position):
+   if Campaign.secure_mission_key(operation_id, key_id):
+    marker.visible = false
+    message = "Ruby: Physically recovered " + key_id.to_upper().replace("_", " ") + "."
+   else: message = "Could not secure this physical key. Check campaign save permissions."
+   return
+ for index: int in range(sandbox_intel_markers.size()):
+  var marker := sandbox_intel_markers[index]
+  var intel_id := str(marker.get_meta("intel_id", ""))
+  if sandbox_intel_completed.has(intel_id) or not _reachable(marker.global_position): continue
+  sandbox_intel_completed[intel_id] = true
+  marker.visible = false
+  var record: Dictionary = sandbox_target_data[index]
+  message = "INTELLIGENCE ONLY  /  " + str(record["intel_name"]) + ": " + str(record["dialogue"])
+  return
+ if witness and not witness_found and _reachable(witness.global_position, witness.get_rid()):
+  if witness.stunned_time > 0.0: message = "The contact cannot speak while temporarily incapacitated."
+  else:
+   witness_found = true
+   message = str(config["witness"]) + ": " + str(config["witness_line"])
+  return
+ if _reachable(exit_marker.global_position):
+  var all_targets_done := true
+  for record: Dictionary in sandbox_target_data:
+   if not bool(sandbox_target_completed.get(str(record["id"]), false)): all_targets_done = false
+  var all_keys_secured := true
+  for key_record: Dictionary in config.get("keys", []):
+   if not Campaign.progress.recovered_keys.has(str(key_record["id"])): all_keys_secured = false
+  if not all_targets_done or not all_keys_secured:
+   message = "Extraction locked. " + _next_objective()
+  elif Campaign.complete(operation_id, sandbox_intel_completed.size() + int(witness_found)):
+   Campaign.ending["intel_found"] = sandbox_intel_completed.size() > 0
+   Campaign.ending["witness_found"] = witness_found
+   _begin_extraction("res://scenes/ending.tscn")
+  else: message = "Campaign progress could not be saved."
+  return
+ message = _next_objective()
 
 # Fictional, non-interactive story scenes. Skipping finalizes exactly the
 # same flags and restores the gameplay camera, without granting the key.
@@ -955,6 +1184,18 @@ func _throw_coin() -> void:
  if intro_active or extraction_active or not story_phase.is_empty(): return
  message = CoinDistraction.use(player, npc_list, self)
 
+func _complete_sandbox_target(npc: HotelNpc) -> bool:
+ if operation_id != "hong_kong_sandbox" or not sandbox_targets.has(npc) or npc.stunned_time > 0.0 or npc.objective_completed: return false
+ var index := sandbox_targets.find(npc)
+ var id := str(sandbox_target_data[index]["id"])
+ if bool(sandbox_target_completed.get(id, false)): return false
+ sandbox_target_completed[id] = true
+ target_complete = true
+ for known_id: Variant in sandbox_target_completed:
+  if not bool(sandbox_target_completed[known_id]): target_complete = false
+ npc.complete_objective(false)
+ return true
+
 func _fire() -> void:
  if not player.aiming or player.equipment.selected != "training_sidearm" or player.equipment.charges <= 0: return
  var center := get_viewport().get_visible_rect().size * 0.5
@@ -971,9 +1212,23 @@ func _fire() -> void:
  player.equipment.charges -= 1
  player.shot_feedback()
  shot_audio.play()
- if not hit.is_empty() and hit["collider"] is HotelNpc:
+ if not hit.is_empty() and hit["collider"] is DestructibleGlass:
+  var pane := hit["collider"] as DestructibleGlass
+  message = "Glazing fractured. The pane is non-solid after the brief stylized break effect." if pane.break_glass() else "That pane is already broken."
+ elif not hit.is_empty() and hit["collider"] is HotelNpc:
   var npc := hit["collider"] as HotelNpc
-  if npc == train_contact and not train_contact_complete:
+  if operation_id == "hong_kong_sandbox" and sandbox_targets.has(npc):
+   var target_index := sandbox_targets.find(npc)
+   var target_record: Dictionary = sandbox_target_data[target_index]
+   var target_id := str(target_record["id"])
+   if bool(sandbox_target_completed.get(target_id, false)):
+    message = str(target_record["name"]) + " is already complete."
+   elif npc.stunned_time > 0.0:
+    message = "Assessment tag cannot complete a temporarily incapacitated target. Wait for recovery."
+   elif _complete_sandbox_target(npc):
+    message = "Ruby: " + str(target_record["name"]) + " permanently completed. Non-graphic assessment tag confirmed."
+   reticle.call("confirm_hit")
+  elif npc == train_contact and not train_contact_complete:
    message = "Ruby: We need the contact's account. Speak to them instead."
   elif npc == target and not target_complete:
    target_complete = true
@@ -984,10 +1239,26 @@ func _fire() -> void:
   reticle.call("confirm_hit")
  else: message = "Assessment pulse discharged."
  for npc: HotelNpc in npc_list:
-  if npc.global_position.distance_to(player.global_position) < 9.0: npc.observe_disturbance(player.global_position)
+  if npc.objective_completed or npc.global_position.distance_to(player.global_position) >= 9.0: continue
+  var report := PhysicsRayQueryParameters3D.create(npc.global_position + Vector3.UP, player.global_position + Vector3.UP)
+  report.exclude = [npc.get_rid(),player.get_rid()]
+  if get_world_3d().direct_space_state.intersect_ray(report).is_empty(): npc.observe_disturbance(player.global_position)
 
 func save_game() -> void:
  var p := player.global_position
+ if operation_id == "hong_kong_sandbox":
+  var completed_targets: Array[String] = []
+  for record: Dictionary in sandbox_target_data:
+   var id := str(record["id"])
+   if bool(sandbox_target_completed.get(id, false)): completed_targets.append(id)
+  var completed_intel: Array[String] = []
+  for id_variant: Variant in sandbox_intel_completed: completed_intel.append(str(id_variant))
+  var marker_positions: Dictionary = {}
+  for marker: Node3D in sandbox_key_markers:
+   marker_positions[str(marker.get_meta("key_id", ""))] = [marker.global_position.x,marker.global_position.y,marker.global_position.z]
+  var data := {"mission_id": operation_id,"sandbox_targets_completed": completed_targets,"sandbox_intel_completed": completed_intel,"sandbox_key_marker_positions": marker_positions,"uniform_found": false,"intel_found": not completed_intel.is_empty(),"witness_found": witness_found,"position": [p.x,p.y,p.z],"equipment": player.equipment.snapshot()}
+  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
+  return
  var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "train_chase_active": train_chase_active, "train_chase_finished": train_chase_finished, "train_contact_position": [train_contact.global_position.x, train_contact.global_position.y, train_contact.global_position.z] if train_contact else [], "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
@@ -995,6 +1266,47 @@ func load_game() -> void:
  var data := SaveStore.read(save_path)
  if data.get("mission_id", "") != operation_id:
   message = "No valid checkpoint for this operation."
+  return
+ if operation_id == "hong_kong_sandbox":
+  var raw_targets: Variant = data.get("sandbox_targets_completed", [])
+  sandbox_target_completed.clear()
+  for record: Dictionary in sandbox_target_data:
+   var id := str(record["id"])
+   var is_complete := raw_targets is Array and id in raw_targets
+   sandbox_target_completed[id] = is_complete
+   var index := sandbox_target_data.find(record)
+   if is_complete: sandbox_targets[index].complete_objective(false)
+   else: sandbox_targets[index].restore_objective(false,false)
+  var raw_intel: Variant = data.get("sandbox_intel_completed", [])
+  sandbox_intel_completed.clear()
+  if raw_intel is Array:
+   for record: Dictionary in sandbox_target_data:
+    var intel_id := str(record["intel_id"])
+    if intel_id in raw_intel: sandbox_intel_completed[intel_id] = true
+  var positions: Variant = data.get("sandbox_key_marker_positions", {})
+  if positions is Dictionary:
+   for marker: Node3D in sandbox_key_markers:
+    var id := str(marker.get_meta("key_id", ""))
+    var saved: Variant = positions.get(id, [])
+    if saved is Array and saved.size() == 3 and (saved[0] is int or saved[0] is float) and (saved[1] is int or saved[1] is float) and (saved[2] is int or saved[2] is float):
+     var point := _vec(saved)
+     if point.is_finite() and absf(point.x) < 110.0 and absf(point.z) < 110.0 and point.y > -1.0 and point.y < 20.0: marker.global_position = point
+    marker.visible = not Campaign.progress.recovered_keys.has(id)
+  witness_found = data.get("witness_found", false) == true
+  intel_found = not sandbox_intel_completed.is_empty()
+  var saved_player: Variant = data.get("position", [])
+  if saved_player is Array and saved_player.size() == 3 and (saved_player[0] is int or saved_player[0] is float) and (saved_player[1] is int or saved_player[1] is float) and (saved_player[2] is int or saved_player[2] is float):
+   var point := _vec(saved_player)
+   if point.is_finite() and absf(point.x) < 95.0 and absf(point.z) < 100.0 and point.y > -1.0 and point.y < 18.0:
+    player.global_position = point
+    player.velocity = Vector3.ZERO
+  target_complete = sandbox_target_completed.size() == 3
+  for target_id: Variant in sandbox_target_completed:
+   if not bool(sandbox_target_completed[target_id]): target_complete = false
+  key_secured = true
+  for id: String in ["key_02","key_03","key_04"]:
+   if not Campaign.progress.recovered_keys.has(id): key_secured = false
+  message = "Sandbox checkpoint restored. Previously completed objectives remain explicit; physical keys remain campaign-verified."
   return
  var expected := str(Campaign.progress.mission(operation_id).get("key_id", ""))
  var saved_key_valid: bool = data.get("key_id", "") == expected and data.get("key_secured", false) == true and Campaign.progress.recovered_keys.has(expected)
