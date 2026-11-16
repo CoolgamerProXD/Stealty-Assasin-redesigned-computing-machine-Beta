@@ -77,6 +77,7 @@ func run() -> void:
    check(world.get("target_complete") and not world.get("key_secured") and player.equipment.charges == 4, "Hong Kong center-ray shot completes the target but does not collect its key")
    check(float((world.get("reticle") as Control).get("hit_timer")) > 0.0, "Hong Kong shot displays hit confirmation")
    player.aiming = false
+   world.call("_finish_story")
   # A staged interior/landmark view, not an end-to-end human route.
   var shot := Camera3D.new()
   world.add_child(shot)
@@ -86,8 +87,8 @@ func run() -> void:
    shot.look_at(Vector3(0,11,-29),Vector3.UP)
   elif id == "tung_chung":
    world.call("_board_train")
-   shot.global_position = Vector3(0,2.1,84.4)
-   shot.look_at(Vector3(0,1.2,78),Vector3.UP)
+   shot.global_position = Vector3(19,2.1,18)
+   shot.look_at(Vector3(19,1.2,34),Vector3.UP)
   else:
    shot.global_position = focus + Vector3(2.0,1.2,2.5)
    shot.look_at(focus,Vector3.UP)

@@ -165,7 +165,11 @@ func _station() -> void:
  _box(Vector3(0,2.6,-14), Vector3(44,5.2,0.3), wall, true)
  _box(Vector3(-22,2.6,0), Vector3(0.3,5.2,28), wall, true)
  _box(Vector3(22,2.6,0), Vector3(0.3,5.2,28), wall, true)
- _box(Vector3(0,2.6,14), Vector3(44,5.2,0.3), wall, true)
+ if str(get_meta("operation_id", "")) == "tung_chung":
+  # Fictional platform doorway aligns with the playable carriage aisle.
+  _box(Vector3(-2.5,2.6,14), Vector3(39,5.2,0.3), wall, true)
+  _box(Vector3(21.5,2.6,14), Vector3(1,5.2,0.3), wall, true)
+ else: _box(Vector3(0,2.6,14), Vector3(44,5.2,0.3), wall, true)
  # Rhythm of columns, floor strips and ceiling lights establishes the concourse.
  for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
   for z: float in [-6.0,6.0]:
@@ -207,11 +211,17 @@ func _station() -> void:
   for side: float in [-0.9,0.9]: _box(Vector3(x+side,0.22,5), Vector3(0.12,0.5,0.55), dark)
  # Fictional platform edge and stationary train facade; no rail-access mechanics.
  _box(Vector3(0,0.025,10.7), Vector3(43,0.05,0.25), Color(0.95,0.75,0.20))
- _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.75,0.78,0.76), true)
- _box(Vector3(0,1.8,11.92), Vector3(37,1.0,0.05), dark)
+ var campaign_train := str(get_meta("operation_id", "")) == "tung_chung"
+ if campaign_train:
+  _box(Vector3(-1.25,1.7,12.6), Vector3(35.5,3.4,1.3), Color(0.75,0.78,0.76), true)
+  _box(Vector3(-1.25,1.8,11.92), Vector3(35.0,1.0,0.05), dark)
+ else:
+  _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.75,0.78,0.76), true)
+  _box(Vector3(0,1.8,11.92), Vector3(37,1.0,0.05), dark)
  for x: float in [-16.0,-12.0,-8.0,-4.0,0.0,4.0,8.0,12.0,16.0]:
+  if campaign_train and x == 16.0: continue
   _box(Vector3(x,1.8,11.87), Vector3(2.3,0.75,0.06), Color(0.31,0.44,0.47))
- _box(Vector3(0,0.65,11.9), Vector3(38,0.12,0.06), orange)
+ _box(Vector3(-1.25 if campaign_train else 0,0.65,11.9), Vector3(35.5 if campaign_train else 38,0.12,0.06), orange)
  _box(Vector3(1,4.2,8), Vector3(9,0.8,0.2), dark)
  _sign("PLATFORM  /  TRAINS", Vector3(1,4.2,7.86), 40)
  # Non-operational architectural details; routes are not real station layouts.

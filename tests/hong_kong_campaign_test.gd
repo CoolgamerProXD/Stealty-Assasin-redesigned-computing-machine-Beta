@@ -326,19 +326,46 @@ func run() -> void:
   await move_near(world, target.global_position)
   world.call("_interact")
   check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")
+  if id == "tung_chung":
+   check(world.get("story_phase") == "escape" and not world.get("escape_seen"), "confrontation starts the skippable escape presentation")
+   world.call("_finish_story")
+   check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "skipping escape restores gameplay without awarding a key")
   var config: Dictionary = world.get("config")
-  if config["placement"] == "target": await move_near(world, target.global_position)
+  if config["placement"] == "target": await move_near(world, (world.get("key_marker") as Node3D).global_position if id == "tung_chung" else target.global_position)
   elif config["placement"] == "guard": await move_near(world, guard.global_position)
   else: await move_near(world, (world.get("key_marker") as Node3D).global_position)
   world.call("_interact")
   check(world.get("key_secured") and service.progress.recovered_keys.has(key_id), id + " requires a separate physical key interaction")
   if id == "tung_chung":
+   world.call("save_game")
+   world.call("load_game")
+   check(world.get("escape_seen") and world.get("key_secured") and world.get("train_stage") == "station", "station checkpoint restores confrontation, escape and physical key")
    await move_near(world, (world.get("exit_marker") as Node3D).global_position)
    world.call("_interact")
-   check(world.get("train_stage") == "aboard" and not world.get("train_contact_complete"), "station objectives transition to a distinct train carriage")
+   check(world.get("train_stage") == "station", "platform prompt directs the player to walk aboard instead of teleporting")
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   await walk_steps([["move_back",3.0]])
+   Engine.time_scale = 1.0
+   print("HK TRAIN BOARD DIAG: ", player.global_position)
+   check(world.get("train_stage") == "aboard" and player.global_position.z > 15.0, "player physically walks from platform into train")
+   world.call("save_game")
+   world.call("load_game")
+   check(world.get("train_stage") == "aboard" and not world.get("train_contact_complete"), "aboard checkpoint resumes before the final confrontation")
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   Engine.time_scale = 3.0
+   await walk_steps([["move_back",6.0]])
+   Engine.time_scale = 1.0
+   print("HK TRAIN PURSUIT DIAG: ", player.global_position)
+   check(player.global_position.z > 32.0, "connected carriages are physically traversable")
    await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
    world.call("_interact")
-   check(world.get("train_contact_complete"), "train contact must be physically questioned")
+   check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the exterior cinematic")
+   world.call("_finish_story")
+   check(world.get("train_contact_complete") and player.is_physics_processing(), "skipping exterior cinematic resolves the pursuit")
   world.call("save_game")
   world.set("target_complete", false)
   world.set("key_secured", false)

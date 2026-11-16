@@ -44,6 +44,15 @@ var train_contact: HotelNpc
 var train_contact_complete: bool = false
 var train_car: Node3D
 var train_streaks: Array[Node3D] = []
+var train_gate: StaticBody3D
+var escape_seen: bool = false
+var story_phase: String = ""
+var story_time: float = 0.0
+var story_camera: Camera3D
+var story_start: Vector3
+var story_set: Node3D
+var story_runner: StylizedPerson
+var story_player: StylizedPerson
 var message: String = ""
 var npc_list: Array[HotelNpc] = []
 var red_overlay: StandardMaterial3D
@@ -98,6 +107,7 @@ func _ready() -> void:
  player.coin_requested.connect(_throw_coin)
  player.fire_requested.connect(_fire)
  _build_markers()
+ if operation_id == "tung_chung": _build_train()
  _build_ui()
  if Campaign.load_checkpoint and Campaign.active_mission == operation_id:
   load_game()
@@ -289,14 +299,15 @@ func _end_intro() -> void:
 func _skip_cinematic() -> void:
  if intro_active: _end_intro()
  elif extraction_active: _finish_extraction()
+ elif not story_phase.is_empty(): _finish_story()
 
 func _input(event: InputEvent) -> void:
- if (intro_active or extraction_active) and event.is_action_pressed("release_mouse"):
+ if (intro_active or extraction_active or not story_phase.is_empty()) and event.is_action_pressed("release_mouse"):
   get_viewport().set_input_as_handled()
   _skip_cinematic()
 
 func _unhandled_input(event: InputEvent) -> void:
- if intro_active or extraction_active: return
+ if intro_active or extraction_active or not story_phase.is_empty(): return
  if event.is_action_pressed("save_game"): save_game()
  elif event.is_action_pressed("load_game"): load_game()
 
@@ -306,8 +317,9 @@ func _next_objective() -> String:
  if not target_complete: return "Confront or tag " + str(config["target"]) + "."
  if not key_secured: return str(config["clue"])
  if operation_id == "tung_chung":
-  if train_stage == "station": return "Board the train at the platform marker."
-  if not train_contact_complete: return "Speak to the train contact in the carriage."
+  if not escape_seen: return "Watch the courier's escape."
+  if train_stage == "station": return "Walk through the open platform door to board the train."
+  if not train_contact_complete: return "Follow the courier through the connected carriages and confront them."
  return "Reach the extraction marker and press E."
 
 func _process(delta: float) -> void:
@@ -322,6 +334,11 @@ func _process(delta: float) -> void:
    intro_camera.global_position = intro_start.lerp(intro_end, t)
    intro_camera.look_at(intro_look_start.lerp(intro_look_end, t), Vector3.UP)
   if intro_time >= 6.0: _end_intro()
+ if not story_phase.is_empty(): _advance_story(delta)
+ if operation_id == "tung_chung":
+  _sync_train_gate()
+  if train_stage == "station" and target_complete and key_secured and escape_seen and player.global_position.z > 14.5 and absf(player.global_position.x - 19.0) < 1.8:
+   _enter_train()
  if extraction_active:
   extraction_time += delta
   var focus := player.global_position + Vector3.UP
@@ -332,7 +349,9 @@ func _process(delta: float) -> void:
    _finish_extraction()
    return
  if train_stage == "aboard":
-  for streak: Node3D in train_streaks: streak.position.z = fposmod(streak.position.z + delta * 7.0 + 8.0, 16.0) - 8.0
+  for streak: Node3D in train_streaks:
+   var segment := 16.0 if streak.has_meta("second_car") else 0.0
+   streak.position.z = fposmod(streak.position.z - segment + delta * 7.0 + 8.0, 16.0) - 8.0 + segment
   if train_contact and not train_contact_complete: train_contact.person.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
@@ -384,7 +403,7 @@ func _reachable(pos: Vector3, excluded: RID = RID()) -> bool:
  return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 func _interact() -> void:
- if intro_active or extraction_active: return
+ if intro_active or extraction_active or not story_phase.is_empty(): return
  var placement := str(config["placement"])
  if _reachable(target.global_position, target.get_rid()):
   if not target_complete:
@@ -393,11 +412,15 @@ func _interact() -> void:
     return
    target_complete = true
    target.complete_objective(false)
+   if operation_id == "tung_chung": _begin_story("escape")
    message = str(config["target"]) + ": " + str(config["target_line"]) + "  /  Ruby: " + str(config["clue"])
    return
-  if placement == "target" and not key_secured:
+  if placement == "target" and operation_id != "tung_chung" and not key_secured:
    _secure_key()
    return
+ if operation_id == "tung_chung" and target_complete and not key_secured and _reachable(key_marker.global_position):
+  _secure_key()
+  return
  if placement == "guard" and not key_secured and _reachable(guard.global_position, guard.get_rid()):
   _secure_key()
   return
@@ -424,20 +447,15 @@ func _interact() -> void:
   message = "Ruby: " + str(config["intel_text"])
   return
  if train_contact and not train_contact_complete and _reachable(train_contact.global_position, train_contact.get_rid()):
-  train_contact_complete = true
-  train_contact.complete_objective(false)
-  # The contact used to stand immovably in the narrow center aisle after the
-  # conversation. Keep the actor visible but clear the route to extraction.
-  train_contact.collision_layer = 0
-  message = "Train contact: The manifest was routed through a market intermediary. Ruby: Take the carriage exit."
+  _begin_story("roof")
   return
  if _reachable(exit_marker.global_position):
   if not target_complete or not key_secured:
    message = "Ruby: " + _next_objective()
   elif operation_id == "tung_chung" and train_stage == "station":
-   _board_train()
+   message = "Ruby: The train door is open. Walk forward through the marked platform doorway."
   elif operation_id == "tung_chung" and not train_contact_complete:
-   message = "Ruby: Speak to the train contact before leaving the carriage."
+   message = "Ruby: Follow and confront the courier in the forward carriage before extracting."
   elif Campaign.complete(operation_id, int(intel_found) + int(witness_found)):
    Campaign.ending["intel_found"] = intel_found
    Campaign.ending["witness_found"] = witness_found
@@ -446,6 +464,104 @@ func _interact() -> void:
   else: message = "Campaign progress could not be saved."
   return
  message = str(config["clue"])
+
+# Fictional, non-interactive story scenes. Skipping finalizes exactly the
+# same flags and restores the gameplay camera, without granting the key.
+func _begin_story(phase: String) -> void:
+ if not story_phase.is_empty(): return
+ story_phase = phase
+ story_time = 0.0
+ if pause_menu: pause_menu.set_process_input(false)
+ player.set_physics_process(false)
+ player.set_process_unhandled_input(false)
+ player.velocity = Vector3.ZERO
+ player.aiming = false
+ player.body_mesh.interact()
+ story_camera = Camera3D.new()
+ Campaign.configure_camera(story_camera)
+ add_child(story_camera)
+ if phase == "escape":
+  _drop_station_key()
+  story_start = target.global_position
+  target.collision_layer = 0
+  target.set_physics_process(false)
+  briefing.text = "KAI VENN: The manifest is already moving. You are too late.\nRUBY: The key is on the concourse. Secure it, then follow the courier."
+ else:
+  story_set = Node3D.new()
+  story_set.position = Vector3(19,3.2,37)
+  add_child(story_set)
+  story_runner = StylizedPerson.new()
+  story_runner.role = "manager"
+  story_set.add_child(story_runner)
+  story_runner.position = Vector3(0,0,2)
+  story_player = StylizedPerson.new()
+  story_set.add_child(story_player)
+  story_player.position = Vector3(0,0,-1)
+  briefing.text = "KAI VENN: The market intermediary arranged the transfer. I never saw the buyer.\nRUBY: That is our lead. Return to the carriage exit."
+  train_contact.visible = false
+ briefing.visible = true
+ skip_button.visible = true
+ hud.visible = false
+ Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+ story_camera.make_current()
+ _advance_story(0.0)
+
+func _drop_station_key() -> void:
+ if key_marker.get_parent() != self:
+  key_marker.reparent(self, true)
+  key_marker.global_position = target.global_position + Vector3(0,0,0.8)
+
+func _advance_story(delta: float) -> void:
+ story_time += delta
+ if story_phase == "escape":
+  var t := clampf(story_time / 5.0,0.0,1.0)
+  var waypoint := Vector3(4,0.05,-2)
+  var destination := Vector3(19,0.05,11)
+  var old := target.global_position
+  target.global_position = story_start.lerp(waypoint, minf(t*1.7,1.0)) if t < 0.59 else waypoint.lerp(destination,(t-0.59)/0.41)
+  var motion := target.global_position-old
+  if motion.length_squared() > 0.0001: target.person.rotation.y = atan2(-motion.x,-motion.z)
+  target.person.animate_motion(delta, 3.4)
+  story_camera.global_position = target.global_position + Vector3(4,3.0,6)
+  story_camera.look_at(target.global_position + Vector3.UP,Vector3.UP)
+ else:
+  var t := clampf(story_time / 5.0,0.0,1.0)
+  story_runner.position.z = 2.0 + t*3.0
+  story_player.position.z = -1.0 + t*2.8
+  story_runner.rotation.y = PI
+  story_player.rotation.y = PI
+  story_runner.animate_motion(delta,2.7)
+  story_player.animate_motion(delta,2.5)
+  story_camera.global_position = Vector3(25,7.5,38+2.0*t)
+  story_camera.look_at(Vector3(19,4.4,38+2.0*t),Vector3.UP)
+ if story_time >= 5.0: _finish_story()
+
+func _finish_story() -> void:
+ if story_phase.is_empty(): return
+ if story_phase == "escape":
+  escape_seen = true
+  target.visible = false
+  target.collision_layer = 0
+  message = "Ruby: The courier boarded. Recover the dropped key, then walk through the platform door."
+ else:
+  train_contact_complete = true
+  train_contact.complete_objective(false)
+  train_contact.collision_layer = 0
+  train_contact.visible = false
+  message = "Ruby: The courier named the market intermediary. Reach the forward carriage exit."
+  if story_set: story_set.queue_free()
+  story_set = null
+ story_phase = ""
+ story_camera.queue_free()
+ briefing.visible = false
+ skip_button.visible = false
+ hud.visible = true
+ player.set_physics_process(true)
+ player.set_process_unhandled_input(true)
+ player.camera.make_current()
+ if pause_menu: pause_menu.set_process_input(true)
+ Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+ _sync_train_gate()
 
 # Progress is committed before the presentation; Escape never duplicates a
 # completion or awards anything. The scene remains interactive only afterwards.
@@ -480,60 +596,77 @@ func _finish_extraction() -> void:
  extraction_active = false
  get_tree().change_scene_to_file(extraction_next)
 
-# A separate fictional train carriage is staged beyond the station boundary;
-# it is entered by a controlled scene transition, never by rail access gameplay.
+# A self-contained fictional pair of carriages is attached directly to the
+# platform. The player walks across the doorway; no rail-access mechanics exist.
 func _board_train() -> void:
+ # Used only for checkpoint migration and deterministic capture setup.
  if train_car == null: _build_train()
- train_stage = "aboard"
- player.global_position = Vector3(0,0.05,85)
+ player.global_position = Vector3(19,0.05,16.5)
  player.velocity = Vector3.ZERO
- player.rotation.y = 0.0
- exit_marker.global_position = Vector3(0,0.05,74)
+ _enter_train()
+
+func _enter_train() -> void:
+ train_stage = "aboard"
+ exit_marker.global_position = Vector3(19,0.05,44)
  for child: Node in exit_marker.get_children():
   if child is Label3D: (child as Label3D).text = "EXTRACTION"
- message = "Ruby: You are aboard. Find the train contact, then leave through the carriage door."
+ if train_contact: train_contact.visible = true
+ message = "Ruby: Follow the courier through the connected carriages."
+
+func _sync_train_gate() -> void:
+ if not train_gate: return
+ var open: bool = target_complete and key_secured and escape_seen
+ train_gate.visible = not open
+ (train_gate.get_child(1) as CollisionShape3D).set_deferred("disabled", open)
 
 func _build_train() -> void:
+ if train_car: return
  train_car = Node3D.new()
- train_car.name = "FictionalTrainCarriage"
- train_car.position = Vector3(0,0,80)
+ train_car.name = "FictionalTrainCarriages"
+ train_car.position = Vector3(19,0,22)
  add_child(train_car)
- _train_solid(Vector3(0,-0.15,0), Vector3(4.5,0.3,16), Color(0.36,0.39,0.39))
- _train_solid(Vector3(-2.25,1.5,0), Vector3(0.2,3,16), Color(0.66,0.69,0.67))
- _train_solid(Vector3(2.25,1.5,0), Vector3(0.2,3,16), Color(0.66,0.69,0.67))
- _train_solid(Vector3(0,1.5,8), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
- _train_solid(Vector3(0,1.5,-8), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
- _part(train_car, Vector3(0,3.05,0), Vector3(4.5,0.12,16), Color(0.46,0.52,0.51))
- for z: float in [-6.0,-2.0,2.0,6.0]:
-  _part(train_car,Vector3(0,2.95,z),Vector3(1.9,0.04,0.28),Color(0.88,0.88,0.76))
+ for car_offset: float in [0.0,16.0]:
+  _train_solid(Vector3(0,-0.15,car_offset), Vector3(4.5,0.3,16.1), Color(0.36,0.39,0.39))
+  for side: float in [-1.0,1.0]:
+   _train_solid(Vector3(side*2.25,1.5,car_offset), Vector3(0.2,3,16), Color(0.66,0.69,0.67))
+  _part(train_car, Vector3(0,3.05,car_offset), Vector3(4.5,0.12,16), Color(0.46,0.52,0.51))
+  for z: float in [-6.0,-2.0,2.0,6.0]:
+   _part(train_car,Vector3(0,2.95,z+car_offset),Vector3(1.9,0.04,0.28),Color(0.88,0.88,0.76))
+  for side: float in [-1.0,1.0]:
+   for z: float in [-5.0,-2.0,1.0,4.0]:
+    _part(train_car, Vector3(side*2.12,1.9,z+car_offset), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
+    _train_solid(Vector3(side*1.65,0.42,z+car_offset), Vector3(0.9,0.75,1.2), Color(0.24,0.31,0.34))
+    _part(train_car, Vector3(side*1.93,1.05,z+car_offset), Vector3(0.35,1.1,1.2), Color(0.24,0.31,0.34))
+  for side: float in [-1.0,1.0]:
+   for i: int in range(6):
+    var streak := Node3D.new()
+    streak.position = Vector3(side*2.07,1.85,-7.5+float(i)*2.5+car_offset)
+    streak.set_meta("second_car", car_offset > 0.0)
+    train_car.add_child(streak)
+    _part(streak,Vector3.ZERO,Vector3(0.025,0.05,1.1),Color(0.52,0.69,0.65))
+    train_streaks.append(streak)
+ _train_solid(Vector3(0,1.5,24), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
  for side: float in [-1.0,1.0]:
-  for z: float in [-5.0,-2.0,1.0,4.0]:
-   _part(train_car, Vector3(side*2.12,1.9,z), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
-   _train_solid(Vector3(side*1.65,0.42,z), Vector3(0.9,0.75,1.2), Color(0.24,0.31,0.34))
-   _part(train_car, Vector3(side*1.93,1.05,z), Vector3(0.35,1.1,1.2), Color(0.24,0.31,0.34))
- # Moving light bands give a restrained impression of travel through the
- # carriage windows; no real railway layout is simulated.
- for side: float in [-1.0,1.0]:
-  for i: int in range(6):
-   var streak := Node3D.new()
-   streak.position = Vector3(side*2.07,1.85,-7.5+float(i)*2.5)
-   train_car.add_child(streak)
-   _part(streak,Vector3.ZERO,Vector3(0.025,0.05,1.1),Color(0.52,0.69,0.65))
-   train_streaks.append(streak)
- var title := Label3D.new()
- title.text = "BLACKLINE  /  TRAIN CONTACT"
- title.position = Vector3(0,2.4,-7.8)
- title.font_size = 32
- title.pixel_size = 0.004
- train_car.add_child(title)
+  _part(train_car,Vector3(side*2.0,1.5,8),Vector3(0.35,3.0,0.25),Color(0.22,0.31,0.32))
+ _part(train_car,Vector3(0,2.8,8),Vector3(3.8,0.35,0.25),Color(0.22,0.31,0.32))
+ train_gate = StaticBody3D.new()
+ train_gate.position = Vector3(19,1.5,13.9)
+ add_child(train_gate)
+ _part(train_gate,Vector3.ZERO,Vector3(3.8,3,0.18),Color(0.23,0.37,0.39))
+ var gate_shape := CollisionShape3D.new()
+ var gate_box := BoxShape3D.new()
+ gate_box.size = Vector3(3.8,3,0.18)
+ gate_shape.shape = gate_box
+ train_gate.add_child(gate_shape)
  var profile := NpcProfile.new()
- profile.identity = "Train contact"
- profile.occupation = "special"
+ profile.identity = "Kai Venn, courier"
+ profile.occupation = "manager"
  train_contact = HotelNpc.new()
  train_contact.profile = profile
- train_contact.position = Vector3(0,0.05,79)
+ train_contact.position = Vector3(19,0.05,36)
  add_child(train_contact)
  train_contact.set_physics_process(false)
+ train_contact.visible = false
 
 func _train_solid(pos: Vector3, size: Vector3, color: Color) -> void:
  var body := StaticBody3D.new()
@@ -602,7 +735,8 @@ func _fire() -> void:
    message = "Ruby: We need the contact's account. Speak to them instead."
   elif npc == target and not target_complete:
    target_complete = true
-   target.complete_objective(true)
+   target.complete_objective(operation_id != "tung_chung")
+   if operation_id == "tung_chung": _begin_story("escape")
    message = "Ruby: Target tagged. " + str(config["clue"])
   elif npc.incapacitate(12.0): message = "Assessment pulse temporarily incapacitated " + npc.profile.identity + "."
   reticle.call("confirm_hit")
@@ -612,7 +746,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -623,33 +757,48 @@ func load_game() -> void:
  var expected := str(Campaign.progress.mission(operation_id).get("key_id", ""))
  var saved_key_valid: bool = data.get("key_id", "") == expected and data.get("key_secured", false) == true and Campaign.progress.recovered_keys.has(expected)
  var previous_stage := train_stage
- if operation_id == "tung_chung" and data.get("train_stage", "") == "aboard" and data.get("target_complete", false) == true and saved_key_valid:
-  _board_train()
-  train_contact_complete = data.get("train_contact_complete", false) == true
-  if train_contact_complete:
-   train_contact.complete_objective(false)
-   train_contact.collision_layer = 0
- else:
-  train_stage = "station"
-  exit_marker.global_position = _vec(config["exit"])
-  for child: Node in exit_marker.get_children():
-   if child is Label3D: (child as Label3D).text = "BOARD TRAIN" if operation_id == "tung_chung" else "EXTRACTION"
-  train_contact_complete = false
-  if train_contact: train_contact.queue_free()
-  if train_car: train_car.queue_free()
-  train_streaks.clear()
-  train_contact = null
-  train_car = null
-  if previous_stage == "aboard": player.global_position = _vec(config["spawn"])
+ target_complete = data.get("target_complete", false) == true
+ key_secured = saved_key_valid
+ escape_seen = target_complete and data.get("escape_seen", true) == true
+ target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
+ if operation_id == "tung_chung":
+  if target_complete:
+   _drop_station_key()
+   var saved_drop: Variant = data.get("dropped_key_pos", [])
+   if saved_drop is Array and saved_drop.size() == 3 and (saved_drop[0] is int or saved_drop[0] is float) and (saved_drop[1] is int or saved_drop[1] is float) and (saved_drop[2] is int or saved_drop[2] is float):
+    var drop := _vec(saved_drop)
+    if drop.is_finite() and absf(drop.x) < 21.0 and absf(drop.z) < 13.0 and drop.y > -1.0 and drop.y < 5.0: key_marker.global_position = drop
+   target.visible = false
+   target.collision_layer = 0
+  else:
+   if key_marker.get_parent() != target: key_marker.reparent(target, false)
+   key_marker.position = Vector3(0,1.1,0)
+   target.visible = true
+   target.collision_layer = 1
+  if data.get("train_stage", "") == "aboard" and target_complete and saved_key_valid and escape_seen:
+   _board_train()
+   train_contact_complete = data.get("train_contact_complete", false) == true
+   if train_contact_complete:
+    train_contact.complete_objective(false)
+    train_contact.collision_layer = 0
+    train_contact.visible = false
+  else:
+   train_stage = "station"
+   exit_marker.global_position = _vec(config["exit"])
+   for child: Node in exit_marker.get_children():
+    if child is Label3D: (child as Label3D).text = "BOARD TRAIN"
+   train_contact_complete = false
+   train_contact.restore_objective(false, false)
+   train_contact.collision_layer = 1
+   train_contact.visible = false
+   if previous_stage == "aboard": player.global_position = _vec(config["spawn"])
+  _sync_train_gate()
  uniform_found = uniform_marker != null and data.get("uniform_found", false) == true
  player.set_disguise("staff" if uniform_found else "visitor")
  if uniform_marker: uniform_marker.visible = not uniform_found
  witness_found = data.get("witness_found", false) == true
  intel_found = data.get("intel_found", false) == true
  intel_marker.visible = not intel_found
- target_complete = data.get("target_complete", false) == true
- target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
- key_secured = saved_key_valid
  key_marker.visible = not key_secured
  player.equipment.restore(data.get("equipment"), Campaign.progress, operation_id)
  var pos: Variant = data.get("position", [])
@@ -659,7 +808,7 @@ func load_game() -> void:
   var in_bounds := absf(p.x) < bound and absf(p.z) < bound and p.y > -1.0 and p.y < 5.0
   var annex: Node = scene.find_child("MissionNeighbourhood", true, false)
   if annex and annex.call("contains_world_position", p): in_bounds = true
-  if train_stage == "aboard": in_bounds = absf(p.x) < 2.0 and p.z > 72.5 and p.z < 87.5 and p.y > -1.0 and p.y < 5.0
+  if train_stage == "aboard": in_bounds = absf(p.x-19.0) < 1.8 and p.z > 14.0 and p.z < 45.5 and p.y > -1.0 and p.y < 5.0
   if is_finite(p.x) and is_finite(p.y) and is_finite(p.z) and in_bounds:
    player.global_position = p
    player.velocity = Vector3.ZERO
