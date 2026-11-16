@@ -328,8 +328,12 @@ func run() -> void:
   check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")
   if id == "tung_chung":
    check(world.get("story_phase") == "escape" and not world.get("escape_seen"), "confrontation starts the skippable escape presentation")
-   world.call("_finish_story")
-   check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "skipping escape restores gameplay without awarding a key")
+   root.push_input(skip_event)
+   await process_frame
+   check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "Escape skips the story and restores gameplay without awarding a key")
+   world.call("save_game")
+   world.call("load_game")
+   check(world.get("target_complete") and world.get("escape_seen") and not world.get("key_secured") and (world.get("key_marker") as Node3D).visible, "post-escape checkpoint keeps the physical key available")
   var config: Dictionary = world.get("config")
   if config["placement"] == "target": await move_near(world, (world.get("key_marker") as Node3D).global_position if id == "tung_chung" else target.global_position)
   elif config["placement"] == "guard": await move_near(world, guard.global_position)
@@ -364,8 +368,9 @@ func run() -> void:
    await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
    world.call("_interact")
    check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the exterior cinematic")
-   world.call("_finish_story")
-   check(world.get("train_contact_complete") and player.is_physics_processing(), "skipping exterior cinematic resolves the pursuit")
+   root.push_input(skip_event)
+   await process_frame
+   check(world.get("train_contact_complete") and player.is_physics_processing(), "Escape skips exterior cinematic and resolves the pursuit")
   world.call("save_game")
   world.set("target_complete", false)
   world.set("key_secured", false)
@@ -392,9 +397,11 @@ func run() -> void:
    # never bypass the world by calling Campaign.complete as the only proof.
    check(world.get("witness_found") and world.get("target_complete") and world.get("key_secured") and world.get("train_contact_complete"), "station witness, confrontation, physical key and train contact survive reload")
    check((world.get("train_contact") as HotelNpc).collision_layer == 0, "completed contact no longer blocks the carriage aisle")
+   world.set("witness_found", false)
+   world.set("intel_found", false)
    await move_near(world, (world.get("exit_marker") as Node3D).global_position)
    world.call("_interact")
-   check(world.get("extraction_active") and service.progress.completed.has(id), "Tung Chung actually completes through its extraction interaction")
+   check(world.get("extraction_active") and service.progress.completed.has(id), "Tung Chung extracts without optional witness or intel")
    world.call("_finish_extraction")
    await process_frame
    await process_frame

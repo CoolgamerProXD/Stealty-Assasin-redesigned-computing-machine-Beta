@@ -710,7 +710,7 @@ func _use_equipment() -> void:
  message = "Quiet Line requires a nearby unobstructed person."
 
 func _throw_coin() -> void:
- if intro_active or extraction_active: return
+ if intro_active or extraction_active or not story_phase.is_empty(): return
  message = CoinDistraction.use(player, npc_list, self)
 
 func _fire() -> void:
@@ -759,7 +759,10 @@ func load_game() -> void:
  var previous_stage := train_stage
  target_complete = data.get("target_complete", false) == true
  key_secured = saved_key_valid
- escape_seen = target_complete and data.get("escape_seen", true) == true
+ # A checkpoint is never resumed mid-presentation: target completion
+ # converges on the same post-escape state as a cinematic skip (also migrates
+ # older saves which did not have a cinematic flag).
+ escape_seen = target_complete if operation_id == "tung_chung" else false
  target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
  if operation_id == "tung_chung":
   if target_complete:
@@ -775,9 +778,14 @@ func load_game() -> void:
    key_marker.position = Vector3(0,1.1,0)
    target.visible = true
    target.collision_layer = 1
+   target.global_position = _vec(config["target_pos"])
+   target.set_physics_process(true)
   if data.get("train_stage", "") == "aboard" and target_complete and saved_key_valid and escape_seen:
    _board_train()
    train_contact_complete = data.get("train_contact_complete", false) == true
+   train_contact.restore_objective(false, false)
+   train_contact.collision_layer = 1
+   train_contact.visible = true
    if train_contact_complete:
     train_contact.complete_objective(false)
     train_contact.collision_layer = 0
