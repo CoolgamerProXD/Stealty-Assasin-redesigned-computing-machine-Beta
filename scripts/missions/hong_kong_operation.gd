@@ -167,7 +167,7 @@ func _setup_sandbox() -> void:
   identity_tag.pixel_size = 0.004
   identity_tag.modulate = Color(0.96,0.79,0.53)
   npc.add_child(identity_tag)
-  npc_list.append(npc)
+  # scene._target already registered this actor in the shared NPC array.
   sandbox_targets.append(npc)
   sandbox_target_data.append(record)
   sandbox_target_completed[str(record["id"])] = false

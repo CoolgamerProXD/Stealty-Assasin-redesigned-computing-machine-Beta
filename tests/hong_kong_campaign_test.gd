@@ -48,7 +48,7 @@ func run() -> void:
  service.active_mission = "hong_kong_sandbox"
  check(not service.progress.secure_key("hong_kong_sandbox","key_01"), "sandbox cannot re-award Operation 01's key")
  check(service.progress.secure_key("hong_kong_sandbox","key_02") and service.progress.secure_key("hong_kong_sandbox","key_03") and service.progress.secure_key("hong_kong_sandbox","key_04"), "the sandbox accepts only its three configured physical keys")
- check(not service.progress.mark_complete("hong_kong_sandbox"), "three keys alone do not bypass objective completion in the runtime")
+ check(not service.progress.completed.has("hong_kong_sandbox"), "key recovery alone never marks the sandbox operation complete")
  service.progress.recovered_keys.erase("key_02")
  service.progress.recovered_keys.erase("key_03")
  service.progress.recovered_keys.erase("key_04")
