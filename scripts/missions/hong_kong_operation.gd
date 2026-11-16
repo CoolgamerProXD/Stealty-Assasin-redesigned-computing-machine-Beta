@@ -745,14 +745,14 @@ func _build_train() -> void:
  train_ambience.stream = ProceduralSound.ambience("train")
  add_child(train_ambience)
  for car_offset: float in [0.0,16.0]:
-  _train_solid(Vector3(0,-0.15,car_offset),Vector3(4.5,0.3,16.1),Color(0.25,0.31,0.32),"rubber")
-  _train_solid(Vector3(0,3.04,car_offset),Vector3(4.5,0.12,16.1),Color(0.25,0.33,0.34),"painted_metal")
+  _train_solid(Vector3(0,-0.15,car_offset),Vector3(4.5,0.3,16.1),Color(0.52,0.57,0.55),"rubber")
+  _train_solid(Vector3(0,3.04,car_offset),Vector3(4.5,0.12,16.1),Color(0.42,0.49,0.48),"painted_metal")
   for side: float in [-1.0,1.0]:
    # Invisible continuous collision preserves the window openings visually but
    # prevents an accidental step through the carriage shell.
    _train_collision(Vector3(side*2.22,1.5,car_offset),Vector3(0.18,3.0,16.0))
-   _part(train_car,Vector3(side*2.22,0.42,car_offset),Vector3(0.18,0.84,15.8),Color(0.25,0.34,0.35),"painted_metal")
-   _part(train_car,Vector3(side*2.22,2.79,car_offset),Vector3(0.18,0.48,15.8),Color(0.20,0.29,0.31),"painted_metal")
+   _part(train_car,Vector3(side*2.22,0.42,car_offset),Vector3(0.18,0.84,15.8),Color(0.42,0.49,0.48),"painted_metal")
+   _part(train_car,Vector3(side*2.22,2.79,car_offset),Vector3(0.18,0.48,15.8),Color(0.34,0.43,0.42),"painted_metal")
    _part(train_car,Vector3(side*2.22,0.93,car_offset),Vector3(0.19,0.08,15.8),Color(0.83,0.45,0.28),"emissive")
    for z: float in [-7.65,7.65]:
     _part(train_car,Vector3(side*2.22,1.88,z+car_offset),Vector3(0.18,1.75,0.7),Color(0.20,0.29,0.31),"painted_metal")
@@ -771,9 +771,9 @@ func _build_train() -> void:
    # Four fixed seat rows per side; fabric, armrests and pedestal are separate
    # materials, and the central aisle remains clear for the contact encounter.
    for z: float in [-5.3,-1.5,2.3,5.7]:
-    _train_solid(Vector3(side*1.62,0.39,z+car_offset),Vector3(1.02,0.72,1.35),Color(0.15,0.29,0.31),"fabric")
-    _part(train_car,Vector3(side*1.62,0.82,z+car_offset-0.34),Vector3(1.02,0.72,0.48),Color(0.17,0.32,0.34),"fabric")
-    _part(train_car,Vector3(side*1.62,0.83,z+car_offset+0.20),Vector3(0.82,0.10,0.56),Color(0.19,0.35,0.37),"fabric")
+    _train_solid(Vector3(side*1.62,0.39,z+car_offset),Vector3(1.02,0.72,1.35),Color(0.36,0.50,0.49),"fabric")
+    _part(train_car,Vector3(side*1.62,0.82,z+car_offset-0.34),Vector3(1.02,0.72,0.48),Color(0.42,0.57,0.56),"fabric")
+    _part(train_car,Vector3(side*1.62,0.83,z+car_offset+0.20),Vector3(0.82,0.10,0.56),Color(0.48,0.62,0.59),"fabric")
     _part(train_car,Vector3(side*1.98,0.82,z+car_offset),Vector3(0.12,0.68,1.1),Color(0.42,0.48,0.46),"brushed_metal")
     if z == -5.3 or z == 2.3:
      _part(train_car,Vector3(side*1.10,1.18,z+car_offset+0.45),Vector3(0.72,0.055,0.48),Color(0.37,0.28,0.19),"wood")
@@ -782,8 +782,8 @@ func _build_train() -> void:
   var light := OmniLight3D.new()
   light.position = Vector3(0,2.60,car_offset)
   light.light_color = Color(0.76,0.87,0.85) if car_offset == 0.0 else Color(1.0,0.70,0.46)
-  light.light_energy = 0.52
-  light.omni_range = 8.5
+  light.light_energy = 1.1 if car_offset == 0.0 else 0.9
+  light.omni_range = 10.0
   light.shadow_enabled = false
   light.add_to_group("quality_practicals")
   light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
