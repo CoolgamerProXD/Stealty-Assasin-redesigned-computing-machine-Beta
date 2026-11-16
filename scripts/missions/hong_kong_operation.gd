@@ -35,6 +35,7 @@ func _ready() -> void:
  var map: String = config["map"]
  var path := "res://scenes/tung_chung_preview.tscn" if map == "station" else ("res://scenes/ngong_ping_preview.tscn" if map == "mountain" else "res://scenes/hong_kong_preview.tscn")
  scene = load(path).instantiate()
+ scene.set_meta("operation_id", operation_id)
  add_child(scene)
  scene.set_process(false)
  scene.set_process_unhandled_input(false)

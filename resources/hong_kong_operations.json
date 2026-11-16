@@ -1,7 +1,157 @@
 {
-  "tung_chung": {"map": "station", "target": "Kai Venn, train courier", "placement": "target", "clue": "The courier carries Key 01. Confront them, then retrieve it before leaving by the platform.", "target_pos": [-12, 0.05, -5], "guard_pos": [10, 0.05, -5], "safe_pos": [0, 0.05, -8], "spawn": [-19, 0.05, 4], "exit": [19, 0.05, 9]},
-  "the_streets": {"map": "city", "target": "Mina Lau, market intermediary", "placement": "guard", "clue": "Market records identify the intermediary. Their bodyguard carries Key 02.", "target_pos": [-8, 0.05, -3], "guard_pos": [-14, 0.05, 3], "safe_pos": [-8, 0.05, 4], "spawn": [0, 0.05, 20], "exit": [-23, 0.05, 0]},
-  "the_district": {"map": "city", "target": "Jonas Wu, district broker", "placement": "safe", "clue": "The broker's records safe is by the central public walkway. It contains Key 03.", "target_pos": [7, 0.05, -3], "guard_pos": [3, 0.05, -8], "safe_pos": [9, 0.05, 4], "spawn": [0, 0.05, 20], "exit": [19, 0.05, 0]},
-  "the_harbour": {"map": "city", "target": "Elias Ng, waterfront liaison", "placement": "guard", "clue": "The liaison's bodyguard carries Key 04 near the harbour approach.", "target_pos": [2, 0.05, -16], "guard_pos": [-2, 0.05, -21], "safe_pos": [6, 0.05, -15], "spawn": [0, 0.05, 20], "exit": [0, 0.05, -35]},
-  "ngong_ping": {"map": "mountain", "target": "Sora Cheng, field coordinator", "placement": "safe", "clue": "Key 05 is in the field safe beside the village approach, not in the public monument.", "target_pos": [-3, 0.05, 4], "guard_pos": [3, 0.05, -4], "safe_pos": [8, 0.05, 5], "spawn": [0, 0.05, 20], "exit": [0, 0.05, 30]}
+  "tung_chung": {
+    "map": "station",
+    "target": "Kai Venn, train courier",
+    "placement": "target",
+    "clue": "The courier carries Key 01. Confront them, then retrieve it before leaving by the platform.",
+    "target_pos": [
+      -12,
+      0.05,
+      -5
+    ],
+    "guard_pos": [
+      10,
+      0.05,
+      -5
+    ],
+    "safe_pos": [
+      0,
+      0.05,
+      -8
+    ],
+    "spawn": [
+      -19,
+      0.05,
+      4
+    ],
+    "exit": [
+      19,
+      0.05,
+      9
+    ]
+  },
+  "the_streets": {
+    "map": "city",
+    "target": "Mina Lau, market intermediary",
+    "placement": "guard",
+    "clue": "The intermediary works inside MARKET OFFICE. Their bodyguard carries Key 02.",
+    "target_pos": [
+      -16,
+      0.05,
+      15
+    ],
+    "guard_pos": [
+      -14,
+      0.05,
+      17
+    ],
+    "safe_pos": [
+      -8,
+      0.05,
+      4
+    ],
+    "spawn": [
+      0,
+      0.05,
+      20
+    ],
+    "exit": [
+      -23,
+      0.05,
+      0
+    ]
+  },
+  "the_district": {
+    "map": "city",
+    "target": "Jonas Wu, district broker",
+    "placement": "safe",
+    "clue": "The broker works in DISTRICT RECORDS. Its records safe contains Key 03.",
+    "target_pos": [
+      16,
+      0.05,
+      15
+    ],
+    "guard_pos": [
+      14,
+      0.05,
+      17
+    ],
+    "safe_pos": [
+      19,
+      0.05,
+      17
+    ],
+    "spawn": [
+      0,
+      0.05,
+      20
+    ],
+    "exit": [
+      19,
+      0.05,
+      0
+    ]
+  },
+  "the_harbour": {
+    "map": "city",
+    "target": "Elias Ng, waterfront liaison",
+    "placement": "guard",
+    "clue": "The liaison and bodyguard are inside HARBOUR LIAISON by the waterfront. The bodyguard carries Key 04.",
+    "target_pos": [
+      16,
+      0.05,
+      -30
+    ],
+    "guard_pos": [
+      19,
+      0.05,
+      -32
+    ],
+    "safe_pos": [
+      6,
+      0.05,
+      -15
+    ],
+    "spawn": [
+      0,
+      0.05,
+      20
+    ],
+    "exit": [
+      0,
+      0.05,
+      -35
+    ]
+  },
+  "ngong_ping": {
+    "map": "mountain",
+    "target": "Sora Cheng, field coordinator",
+    "placement": "safe",
+    "clue": "Key 05 is in the field safe beside the village approach, not in the public monument.",
+    "target_pos": [
+      -3,
+      0.05,
+      4
+    ],
+    "guard_pos": [
+      3,
+      0.05,
+      -4
+    ],
+    "safe_pos": [
+      8,
+      0.05,
+      5
+    ],
+    "spawn": [
+      0,
+      0.05,
+      20
+    ],
+    "exit": [
+      0,
+      0.05,
+      30
+    ]
+  }
 }

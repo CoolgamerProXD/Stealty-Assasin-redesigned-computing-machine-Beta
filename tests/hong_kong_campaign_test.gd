@@ -89,6 +89,26 @@ func run() -> void:
    Engine.time_scale = 1.0
    print("HK STAIR DIAG: ", player.global_position)
    check(player.global_position.y > 3.0 and player.global_position.z < -3.8, "station stairs connect the concourse to the upper landing")
+  if id in ["the_streets", "the_district", "the_harbour"]:
+   var city: Node = world.get("scene")
+   check(city.find_child("InteriorLocalNavigation", true, false) != null, id + " has a walk-in mission interior")
+   target.collision_layer = 0
+   guard.collision_layer = 0
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   player.global_position = Vector3(-10,0.05,16) if id == "the_streets" else (Vector3(10,0.05,16) if id == "the_district" else Vector3(16,0.05,-37))
+   await physics_frame
+   Engine.time_scale = 3.0
+   var action := "move_left" if id == "the_streets" else ("move_right" if id == "the_district" else "move_back")
+   Input.action_press(action)
+   await create_timer(2.8).timeout
+   Input.action_release(action)
+   Engine.time_scale = 1.0
+   print("HK INTERIOR DIAG: ", id, " ", player.global_position)
+   var entered: bool = player.global_position.x < -14.0 if id == "the_streets" else (player.global_position.x > 14.0 if id == "the_district" else player.global_position.z > -33.0)
+   check(entered, id + " entrance is physically traversable")
+   target.collision_layer = 1
+   guard.collision_layer = 1
   await move_near(world, target.global_position)
   world.call("_interact")
   check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")

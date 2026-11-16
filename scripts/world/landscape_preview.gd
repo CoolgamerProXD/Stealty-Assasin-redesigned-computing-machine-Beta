@@ -242,6 +242,9 @@ func _city() -> void:
  for x: float in [-31.0,-17.0,17.0,31.0]:
   for z: float in [-30.0,-16.0,16.0,30.0]:
    var h := 6.0 + absf(x + z) * 0.09
+   if _is_operation_interior(x, z):
+    _operation_interior(x, z)
+    continue
    var building := Color(0.42+absf(x)*0.002,0.44,0.42+absf(z)*0.002)
    _box(Vector3(x,h/2,z),Vector3(10,h,9),building,true)
    for level: int in range(1,3):
@@ -305,6 +308,7 @@ func _city() -> void:
  # Facade bays, awnings and signs establish distinct public-facing streets.
  for x: float in [-31.0,-17.0,17.0,31.0]:
   for z: float in [-30.0,-16.0,16.0,30.0]:
+   if _is_operation_interior(x, z): continue
    _accent(Vector3(x,3.5,z+4.62),Vector3(9.8,0.15,0.12),Color(0.69,0.62,0.49))
    _accent(Vector3(x,0.13,z+5.2),Vector3(10.4,0.20,0.7),Color(0.49,0.49,0.45))
    for dx: float in [-3.8,3.8]:
@@ -327,6 +331,46 @@ func _city() -> void:
  for x: float in [-35.0,-25.0,-15.0,-5.0,5.0,15.0,25.0,35.0]:
   _box(Vector3(x,1.4,-38),Vector3(0.12,2.8,0.12),dark)
   _box(Vector3(x,2.85,-38),Vector3(0.7,0.1,0.7),Color(0.95,0.80,0.58))
+
+# Three mission-specific, walk-in interiors replace (rather than overlap) a
+# solid scenic block. The surrounding city remains a shared destination.
+func _is_operation_interior(x: float, z: float) -> bool:
+ var op := str(get_meta("operation_id", ""))
+ return (op == "the_streets" and x == -17.0 and z == 16.0) or (op == "the_district" and x == 17.0 and z == 16.0) or (op == "the_harbour" and x == 17.0 and z == -30.0)
+
+func _operation_interior(x: float, z: float) -> void:
+ var op := str(get_meta("operation_id", ""))
+ var wall := Color(0.60,0.57,0.49) if op == "the_streets" else (Color(0.45,0.52,0.51) if op == "the_district" else Color(0.52,0.49,0.42))
+ var dark := Color(0.23,0.28,0.28)
+ # Front split around an actual 2.4 m doorway. Other walls and the roof are solid.
+ if op == "the_harbour":
+  _box(Vector3(x,2.1,z+4.5),Vector3(10,4.2,0.25),wall,true)
+  for side: float in [-1.0,1.0]:
+   _box(Vector3(x+side*5,2.1,z),Vector3(0.25,4.2,9),wall,true)
+   _box(Vector3(x+side*3.1,2.1,z-4.5),Vector3(3.8,4.2,0.25),wall,true)
+ else:
+  var front: float = x + (5.0 if x < 0 else -5.0)
+  var back: float = x - (5.0 if x < 0 else -5.0)
+  _box(Vector3(back,2.1,z),Vector3(0.25,4.2,9),wall,true)
+  for side: float in [-1.0,1.0]:
+   _box(Vector3(x,2.1,z+side*4.5),Vector3(10,4.2,0.25),wall,true)
+   _box(Vector3(front,2.1,z+side*2.85),Vector3(0.25,4.2,3.3),wall,true)
+ _box(Vector3(x,4.3,z),Vector3(10,0.2,9),dark,true)
+ _box(Vector3(x,0.015,z),Vector3(9.7,0.03,8.7),Color(0.48,0.45,0.38))
+ # A desk and wall fixtures are tucked away from the doorway and actor routes.
+ var desk_x := x + (-3.0 if op == "the_streets" else 3.0)
+ _box(Vector3(desk_x,0.5,z-2.8),Vector3(1.6,1.0,1.0),Color(0.36,0.25,0.18),true)
+ _box(Vector3(desk_x,1.2,z-2.8),Vector3(0.65,0.5,0.12),Color(0.18,0.31,0.33))
+ _box(Vector3(x,4.12,z),Vector3(2.8,0.08,0.6),Color(0.95,0.84,0.62))
+ var label := "MARKET OFFICE" if op == "the_streets" else ("DISTRICT RECORDS" if op == "the_district" else "HARBOUR LIAISON")
+ _sign(label, Vector3(x,2.9,z+4.31), 34)
+ var region := NavigationRegion3D.new()
+ region.name = "InteriorLocalNavigation"
+ var nav := NavigationMesh.new()
+ nav.vertices = PackedVector3Array([Vector3(x-4.5,0,z-4.0),Vector3(x+4.5,0,z-4.0),Vector3(x+4.5,0,z+4.0),Vector3(x-4.5,0,z+4.0)])
+ nav.add_polygon(PackedInt32Array([0,3,2,1]))
+ region.navigation_mesh = nav
+ add_child(region)
 
 func _mountain() -> void:
  _ground(Color(0.36,0.46,0.34))
