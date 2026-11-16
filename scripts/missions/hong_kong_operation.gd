@@ -1272,7 +1272,7 @@ func load_game() -> void:
   sandbox_target_completed.clear()
   for record: Dictionary in sandbox_target_data:
    var id := str(record["id"])
-   var is_complete := raw_targets is Array and id in raw_targets
+   var is_complete: bool = raw_targets is Array and id in raw_targets
    sandbox_target_completed[id] = is_complete
    var index := sandbox_target_data.find(record)
    if is_complete: sandbox_targets[index].complete_objective(false)
