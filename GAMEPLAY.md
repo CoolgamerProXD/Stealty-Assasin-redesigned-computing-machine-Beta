@@ -1,3 +1,9 @@
+# Current Hong Kong gameplay
+
+After Initiation, the five operations unlock in order. Press E to confront the named target, then separately collect that mission's key from the indicated target, bodyguard or safe. Reach the marked extraction after both objectives. In Tung Chung the platform transition leads to a fictional carriage, where the train contact must be questioned before the exit. The USB HUD displays all five persistent keys; the final extraction opens a skippable secure-channel event without a fabricated revelation. F5/F9 save/load that operation only. Escape skips an entry camera or opens pause after the camera. Loadout, aim/fire and Instinct remain available.
+
+Staff and security may warn a visible trespasser and point toward a permitted area. Security enters a stylized alert after about three seconds; leaving de-escalates. Visitors and staff who lack access seek help locally. This is not a complete combat, pursuit, injury or backup system. The historical preview notes below refer to the separately selectable exploration scenes, not the new campaign operations.
+
 # Second-pass gameplay notes
 
 The Meridian west wing has two additional locally scheduled people and one stationary upstairs guest. There is no NPC route between floors; Locke is still in the suite. Restaurant tables, seating and beds have selected collision, while many decorative details are not solid. The lobby and original mission positions are retained. Player crouch is represented by bent knees and a lowered torso, while the existing capsule/ceiling clearance rules determine physical stance. Sounds and poses remain stylized approximations.
@@ -8,7 +14,7 @@ The city and mountain scenes have a few moving public-space visitors, while the 
 
 Use Mission Selection to open any of the three separate map previews; Escape returns to Mission Selection. They do not start campaign missions or save story progress. Meridian retains its objectives, witness, target-state and save paths. The west ramp connects the original lobby to two storeys of added space; Adrian remains in the upper private suite. The central top HUD shows mission guidance, bottom-left reports only actual local access/awareness, bottom-right reports selected equipment and real charges, and contextual interaction appears top-left. There is no health system or radar.
 
-# Current direction and preview
+# Historical direction and preview
 
 Hong Kong is the planned campaign direction; Meridian remains optional legacy content. The main-menu Tung Chung entry is a map preview, not a mission. E observes either nearby character, and Escape returns to the menu; it has no combat, Instinct, save, mission goals, train story or opportunities. See HONG_KONG_MAP_PLAN.md.
 

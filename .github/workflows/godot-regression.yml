@@ -92,6 +92,13 @@ jobs:
           xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/cinema_capture_test.gd 2>&1 | tee "$RUNNER_TEMP/cinema.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^CINEMA FAIL:' "$RUNNER_TEMP/cinema.log"; then exit 1; fi
           grep -E '^CINEMA RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/cinema.log"
+      - name: Hong Kong staged entry and environment captures
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/visual-test-output" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/hong_kong_capture_test.gd 2>&1 | tee "$RUNNER_TEMP/hkvisual.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^HKVIS FAIL:' "$RUNNER_TEMP/hkvisual.log"; then exit 1; fi
+          grep -E '^HKVIS RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hkvisual.log"
       - name: Upload rendered comparisons
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -110,13 +117,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "environment", "import", "startup", "tests", "hk", "soak", "camera", "visual", "cinema"):
+          for name in ("version", "import", "startup", "tests", "hk", "hkvisual", "soak", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "hk", "soak", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+              if name in ("tests", "hk", "hkvisual", "soak", "camera", "visual", "cinema"):
+                  selected = [line for line in lines if re.search(r"^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -124,6 +131,19 @@ jobs:
               text = "\n".join(selected)[-3500:] or "No matching diagnostics."
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print(f"::notice title={name} summary::{text}")
+          PYCODE
+      - name: Preview new campaign captures
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_play_tung_chung", "hk_play_the_district", "hk_play_ngong_ping"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+              for index in range(0, len(encoded), 3000):
+                  print(f"::notice title=preview_{name}_{index // 3000}::{encoded[index:index + 3000]}")
           PYCODE
       # Separate step: GitHub limits the number of notices in a single step.
       - name: Preview wall comparison thumbnails

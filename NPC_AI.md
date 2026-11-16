@@ -1,4 +1,8 @@
-# Second-pass local routes
+# Current trespass behavior
+
+Visible restricted-area trespass creates a local memory. Authorized staff/security issue a warning with an exit direction and a three-second grace period that does not restart on each sighting. Leaving de-escalates; security otherwise raises a stylized alert pose, while other roles seek help on a bounded local route. Visitors do not immediately become hostile. This does not implement player damage, coordinated backup, pursuit combat or comprehensive obstacle avoidance. Station navigation now excludes the information island and pillars; other navigation remains partial.
+
+# Historical second-pass local routes
 
 Two Meridian wing visitors use a dedicated ground-floor navigation strip, away from the restaurant furniture. An upstairs visitor walks a separate clear gallery route; no cross-floor connection is claimed. Locke stays in the suite and mission completion/persistence remains separate from these background actors. City and Ngong Ping previews each use a few deterministic floor-local visitor routes within the open central space, without story behavior or simulation of a real crowd. Station passengers use short, separated local routes; no crowd simulation or complete obstacle-aware station navmesh is claimed. NPC knowledge remains local; these additions do not share observations globally.
 

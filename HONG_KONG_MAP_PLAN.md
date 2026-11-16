@@ -1,6 +1,8 @@
 # Hong Kong campaign — production map plan
 
-Status: three rough, explorable map previews are now available from Mission Selection. Missions, story sequences and the detailed planned systems below are not complete. The stations, routes, schedules and setpieces below are fictional gameplay spaces, not real-world railway or site layouts. Preserve Initiation and the existing Meridian mission and saves. Meridian remains a separate legacy assignment rather than being rewritten into the new story. Do not unlock unfinished chapters as playable missions.
+**Current implementation:** five early campaign operations reuse the existing station, shared city and mountain scenes. They have individually identified physical keys, targets, checkpoints, extraction, short entry cameras and a secure-channel event. Tung Chung adds a small fictional train carriage; the city operations have three walk-in offices, and Ngong Ping has an outdoor field office and public viewing approach. This is not the intended 15× destination, a finished train storyline, realistic landmark or production environment. Cross-district routing, extensive interiors, combat and human/target-device testing remain open. Meridian is separate and optional.
+
+The following sections are **historical design intentions**, not claims that every named sequence or feature was implemented.
 
 ## 01 / Initiation
 Keep the evaluation annex, its two guards, three records and moving unit. Ruby remains the handler and the introduction remains skippable.

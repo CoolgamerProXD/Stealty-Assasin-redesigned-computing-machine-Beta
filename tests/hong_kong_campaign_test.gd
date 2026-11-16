@@ -206,6 +206,21 @@ func run() -> void:
   world.call("load_game")
   check(world.get("target_complete") and world.get("key_secured"), id + " isolated checkpoint restores target and key")
   if id == "tung_chung": check(world.get("train_stage") == "aboard" and world.get("train_contact_complete"), "train stage survives checkpoint load")
+  var test_path: String = world.get("save_path")
+  var valid_save := SaveStore.read(test_path)
+  var wrong_key := valid_save.duplicate(true)
+  wrong_key["key_id"] = "key_99"
+  SaveStore.write(test_path, wrong_key)
+  world.call("load_game")
+  check(not world.get("key_secured"), id + " rejects another key in its checkpoint")
+  SaveStore.write(test_path, valid_save)
+  world.call("load_game")
+  var wrong_mission := valid_save.duplicate(true)
+  wrong_mission["mission_id"] = "meridian"
+  wrong_mission["target_complete"] = false
+  SaveStore.write(test_path, wrong_mission)
+  world.call("load_game")
+  check(world.get("target_complete") and world.get("key_secured"), id + " ignores a different mission's checkpoint")
   if id == "ngong_ping":
    await move_near(world, (world.get("exit_marker") as Node3D).global_position)
    world.call("_interact")

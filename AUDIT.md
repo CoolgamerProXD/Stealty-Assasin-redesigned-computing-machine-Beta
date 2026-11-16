@@ -1,3 +1,7 @@
+## Hong Kong expansion limitations
+
+The five new operations are early playable slices on reused blockouts, not the requested full-scale destination. The station train is a small staged fictional carriage; the city maps are shared and have only a few new interiors; the Buddha is procedural and requires cultural and visual review. Trespass alerts do not yet include combat or coordinated security. No human Windows playtest, audio review, accessibility review or Iris Xe benchmark has been performed. See the latest run in TESTING.md before treating any automated result as verified.
+
 # PROJECT ASSASSIN — audit and stabilisation
 
 ## Absolute Cinema iteration

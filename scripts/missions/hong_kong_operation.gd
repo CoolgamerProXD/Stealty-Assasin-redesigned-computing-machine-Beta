@@ -131,6 +131,8 @@ func _build_ui() -> void:
  add_child(canvas)
  hud = Label.new()
  hud.position = Vector2(24,20)
+ hud.size = Vector2(1200,220)
+ hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
  hud.add_theme_font_size_override("font_size", 18)
  hud.add_theme_color_override("font_shadow_color", Color.BLACK)
  hud.add_theme_constant_override("shadow_offset_x", 2)
@@ -222,8 +224,8 @@ func _end_intro() -> void:
 
 func _input(event: InputEvent) -> void:
  if intro_active and event.is_action_pressed("release_mouse"):
-  _end_intro()
   get_viewport().set_input_as_handled()
+  _end_intro()
 
 func _unhandled_input(event: InputEvent) -> void:
  if intro_active: return
@@ -247,7 +249,10 @@ func _process(delta: float) -> void:
  for i: int in range(1,6):
   var id := "key_%02d" % i
   keys.append("%02d" % i if Campaign.progress.recovered_keys.has(id) else "--")
- hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s\n%s\nE INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", message]
+ var equipment_text := Campaign.item_label(player.equipment.selected)
+ if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
+ else: equipment_text += "  /  Q USE"
+ hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nE INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message]
  reticle.visible = player.aiming and not intro_active
  _overlay(target.person, red_overlay if player.instinct_active and not target_complete else null)
  var key_pos := key_marker.global_position
@@ -444,7 +449,10 @@ func load_game() -> void:
  if data.get("mission_id", "") != operation_id:
   message = "No valid checkpoint for this operation."
   return
- if operation_id == "tung_chung" and data.get("train_stage", "") == "aboard" and data.get("target_complete", false) == true and data.get("key_secured", false) == true:
+ var expected := str(Campaign.progress.mission(operation_id).get("key_id", ""))
+ var saved_key_valid: bool = data.get("key_id", "") == expected and data.get("key_secured", false) == true and Campaign.progress.recovered_keys.has(expected)
+ var previous_stage := train_stage
+ if operation_id == "tung_chung" and data.get("train_stage", "") == "aboard" and data.get("target_complete", false) == true and saved_key_valid:
   _board_train()
   train_contact_complete = data.get("train_contact_complete", false) == true
   if train_contact_complete: train_contact.complete_objective(false)
@@ -457,10 +465,10 @@ func load_game() -> void:
   train_streaks.clear()
   train_contact = null
   train_car = null
+  if previous_stage == "aboard": player.global_position = _vec(config["spawn"])
  target_complete = data.get("target_complete", false) == true
  target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
- var expected := str(Campaign.progress.mission(operation_id).get("key_id", ""))
- key_secured = data.get("key_id", "") == expected and data.get("key_secured", false) == true and Campaign.progress.recovered_keys.has(expected)
+ key_secured = saved_key_valid
  key_marker.visible = not key_secured
  player.equipment.restore(data.get("equipment"), Campaign.progress, operation_id)
  var pos: Variant = data.get("position", [])

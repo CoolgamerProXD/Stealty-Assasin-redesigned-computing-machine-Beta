@@ -1,3 +1,9 @@
+# Hong Kong campaign expansion — early playable slices
+
+- Added five ordered Hong Kong operation scenes with separate physical key interactions, target and extraction gating, isolated checkpoints and persistent USB key tracking. A skippable secure-channel event follows final extraction; no file revelation is invented. Meridian stays optional.
+- Added a fictional Tung Chung train carriage and contact, three city walk-in interiors, a mountain field archive and a traversable public monument approach. The city missions still reuse one blockout and are not the requested 15× expansion.
+- Added role-aware trespass warning/grace/de-escalation and a non-graphic security alert pose, authored station navigation holes, brief entry cameras, procedural turn/weight blending, and integrated campaign tests. Combat/damage, comprehensive AI, production art and interactive hardware testing remain incomplete.
+
 # Current iteration — prototype refinement
 
 - Added nine CC0 Kenney furniture models, glazed hotel bays and restaurant screen, procedural floor finishes, new guest-room beds, and aligned dining chair collisions. Legacy checkpoints overlapping new furniture are relocated where possible.

@@ -1,3 +1,9 @@
+# Hong Kong operation architecture
+
+`resources/campaign.json` orders the five operations after Initiation while preserving optional Meridian. `CampaignProgress` validates each mission's distinct key ID, preserves keys in the campaign snapshot and refuses completion without the matching key; the world also gates extraction on its physical target and key interaction. `hong_kong_operation.gd` instantiates the existing map scenes, owns per-deployment objectives and isolated checkpoint state, and stages Tung Chung's separate fictional carriage. Three mission-specific interiors replace selected city scenery blocks; the mountain field office is separate from the monument. `usb_decryption.tscn` is a one-time, skippable event after all five keys and the final extraction; its contents remain unresolved. The independent preview scenes remain available and do not modify campaign state.
+
+`HotelNpc` uses its existing local perception and memory for role-aware warnings, a non-resetting three-second grace period, de-escalation, bounded help-seeking and a security alert pose. There is no combat/damage system or global radio simulation. Station navigation has authored holes around columns and the information island; NPC navigation elsewhere is still local and not comprehensively obstacle-aware. Short entry cameras, procedural poses and collision-bearing ramps are prototypes, not authored cinematic or animation pipelines.
+
 # Second-pass architecture notes
 
 `EnvironmentDressing` instances original box details into shared core and HIGH-only batches; geometry is visual and does not imply collision. Existing restaurant tables, lounge seating, room beds, walls, floors and ramp have colliders, but most added small props and decoration do not. `WestWingNavigation` covers a deliberately clear ground-floor strip used by two scheduled visitors. A third follows an independent upstairs gallery route; the original routes and the upstairs suite target remain separate. The preview districts use their existing local NPC agents on short floor-local paths; accents are a color-instanced batch. No global, cross-level or cross-district navigation is implied.
@@ -8,7 +14,7 @@
 
 The hotel builds a connected western extension plus upper slabs and a physical ramp, leaving the original mission coordinates intact. Upper areas contain a suite and guest rooms; the target's short local schedule stays in the suite. Existing NPC navmesh remains on the original level; the independent upper region is not a connected cross-floor route. Save validation permits the added volume but does not fully model all new interior walls. The ground-level footprint is about 3.5x the former layout; summing the two gross floor plates gives about 7x, before subtracting walls and stairwell. The map remains procedural and partially visual-only. The three previews have their own scenes and return to the map selector; no mission or save state is faked.
 
-# Current Hong Kong checkpoint
+# Historical Hong Kong preview checkpoint
 
 `TungChungPreview` is a separate exploratory scene, not an assignment: it uses the existing player and scheduled NPC classes, a fictional rectangular navmesh and original modular geometry. Its lack of mission state, shooting, checkpoints, Instinct and train mechanics is intentional and visible in the menu. Meridian keeps its existing mission identity and checkpoint; planned Hong Kong chapters have no scene and cannot be unlocked as playable. Completed physical Meridian targets have a terminal NPC state separate from temporary incapacitation; the checkpoint stores whether the objective was completed with a downed pose.
 

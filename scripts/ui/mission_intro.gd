@@ -56,8 +56,8 @@ func _process(delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
  if not done and event.is_action_pressed("release_mouse"):
-  end_intro()
   get_viewport().set_input_as_handled()
+  end_intro()
 
 func end_intro() -> void:
  if done: return
