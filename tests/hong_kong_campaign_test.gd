@@ -151,7 +151,15 @@ func run() -> void:
   root.add_child(world)
   await process_frame
   var player: HotelPlayer = world.get("player")
-  var target: HotelNpc = world.get("target")
+  if id == "tung_chung":
+   var carriage_windows := world.find_children("CarriageWindowGlass","MeshInstance3D",true,false)
+   var seated_passengers: Array[StylizedPerson] = world.get("train_passengers")
+   check(carriage_windows.size() == 16, "two connected carriages expose materialized windows without removing collision shells")
+   check(seated_passengers.size() == 4, "each carriage has distinct seated passenger characters")
+   for passenger: StylizedPerson in seated_passengers:
+    for frame: int in range(30): passenger.animate_motion(1.0/60.0,0.0)
+   check(seated_passengers.all(func(person: StylizedPerson) -> bool: return person.seated_blend > 0.8 and person.gait_speed < 0.1), "passenger rigs blend into non-sliding seated idle poses")
+  var target: HotelNpc = world.get("target") as HotelNpc
   var guard: HotelNpc = world.get("guard")
   var people: Array[HotelNpc] = world.get("npc_list")
   for npc: HotelNpc in people:
@@ -372,13 +380,21 @@ func run() -> void:
    player.velocity = Vector3.ZERO
    await physics_frame
    Engine.time_scale = 3.0
-   await walk_steps([["move_back",3.0]])
+   await walk_steps([["move_back",0.45]])
    Engine.time_scale = 1.0
    print("HK TRAIN BOARD DIAG: ", player.global_position)
    check(world.get("train_stage") == "aboard" and player.global_position.z > 15.0, "player physically walks from platform into train")
+   check(world.get("story_phase") == "departure" and not player.is_physics_processing(), "boarding starts the controlled skippable exterior departure insert")
+   world.call("_advance_story",5.3)
+   check(world.get("train_departure_seen") and player.is_physics_processing() and world.get("key_secured"), "unskipped departure returns to the same playable carriage without changing key state")
    world.call("save_game")
    world.call("load_game")
-   check(world.get("train_stage") == "aboard" and not world.get("train_contact_complete"), "aboard checkpoint resumes before the final confrontation")
+   check(world.get("train_stage") == "aboard" and world.get("train_departure_seen") and not world.get("train_contact_complete"), "aboard checkpoint resumes after the one-time departure insert")
+   world.set("train_departure_seen",false)
+   world.call("_begin_story","departure")
+   root.push_input(skip_event)
+   await process_frame
+   check(world.get("train_departure_seen") and player.is_physics_processing(), "Escape skips the departure insert without losing train control")
    var aboard_path: String = world.get("save_path")
    var aboard_save := SaveStore.read(aboard_path)
    var legacy_save := aboard_save.duplicate(true)
@@ -398,9 +414,9 @@ func run() -> void:
    check(player.global_position.z > 32.0, "connected carriages are physically traversable")
    await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
    world.call("_interact")
-   check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the exterior cinematic")
+   check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the skippable carriage contact exchange")
    world.call("_advance_story", 5.1)
-   check(world.get("train_contact_complete") and player.is_physics_processing(), "unskipped exterior cinematic resolves the pursuit")
+   check(world.get("train_contact_complete") and player.is_physics_processing(), "unskipped contact exchange resolves the pursuit")
    world.call("load_game")
    await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
    world.call("_interact")

@@ -44,6 +44,7 @@ var train_contact: HotelNpc
 var train_contact_complete: bool = false
 var train_car: Node3D
 var train_streaks: Array[Node3D] = []
+var departure_streaks: Array[Node3D] = []
 var train_gate: StaticBody3D
 var train_passengers: Array[StylizedPerson] = []
 var train_ambience: AudioStreamPlayer
@@ -61,6 +62,9 @@ var red_overlay: StandardMaterial3D
 var yellow_overlay: StandardMaterial3D
 var shot_audio: AudioStreamPlayer
 var gadget_audio: AudioStreamPlayer
+var train_departure_seen: bool = false
+var cinematic_title: Label
+var cinema_bars: Array[ColorRect] = []
 
 func _vec(value: Array) -> Vector3:
  return Vector3(float(value[0]), float(value[1]), float(value[2]))
@@ -169,17 +173,13 @@ func _build_markers() -> void:
  exit_label.pixel_size = 0.004
  exit_marker.add_child(exit_label)
 
-func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> void:
+func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color, finish: String = "plain") -> MeshInstance3D:
  var part := MeshInstance3D.new()
- var mesh := BoxMesh.new()
- mesh.size = size
- part.mesh = mesh
+ part.mesh = StationMaterials.box_mesh(size)
  part.position = pos
- var mat := StandardMaterial3D.new()
- mat.albedo_color = color
- mat.roughness = 0.7
- part.material_override = mat
+ part.material_override = StationMaterials.material(color, finish)
  parent.add_child(part)
+ return part
 
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()
@@ -213,6 +213,31 @@ func _build_ui() -> void:
  reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
  canvas.add_child(reticle)
+ var top_bar := ColorRect.new()
+ top_bar.anchor_right = 1.0
+ top_bar.offset_bottom = 34.0
+ top_bar.color = Color(0.008,0.015,0.018,0.96)
+ top_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ canvas.add_child(top_bar)
+ var bottom_bar := ColorRect.new()
+ bottom_bar.anchor_top = 1.0
+ bottom_bar.anchor_right = 1.0
+ bottom_bar.anchor_bottom = 1.0
+ bottom_bar.offset_top = -34.0
+ bottom_bar.color = Color(0.008,0.015,0.018,0.96)
+ bottom_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ canvas.add_child(bottom_bar)
+ cinema_bars = [top_bar,bottom_bar]
+ cinematic_title = Label.new()
+ cinematic_title.position = Vector2(32,42)
+ cinematic_title.add_theme_font_size_override("font_size",14)
+ cinematic_title.add_theme_color_override("font_color",Color(0.78,0.83,0.78))
+ cinematic_title.add_theme_color_override("font_shadow_color",Color.BLACK)
+ cinematic_title.add_theme_constant_override("shadow_offset_x",1)
+ cinematic_title.add_theme_constant_override("shadow_offset_y",1)
+ cinematic_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+ canvas.add_child(cinematic_title)
+ _set_cinematic_overlay("",false)
  red_overlay = StandardMaterial3D.new()
  red_overlay.albedo_color = Color(1,0.08,0.05,0.85)
  red_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -230,6 +255,11 @@ func _build_ui() -> void:
  gadget_audio.bus = "SFX"
  gadget_audio.stream = ProceduralSound.tone(260.0,0.12,0.035)
  add_child(gadget_audio)
+
+func _set_cinematic_overlay(title: String, visible: bool) -> void:
+ cinematic_title.text = title
+ cinematic_title.visible = visible
+ for bar: ColorRect in cinema_bars: bar.visible = visible
 
 func _begin_intro() -> void:
  player.set_physics_process(false)
@@ -488,6 +518,11 @@ func _begin_story(phase: String) -> void:
   target.collision_layer = 0
   target.set_physics_process(false)
   briefing.text = "KAI VENN: The manifest is already moving. You are too late.\nRUBY: The key is on the concourse. Secure it, then follow the courier."
+  _set_cinematic_overlay("TUNG CHUNG  /  COURIER ESCAPE",true)
+ elif phase == "departure":
+  _build_departure_exterior()
+  briefing.text = "TUNG CHUNG LINE  /  The train clears the platform. Follow the courier through the connected carriages."
+  _set_cinematic_overlay("TUNG CHUNG  /  DEPARTURE",true)
  else:
   story_set = Node3D.new()
   story_set.position = Vector3(19,3.2,37)
@@ -501,12 +536,69 @@ func _begin_story(phase: String) -> void:
   story_player.position = Vector3(0,0,-1)
   briefing.text = "KAI VENN: The market intermediary arranged the transfer. I never saw the buyer.\nRUBY: That is our lead. Return to the carriage exit."
   train_contact.visible = false
+  _set_cinematic_overlay("TUNG CHUNG  /  THE HANDOFF",true)
  briefing.visible = true
  skip_button.visible = true
  hud.visible = false
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  story_camera.make_current()
  _advance_story(0.0)
+
+func _build_departure_exterior() -> void:
+ # A separate non-interactive cinematic set is used for this short departure
+ # insert. It represents a fictional city-side train view, not an explorable or
+ # physically connected rail scene; the saved player remains at the train door.
+ departure_streaks.clear()
+ story_set = Node3D.new()
+ story_set.name = "FictionalDepartureCutaway"
+ story_set.position = Vector3(220,0,0)
+ add_child(story_set)
+ _part(story_set,Vector3(0,-0.4,0),Vector3(42,0.5,38),Color(0.045,0.075,0.085),"rubber")
+ # Exterior body: repeated windows are actual gaps between the lower/upper
+ # panels and posts, with tinted glass planes and a restrained amber waist line.
+ _part(story_set,Vector3(0,0.5,0),Vector3(4.4,0.75,27),Color(0.12,0.22,0.25),"painted_metal")
+ _part(story_set,Vector3(0,2.75,0),Vector3(4.4,0.55,27),Color(0.10,0.19,0.22),"painted_metal")
+ _part(story_set,Vector3(0,3.12,0),Vector3(4.55,0.16,27.2),Color(0.17,0.25,0.27),"brushed_metal")
+ for side: float in [-1.0,1.0]:
+  _part(story_set,Vector3(side*2.12,1.88,0),Vector3(0.14,0.30,27),Color(0.13,0.22,0.24),"painted_metal")
+  for z: float in [-11.5,-8.1,-4.7,-1.3,2.1,5.5,8.9,11.5]:
+   _part(story_set,Vector3(side*2.13,1.86,z),Vector3(0.12,1.66,0.16),Color(0.24,0.32,0.33),"brushed_metal")
+  for z: float in [-9.8,-6.4,-3.0,0.4,3.8,7.2,10.6]:
+   _part(story_set,Vector3(side*2.16,1.9,z),Vector3(0.035,1.34,2.7),Color(0.31,0.56,0.62,0.52),"glass")
+  _part(story_set,Vector3(side*2.17,0.98,0),Vector3(0.05,0.12,26),Color(0.85,0.43,0.28),"emissive")
+  _part(story_set,Vector3(side*2.18,0.34,0),Vector3(0.06,0.28,26),Color(0.055,0.09,0.10),"rubber")
+ # Mid-carriage seam and flexible connector make the paired-car composition
+ # readable in the exterior shot without interrupting the playable aisle.
+ for side: float in [-1.0,1.0]:
+  _part(story_set,Vector3(side*2.15,1.55,0),Vector3(0.15,2.5,0.24),Color(0.11,0.18,0.20),"brushed_metal")
+ _part(story_set,Vector3(0,3.12,0),Vector3(4.48,0.16,0.24),Color(0.11,0.18,0.20),"brushed_metal")
+ # End faces, a two-tone door and bogies establish direction and scale.
+ _part(story_set,Vector3(0,1.65,-13.45),Vector3(4.35,2.45,0.18),Color(0.13,0.23,0.26),"painted_metal")
+ _part(story_set,Vector3(0,1.45,-13.57),Vector3(1.28,1.95,0.06),Color(0.12,0.29,0.32),"glass")
+ for z: float in [-8.0,8.0]:
+  _part(story_set,Vector3(0,0.08,z),Vector3(3.7,0.32,2.3),Color(0.045,0.065,0.071),"brushed_metal")
+  for side: float in [-1.0,1.0]:
+   _part(story_set,Vector3(side*1.42,-0.06,z),Vector3(0.32,0.25,0.65),Color(0.09,0.13,0.14),"brushed_metal")
+ # Distant fictional block silhouettes and window lights read through the
+ # glass; the view uses no recognizable skyline, real station map or logo.
+ for i: int in range(9):
+  var z := -17.0 + float(i)*4.1
+  var height := 5.5 + float((i*7)%5)*1.25
+  var width := 2.4 + float(i%3)*0.7
+  _part(story_set,Vector3(-7.6,height*0.5,z),Vector3(width,height,3.8),Color(0.055+float(i%2)*0.018,0.09,0.105),"concrete")
+  for row: int in range(1,4):
+   var wy := 0.9 + float(row)*1.05
+   if wy > height-0.4: continue
+   for col: int in range(2):
+    _part(story_set,Vector3(-6.25,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.82,0.52,0.29,0.76) if (i+row+col)%3==0 else Color(0.25,0.58,0.64,0.65),"emissive")
+ # Passing environmental light bars create lateral motion while the camera
+ # tracks the carriage; all are non-colliding cinematic dressing.
+ for i: int in range(14):
+  var streak := Node3D.new()
+  streak.position = Vector3(3.4,1.2+float(i%4)*0.55,-16.0+float(i)*2.4)
+  story_set.add_child(streak)
+  _part(streak,Vector3.ZERO,Vector3(0.045,0.035,1.8+float(i%3)*0.8),Color(0.22,0.72,0.78,0.82) if i%3==0 else Color(0.88,0.39,0.25,0.72),"emissive")
+  departure_streaks.append(streak)
 
 func _drop_station_key() -> void:
  if key_marker.get_parent() != self:
@@ -526,6 +618,15 @@ func _advance_story(delta: float) -> void:
   target.person.animate_motion(delta, 3.4)
   story_camera.global_position = target.global_position + Vector3(4,3.0,6)
   story_camera.look_at(target.global_position + Vector3.UP,Vector3.UP)
+ elif story_phase == "departure":
+  var t := clampf(story_time / 5.2,0.0,1.0)
+  var ease := t*t*(3.0-2.0*t)
+  var focus := story_set.global_position + Vector3(0,1.55,-5.0+ease*10.0)
+  story_camera.global_position = story_set.global_position + Vector3(8.4-0.9*ease,3.7-0.65*ease,-10.0+ease*18.0)
+  story_camera.look_at(focus,Vector3.UP)
+  for i: int in range(departure_streaks.size()):
+   var streak := departure_streaks[i]
+   streak.position.z = fposmod(streak.position.z + delta*(7.5+float(i%4)*1.3) + 17.0,34.0)-17.0
  else:
   var t := clampf(story_time / 5.0,0.0,1.0)
   story_runner.position.z = 2.0 + t*3.0
@@ -536,7 +637,7 @@ func _advance_story(delta: float) -> void:
   story_player.animate_motion(delta,2.5)
   story_camera.global_position = Vector3(25,7.5,38+2.0*t)
   story_camera.look_at(Vector3(19,4.4,38+2.0*t),Vector3.UP)
- if story_time >= 5.0: _finish_story()
+ if story_time >= (5.2 if story_phase == "departure" else 5.0): _finish_story()
 
 func _finish_story() -> void:
  if story_phase.is_empty(): return
@@ -545,6 +646,12 @@ func _finish_story() -> void:
   target.visible = false
   target.collision_layer = 0
   message = "Ruby: The courier boarded. Recover the dropped key, then walk through the platform door."
+ elif story_phase == "departure":
+  train_departure_seen = true
+  message = "Ruby: The line is moving. Follow Kai through the connected carriages."
+  if story_set: story_set.queue_free()
+  story_set = null
+  departure_streaks.clear()
  else:
   train_contact_complete = true
   train_contact.complete_objective(false)
@@ -554,6 +661,7 @@ func _finish_story() -> void:
   if story_set: story_set.queue_free()
   story_set = null
  story_phase = ""
+ _set_cinematic_overlay("",false)
  story_camera.queue_free()
  briefing.visible = false
  skip_button.visible = false
@@ -605,6 +713,9 @@ func _board_train() -> void:
  if train_car == null: _build_train()
  player.global_position = Vector3(19,0.05,16.5)
  player.velocity = Vector3.ZERO
+ # Checkpoint restoration starts on the interior side of the threshold and
+ # must not replay the one-time departure insert.
+ train_departure_seen = true
  _enter_train()
 
 func _enter_train() -> void:
@@ -615,6 +726,7 @@ func _enter_train() -> void:
   if child is Label3D: (child as Label3D).text = "EXTRACTION"
  if train_contact: train_contact.visible = true
  message = "Ruby: Follow the courier through the connected carriages."
+ if not train_departure_seen: _begin_story("departure")
 
 func _sync_train_gate() -> void:
  if not train_gate: return
@@ -633,48 +745,78 @@ func _build_train() -> void:
  train_ambience.stream = ProceduralSound.ambience("train")
  add_child(train_ambience)
  for car_offset: float in [0.0,16.0]:
-  _train_solid(Vector3(0,-0.15,car_offset), Vector3(4.5,0.3,16.1), Color(0.36,0.39,0.39))
+  _train_solid(Vector3(0,-0.15,car_offset),Vector3(4.5,0.3,16.1),Color(0.25,0.31,0.32),"rubber")
+  _train_solid(Vector3(0,3.04,car_offset),Vector3(4.5,0.12,16.1),Color(0.25,0.33,0.34),"painted_metal")
   for side: float in [-1.0,1.0]:
-   _train_solid(Vector3(side*2.25,1.5,car_offset), Vector3(0.2,3,16), Color(0.66,0.69,0.67))
-  _part(train_car, Vector3(0,3.05,car_offset), Vector3(4.5,0.12,16), Color(0.46,0.52,0.51))
-  for z: float in [-6.0,-2.0,2.0,6.0]:
-   _part(train_car,Vector3(0,2.95,z+car_offset),Vector3(1.9,0.04,0.28),Color(0.88,0.88,0.76))
+   # Invisible continuous collision preserves the window openings visually but
+   # prevents an accidental step through the carriage shell.
+   _train_collision(Vector3(side*2.22,1.5,car_offset),Vector3(0.18,3.0,16.0))
+   _part(train_car,Vector3(side*2.22,0.42,car_offset),Vector3(0.18,0.84,15.8),Color(0.25,0.34,0.35),"painted_metal")
+   _part(train_car,Vector3(side*2.22,2.79,car_offset),Vector3(0.18,0.48,15.8),Color(0.20,0.29,0.31),"painted_metal")
+   _part(train_car,Vector3(side*2.22,0.93,car_offset),Vector3(0.19,0.08,15.8),Color(0.83,0.45,0.28),"emissive")
+   for z: float in [-7.65,7.65]:
+    _part(train_car,Vector3(side*2.22,1.88,z+car_offset),Vector3(0.18,1.75,0.7),Color(0.20,0.29,0.31),"painted_metal")
+   for z: float in [-5.8,-2.2,1.4,5.0]:
+    var window := _part(train_car,Vector3(side*2.13,1.87,z+car_offset),Vector3(0.035,1.55,2.65),Color(0.30,0.54,0.60,0.48),"glass")
+    window.name = "CarriageWindowGlass"
+    _part(train_car,Vector3(side*2.10,1.87,z+car_offset-1.35),Vector3(0.06,1.68,0.10),Color(0.47,0.55,0.53),"brushed_metal")
+    _part(train_car,Vector3(side*2.10,1.87,z+car_offset+1.35),Vector3(0.06,1.68,0.10),Color(0.47,0.55,0.53),"brushed_metal")
+   for z: float in [-6.0,-2.0,2.0,6.0]:
+    var streak := Node3D.new()
+    streak.position = Vector3(side*2.34,1.55,z+car_offset)
+    streak.set_meta("second_car",car_offset>0.0)
+    train_car.add_child(streak)
+    _part(streak,Vector3.ZERO,Vector3(0.035,0.045,1.1),Color(0.32,0.72,0.78,0.82),"emissive")
+    train_streaks.append(streak)
+   # Four fixed seat rows per side; fabric, armrests and pedestal are separate
+   # materials, and the central aisle remains clear for the contact encounter.
+   for z: float in [-5.3,-1.5,2.3,5.7]:
+    _train_solid(Vector3(side*1.62,0.39,z+car_offset),Vector3(1.02,0.72,1.35),Color(0.15,0.29,0.31),"fabric")
+    _part(train_car,Vector3(side*1.62,0.82,z+car_offset-0.34),Vector3(1.02,0.72,0.48),Color(0.17,0.32,0.34),"fabric")
+    _part(train_car,Vector3(side*1.62,0.83,z+car_offset+0.20),Vector3(0.82,0.10,0.56),Color(0.19,0.35,0.37),"fabric")
+    _part(train_car,Vector3(side*1.98,0.82,z+car_offset),Vector3(0.12,0.68,1.1),Color(0.42,0.48,0.46),"brushed_metal")
+    if z == -5.3 or z == 2.3:
+     _part(train_car,Vector3(side*1.10,1.18,z+car_offset+0.45),Vector3(0.72,0.055,0.48),Color(0.37,0.28,0.19),"wood")
+     _part(train_car,Vector3(side*1.10,1.15,z+car_offset+0.45),Vector3(0.74,0.035,0.50),Color(0.52,0.40,0.28),"wood")
+  _part(train_car,Vector3(0,2.94,car_offset),Vector3(1.9,0.045,0.30),Color(0.90,0.73,0.48),"emissive")
   var light := OmniLight3D.new()
-  light.position = Vector3(0,2.75,car_offset)
-  light.light_color = Color(0.83,0.91,0.85)
-  light.light_energy = 0.55
-  light.omni_range = 8.0
+  light.position = Vector3(0,2.60,car_offset)
+  light.light_color = Color(0.76,0.87,0.85) if car_offset == 0.0 else Color(1.0,0.70,0.46)
+  light.light_energy = 0.52
+  light.omni_range = 8.5
+  light.shadow_enabled = false
   light.add_to_group("quality_practicals")
   light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
   train_car.add_child(light)
+  # Interior route labels and doorway ribs visually identify the passage between cars.
+  var sign := Label3D.new()
+  sign.text = "01  /  HONG KONG LINE"
+  sign.position = Vector3(0,2.65,car_offset-7.2)
+  sign.font_size = 23
+  sign.pixel_size = 0.006
+  sign.modulate = Color(0.83,0.76,0.60)
+  train_car.add_child(sign)
+ _train_solid(Vector3(0,1.5,24),Vector3(4.5,3,0.2),Color(0.29,0.35,0.36),"painted_metal")
+ # The inter-carriage vestibule is intentionally open; side jambs and header
+ # frame it without blocking the aisle or creating an invisible threshold.
+ for side: float in [-1.0,1.0]:
+  _part(train_car,Vector3(side*1.68,1.45,8),Vector3(0.22,2.8,0.34),Color(0.18,0.28,0.30),"brushed_metal")
+ _part(train_car,Vector3(0,2.88,8),Vector3(3.35,0.18,0.34),Color(0.18,0.28,0.30),"brushed_metal")
+ for car_offset: float in [0.0,16.0]:
   for side: float in [-1.0,1.0]:
    var passenger := StylizedPerson.new()
    passenger.role = "civilian"
-   passenger.position = Vector3(side*1.55,0,car_offset-3.5)
+   passenger.appearance_seed = int(absf(side*17.0+(car_offset+5.3)*31.0))
+   passenger.position = Vector3(side*1.62,0.78,car_offset-5.3)
    passenger.rotation.y = -side*PI*0.5
+   passenger.set_seated(true)
+   passenger.idle_activity = "waiting" if car_offset == 0.0 else "phone"
    train_car.add_child(passenger)
    train_passengers.append(passenger)
-  for side: float in [-1.0,1.0]:
-   for z: float in [-5.0,-2.0,1.0,4.0]:
-    _part(train_car, Vector3(side*2.12,1.9,z+car_offset), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
-    _train_solid(Vector3(side*1.65,0.42,z+car_offset), Vector3(0.9,0.75,1.2), Color(0.24,0.31,0.34))
-    _part(train_car, Vector3(side*1.93,1.05,z+car_offset), Vector3(0.35,1.1,1.2), Color(0.24,0.31,0.34))
-  for side: float in [-1.0,1.0]:
-   for i: int in range(6):
-    var streak := Node3D.new()
-    streak.position = Vector3(side*2.07,1.85,-7.5+float(i)*2.5+car_offset)
-    streak.set_meta("second_car", car_offset > 0.0)
-    train_car.add_child(streak)
-    _part(streak,Vector3.ZERO,Vector3(0.025,0.05,1.1),Color(0.52,0.69,0.65))
-    train_streaks.append(streak)
- _train_solid(Vector3(0,1.5,24), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
- for side: float in [-1.0,1.0]:
-  _part(train_car,Vector3(side*2.0,1.5,8),Vector3(0.35,3.0,0.25),Color(0.22,0.31,0.32))
- _part(train_car,Vector3(0,2.8,8),Vector3(3.8,0.35,0.25),Color(0.22,0.31,0.32))
  train_gate = StaticBody3D.new()
  train_gate.position = Vector3(19,1.5,13.9)
  add_child(train_gate)
- _part(train_gate,Vector3.ZERO,Vector3(3.8,3,0.18),Color(0.23,0.37,0.39))
+ _part(train_gate,Vector3.ZERO,Vector3(3.8,3,0.18),Color(0.23,0.37,0.39),"painted_metal")
  var gate_shape := CollisionShape3D.new()
  var gate_box := BoxShape3D.new()
  gate_box.size = Vector3(3.8,3,0.18)
@@ -690,11 +832,21 @@ func _build_train() -> void:
  train_contact.set_physics_process(false)
  train_contact.visible = false
 
-func _train_solid(pos: Vector3, size: Vector3, color: Color) -> void:
+func _train_solid(pos: Vector3, size: Vector3, color: Color, finish: String = "plain") -> void:
  var body := StaticBody3D.new()
  body.position = pos
  train_car.add_child(body)
- _part(body, Vector3.ZERO, size, color)
+ _part(body,Vector3.ZERO,size,color,finish)
+ var collider := CollisionShape3D.new()
+ var shape := BoxShape3D.new()
+ shape.size = size
+ collider.shape = shape
+ body.add_child(collider)
+
+func _train_collision(pos: Vector3, size: Vector3) -> void:
+ var body := StaticBody3D.new()
+ body.position = pos
+ train_car.add_child(body)
  var collider := CollisionShape3D.new()
  var shape := BoxShape3D.new()
  shape.size = size
@@ -768,7 +920,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -785,6 +937,7 @@ func load_game() -> void:
  # converges on the same post-escape state as a cinematic skip (also migrates
  # older saves which did not have a cinematic flag).
  escape_seen = target_complete if operation_id == "tung_chung" else false
+ train_departure_seen = data.get("train_departure_seen", data.get("train_stage", "") == "aboard") == true
  target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
  if operation_id == "tung_chung":
   if target_complete:

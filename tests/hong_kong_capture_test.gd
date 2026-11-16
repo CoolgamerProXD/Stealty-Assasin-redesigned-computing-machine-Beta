@@ -94,6 +94,13 @@ func run() -> void:
    shot.look_at(focus,Vector3.UP)
   shot.make_current()
   await capture("hk_play_" + id)
+  if id == "tung_chung":
+   world.set("train_departure_seen",false)
+   world.call("_begin_story","departure")
+   check((world.get("story_camera") as Camera3D).current and world.get("story_phase") == "departure", "departure cutaway activates its dedicated exterior camera")
+   await capture("hk_tung_chung_departure_exterior")
+   world.call("_finish_story")
+   check(world.get("train_departure_seen") and player.is_physics_processing(), "departure cutaway returns control to the playable train")
   if id in ["the_streets", "the_district", "the_harbour"]:
    var neighbourhood: Node3D = (world.get("scene") as Node).find_child("MissionNeighbourhood", true, false)
    shot.global_position = neighbourhood.to_global(Vector3(0,6.0,9))

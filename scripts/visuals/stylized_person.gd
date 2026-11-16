@@ -31,6 +31,8 @@ var weapon_aim_blend: float = 0.0
 var phase: float = 0.0
 var idle_phase: float = 0.0
 var idle_activity: String = "idle"
+var seated: bool = false
+var seated_blend: float = 0.0
 var ground_adjust: float = 0.0
 var clothing: StandardMaterial3D
 # Identical immutable primitive meshes are reused across the population. Each
@@ -158,6 +160,10 @@ func set_role(value: String) -> void:
  role = value
  if clothing: clothing.albedo_color = _role_color()
 
+func set_seated(value: bool) -> void:
+ seated = value
+ if value: gait_speed = 0.0
+
 func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> void:
  if not left_leg: return
  var blend := 1.0 - exp(-delta * 10.0)
@@ -225,6 +231,20 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
+ # A simple seated pose supports passenger idles without changing the player
+ # rig or requiring a second skeletal-animation path.
+ seated_blend = move_toward(seated_blend, 1.0 if seated else 0.0, delta * 4.5)
+ if seated_blend > 0.001:
+  upper_body.position.y = lerpf(upper_body.position.y,-0.42,seated_blend)
+  left_leg.position.y = lerpf(left_leg.position.y,0.48,seated_blend)
+  right_leg.position.y = lerpf(right_leg.position.y,0.48,seated_blend)
+  left_leg.rotation.x = lerpf(left_leg.rotation.x,0.85,seated_blend)
+  right_leg.rotation.x = lerpf(right_leg.rotation.x,0.85,seated_blend)
+  left_knee.rotation.x = lerpf(left_knee.rotation.x,-0.95,seated_blend)
+  right_knee.rotation.x = lerpf(right_knee.rotation.x,-0.95,seated_blend)
+  var lap_pose := 0.46 if idle_activity == "phone" else 0.24
+  left_arm.rotation.x = lerpf(left_arm.rotation.x,lap_pose,seated_blend)
+  right_arm.rotation.x = lerpf(right_arm.rotation.x,0.18,seated_blend)
 
 # Approximate the low point of the rotating ellipsoid shoe in character-local
 # space. The shared root is already grounded by CharacterBody3D; we deliberately
