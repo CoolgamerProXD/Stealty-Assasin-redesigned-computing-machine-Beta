@@ -51,7 +51,11 @@ func _ready() -> void:
  pivot.add_child(arm)
  arm.add_excluded_object(get_rid())
  camera = Camera3D.new()
- Campaign.configure_camera(camera)
+ # Player is also compiled by standalone test scripts before autoloads are
+ # resolved, so look up the optional runtime service rather than statically
+ # binding the Campaign singleton from this reusable class.
+ var campaign_service := get_node_or_null("/root/Campaign")
+ if campaign_service: campaign_service.call("configure_camera", camera)
  arm.add_child(camera)
  camera.current = true
  camera.fov = 68.0
