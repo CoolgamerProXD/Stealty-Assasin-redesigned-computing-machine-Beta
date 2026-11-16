@@ -1,3 +1,23 @@
+# Full development sprint: verified checkpoint and limitations
+
+[Run 43822650401](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43822650401), code commit `c45c42e`, passed 8 Python data checks, **241** behavioral checks, **149** Hong Kong checks, **31** permanent coin checks, **20** NPC route-cycle checks, **24** camera checks, **15** rendered checks, the cinematic/UI suite and **26** Hong Kong staged visual checks. Windows export and headless launch of the menu, Initiation, Meridian, five operations, previews and USB scene passed. [Windows build](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43822650401/artifacts/14205212956); [scripted captures](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43822650401/artifacts/14205715672).
+
+The coin tests use actual Initiation record interactions, check each earned/equipped cap, duplicate protection and campaign-file reload, completed/partial legacy migration, loadout changes, deployment replenishment and local NPC distraction. The Hong Kong suite tests separate physical keys, target and extraction gates, saves and isolation, witness and evidence persistence, security warning/reaction, and simulated traversal of each new gate and both ramps. The new upper-room route ended at local `(-17, 3.95, 15.39)` in all three operations. Background actors are frozen/non-colliding for these route tests. The final extraction Escape was injected through the viewport input dispatcher, yielding the USB event without pausing. These scripted checks do not constitute a human playthrough.
+
+Fixed scripted 1280×720 Linux Xvfb/llvmpipe samples at `c45c42e` (30 frames per setting; mean FPS, mean frame time, p95 frame time):
+
+| Staged view | LOW | MEDIUM | HIGH |
+|---|---|---|---|
+| Tung Chung train | 40.60 FPS, 24.63/29.69 ms | 15.86 FPS, 63.04/65.15 ms | 15.68 FPS, 63.77/65.02 ms |
+| District neighbourhood | 53.04 FPS, 18.85/22.78 ms | 18.35 FPS, 54.49/56.42 ms | 17.42 FPS, 57.41/62.64 ms |
+| Ngong Ping vista | 52.68 FPS, 18.98/19.66 ms | 17.48 FPS, 57.20/58.15 ms | 17.64 FPS, 56.68/57.73 ms |
+
+These software-renderer figures are **not Windows or Iris Xe measurements**, do not establish performance on the target laptop, and vary between CI runners. No real-device 1% low, representative busy-area timing, or Windows memory measurement was available.
+
+Run [43821889636](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43821889636) exposed a failed synthetic extraction-skip test; viewport input dispatch and pause interception were corrected and passed in 43822650401. Run [43822365411](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43822365411) failed standalone script compilation after a camera-settings change; `c45c42e` changed player setup to runtime service lookup and passed. Earlier settings/loadout 720p bounds failures were corrected and verified. Subsequent code commits require their own completed run.
+
+No interactive Windows testing, user-hardware Iris Xe benchmark, human audio review or cultural review was possible. See [WINDOWS_PLAYTEST_CHECKLIST.md](WINDOWS_PLAYTEST_CHECKLIST.md) for a reproducible local pass.
+
 # Hong Kong expansion: latest confirmed automated checkpoint
 
 [Run 43815207190](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43815207190), code commit `566faef`, passed 8 Python data tests, 238 behavioral checks, 110 Hong Kong integration checks, 20 NPC route-cycle checks, 24 camera checks, 15 rendered checks, 12 cinematic/UI checks and 22 Hong Kong staged visual checks. The operation suite exercises all five deployments, separate physical keys, objective/extraction gating, isolated checkpoint restoration, train stage and the secure-channel event. Fixed synthetic input walks deployment-to-target and through the three city interiors, plus the station stair, mountain field-office entrance and monument terrace, with background actors frozen/non-colliding. A staged center-ray shot checks that target completion does not award its key. Security pulse checks cover warning grace, a brief player stagger and solid cover. These are scripted checks, not interactive playthroughs or general crowd/navigation coverage.

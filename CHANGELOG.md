@@ -1,3 +1,7 @@
+# Full development sprint checkpoint
+
+Added permanent, independently stored Initiation lesson coins, an equip/replenish loadout and throwable NPC distraction; three connected city neighbourhoods with walk-in rooms, upper-floor service disguises, local routines and optional lookout evidence; mission-specific witnesses, debrief outcomes and extraction presentation; local witness/guard reports; procedural character interaction and hit-response fixes; optional clue Instinct highlighting; quality-controlled practical lights, shadow and view-distance controls. These are still prototype implementations: the 15× destination, production animation/art, comprehensive combat/AI and human Windows/Iris Xe verification remain open. See TESTING.md for completed runs and WINDOWS_PLAYTEST_CHECKLIST.md for manual checks.
+
 # Hong Kong campaign expansion — early playable slices
 
 - Added five ordered Hong Kong operation scenes with separate physical key interactions, target and extraction gating, isolated checkpoints and persistent USB key tracking. A skippable secure-channel event follows final extraction; no file revelation is invented. Meridian stays optional.

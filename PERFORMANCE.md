@@ -1,3 +1,7 @@
+# Current sprint performance status
+
+LOW/MEDIUM/HIGH remain Compatibility-renderer presets. Shadow and local-light overrides and a near/far camera-distance toggle apply live; LOW suppresses shadows and local lights. Neighbourhood practicals are shadowless and bounded, and one beacon changes intensity. No dynamic GI or full day/night system is implemented. The three new neighbourhoods add geometry and agents; target-device profiling is still essential. TESTING.md records software-rendered CI samples, which must not be confused with actual Windows/Iris Xe benchmarks. WINDOWS_PLAYTEST_CHECKLIST.md describes the required measurements.
+
 # Latest software-only sample
 
 Run [43769963435](https://github.com/CoolgamerProXD/Stealty-Assasin-redesigned-computing-machine-Beta/actions/runs/43769963435), `0fb0915`, Godot 4.4.1 Compatibility at 1280×720 on a Linux Xvfb/Mesa llvmpipe VM, 60 sampled frames per preset: Meridian LOW 31.986 ms / 31.26 FPS, MEDIUM 96.326 ms / 10.38 FPS, HIGH 112.128 ms / 8.92 FPS; station LOW 36.272 ms / 27.57 FPS, MEDIUM 98.305 ms / 10.17 FPS, HIGH 105.416 ms / 9.49 FPS. This software-only sample varies significantly between CI runners and is not comparable to the target Windows/Iris Xe laptop. No renderer comparison or target-device benchmark has been performed.
