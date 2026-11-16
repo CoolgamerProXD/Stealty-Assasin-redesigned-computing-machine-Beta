@@ -283,8 +283,11 @@ func _physics_process(delta: float) -> void:
   if to_player.length_squared() > 0.01: facing = to_player.normalized()
   alert_pulse_clock -= delta
   if alert_pulse_clock <= 0.0:
+   # Alert animations may be used elsewhere, but security only fires at a
+   # currently known trespasser and only while the player is still inside.
+   if not warning_area.is_empty() and trespass_grace <= 0.0 and _player_access_area() == warning_area:
+    _fire_alert_pulse()
    alert_pulse_clock = 1.4
-   _fire_alert_pulse()
  if person:
   person.idle_activity = state
   if profile.occupation == "security":
