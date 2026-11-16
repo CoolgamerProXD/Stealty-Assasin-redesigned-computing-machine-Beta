@@ -342,6 +342,13 @@ func run() -> void:
   check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")
   if id == "tung_chung":
    check(world.get("story_phase") == "escape" and not world.get("escape_seen"), "confrontation starts the skippable escape presentation")
+   world.call("_advance_story", 5.1)
+   check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "unskipped escape restores gameplay without granting a key")
+   world.call("load_game")
+   target.set_physics_process(false)
+   check(not world.get("target_complete") and target.visible and target.collision_layer != 0, "pre-confrontation checkpoint restores the courier")
+   await move_near(world, target.global_position)
+   world.call("_interact")
    root.push_input(skip_event)
    await process_frame
    check(world.get("escape_seen") and player.is_physics_processing() and not world.get("key_secured"), "Escape skips the story and restores gameplay without awarding a key")
@@ -372,6 +379,16 @@ func run() -> void:
    world.call("save_game")
    world.call("load_game")
    check(world.get("train_stage") == "aboard" and not world.get("train_contact_complete"), "aboard checkpoint resumes before the final confrontation")
+   var aboard_path: String = world.get("save_path")
+   var aboard_save := SaveStore.read(aboard_path)
+   var legacy_save := aboard_save.duplicate(true)
+   legacy_save["position"] = [0,0.05,80]
+   legacy_save.erase("escape_seen")
+   SaveStore.write(aboard_path, legacy_save)
+   world.call("load_game")
+   check(world.get("train_stage") == "aboard" and player.global_position.z > 14.0 and player.global_position.z < 20.0, "legacy carriage checkpoint migrates safely to the new train")
+   SaveStore.write(aboard_path, aboard_save)
+   world.call("load_game")
    player.rotation.y = 0.0
    player.velocity = Vector3.ZERO
    Engine.time_scale = 3.0
@@ -382,6 +399,11 @@ func run() -> void:
    await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
    world.call("_interact")
    check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the exterior cinematic")
+   world.call("_advance_story", 5.1)
+   check(world.get("train_contact_complete") and player.is_physics_processing(), "unskipped exterior cinematic resolves the pursuit")
+   world.call("load_game")
+   await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
+   world.call("_interact")
    root.push_input(skip_event)
    await process_frame
    check(world.get("train_contact_complete") and player.is_physics_processing(), "Escape skips exterior cinematic and resolves the pursuit")
