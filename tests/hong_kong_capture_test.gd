@@ -52,6 +52,7 @@ func run() -> void:
   await physics_frame
   var intro: Camera3D = world.get("intro_camera")
   check(intro.current and world.get("intro_active"), id + " entry camera is active")
+  if id != "ngong_ping": check(world.get("has_establishing"), id + " opens on the location before cutting to the target")
   check(root.get_visible_rect().encloses((world.get("skip_button") as Button).get_global_rect()), id + " skip button fits at 720p")
   await capture("hk_intro_" + id)
   world.call("_end_intro")

@@ -22,6 +22,10 @@ var intro_start: Vector3
 var intro_end: Vector3
 var intro_look_start: Vector3
 var intro_look_end: Vector3
+var establishing_start: Vector3
+var establishing_end: Vector3
+var establishing_focus: Vector3
+var has_establishing: bool = false
 var reticle: Control
 var intro_camera: Camera3D
 var intro_time: float = 0.0
@@ -232,8 +236,21 @@ func _begin_intro() -> void:
   _:
    intro_start = at + Vector3(-5,4,7)
    intro_end = at + Vector3(4,2.5,4)
- intro_camera.global_position = intro_start
- intro_camera.look_at(intro_look_start, Vector3.UP)
+ # A short location establishing shot precedes a cut to the physical target.
+ # Ngong Ping's existing panorama already frames the public landmark.
+ var neighbourhood: Node3D = scene.find_child("MissionNeighbourhood", true, false)
+ if neighbourhood:
+  has_establishing = true
+  establishing_start = neighbourhood.to_global(Vector3(0,6,8))
+  establishing_end = neighbourhood.to_global(Vector3(0,5,14))
+  establishing_focus = neighbourhood.to_global(Vector3(0,2,42))
+ elif operation_id == "tung_chung":
+  has_establishing = true
+  establishing_start = Vector3(0,4.2,7)
+  establishing_end = Vector3(2,3.5,5)
+  establishing_focus = Vector3(-3,1.5,-4)
+ intro_camera.global_position = establishing_start if has_establishing else intro_start
+ intro_camera.look_at(establishing_focus if has_establishing else intro_look_start, Vector3.UP)
  intro_camera.make_current()
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  briefing.text = str(Campaign.progress.mission(operation_id).get("briefing", "")) + "\n\nESC  /  SKIP BRIEFING"
@@ -271,9 +288,13 @@ func _process(delta: float) -> void:
  if player == null: return
  if intro_active:
   intro_time += delta
-  var t := minf(intro_time / 6.0, 1.0)
-  intro_camera.global_position = intro_start.lerp(intro_end, t)
-  intro_camera.look_at(intro_look_start.lerp(intro_look_end, t), Vector3.UP)
+  if has_establishing and intro_time < 2.0:
+   intro_camera.global_position = establishing_start.lerp(establishing_end, intro_time / 2.0)
+   intro_camera.look_at(establishing_focus, Vector3.UP)
+  else:
+   var t := minf((intro_time - 2.0) / 4.0, 1.0) if has_establishing else minf(intro_time / 6.0, 1.0)
+   intro_camera.global_position = intro_start.lerp(intro_end, t)
+   intro_camera.look_at(intro_look_start.lerp(intro_look_end, t), Vector3.UP)
   if intro_time >= 6.0: _end_intro()
  if extraction_active:
   extraction_time += delta
