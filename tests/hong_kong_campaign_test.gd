@@ -179,6 +179,14 @@ func run() -> void:
    print("HK INTERIOR DIAG: ", id, " ", player.global_position)
    var entered: bool = player.global_position.x < -14.0 if id == "the_streets" else (player.global_position.x > 14.0 if id == "the_district" else player.global_position.z > -33.0)
    check(entered, id + " entrance is physically traversable")
+   Engine.time_scale = 3.0
+   Input.action_press(action)
+   await create_timer(2.8).timeout
+   Input.action_release(action)
+   Engine.time_scale = 1.0
+   print("HK BACK ROUTE DIAG: ", id, " ", player.global_position)
+   var exited: bool = player.global_position.x < -22.5 if id == "the_streets" else (player.global_position.x > 22.5 if id == "the_district" else player.global_position.z > -25.0)
+   check(exited, id + " interior connects to a second physical exit")
    target.collision_layer = 1
    guard.collision_layer = 1
   await move_near(world, (world.get("exit_marker") as Node3D).global_position)

@@ -342,19 +342,18 @@ func _operation_interior(x: float, z: float) -> void:
  var op := str(get_meta("operation_id", ""))
  var wall := Color(0.60,0.57,0.49) if op == "the_streets" else (Color(0.45,0.52,0.51) if op == "the_district" else Color(0.52,0.49,0.42))
  var dark := Color(0.23,0.28,0.28)
- # Front split around an actual 2.4 m doorway. Other walls and the roof are solid.
+ # Two ends are split around real 3 m doorways, giving each interior a
+ # street-facing and a backstreet-facing route. Other walls and roof are solid.
  if op == "the_harbour":
-  _box(Vector3(x,2.1,z+4.5),Vector3(10,4.2,0.25),wall,true)
   for side: float in [-1.0,1.0]:
    _box(Vector3(x+side*5,2.1,z),Vector3(0.25,4.2,9),wall,true)
-   _box(Vector3(x+side*3.1,2.1,z-4.5),Vector3(3.8,4.2,0.25),wall,true)
+   for end: float in [-1.0,1.0]:
+    _box(Vector3(x+side*3.25,2.1,z+end*4.5),Vector3(3.5,4.2,0.25),wall,true)
  else:
-  var front: float = x + (5.0 if x < 0 else -5.0)
-  var back: float = x - (5.0 if x < 0 else -5.0)
-  _box(Vector3(back,2.1,z),Vector3(0.25,4.2,9),wall,true)
   for side: float in [-1.0,1.0]:
    _box(Vector3(x,2.1,z+side*4.5),Vector3(10,4.2,0.25),wall,true)
-   _box(Vector3(front,2.1,z+side*2.85),Vector3(0.25,4.2,3.3),wall,true)
+   for end: float in [-1.0,1.0]:
+    _box(Vector3(x+end*5.0,2.1,z+side*3.0),Vector3(0.25,4.2,3.0),wall,true)
  _box(Vector3(x,4.3,z),Vector3(10,0.2,9),dark,true)
  _box(Vector3(x,0.015,z),Vector3(9.7,0.03,8.7),Color(0.48,0.45,0.38))
  # A desk and wall fixtures are tucked away from the doorway and actor routes.
@@ -484,10 +483,10 @@ func _mountain_field_office() -> void:
  add_child(marker)
  var wall := Color(0.51,0.52,0.45)
  var trim := Color(0.26,0.31,0.27)
- _box(Vector3(11.5,1.6,5),Vector3(0.2,3.2,5),wall,true)
  for side: float in [-1.0,1.0]:
   _box(Vector3(9,1.6,5+side*2.5),Vector3(5,3.2,0.2),wall,true)
-  _box(Vector3(6.5,1.6,5+side*1.75),Vector3(0.2,3.2,1.5),wall,true)
+  for end: float in [-1.0,1.0]:
+   _box(Vector3(9+end*2.5,1.6,5+side*1.75),Vector3(0.2,3.2,1.5),wall,true)
  _box(Vector3(9,3.25,5),Vector3(5.2,0.16,5.2),trim,true)
  _box(Vector3(9,0.018,5),Vector3(4.9,0.036,4.9),Color(0.45,0.43,0.36))
  _box(Vector3(11.2,1.2,6.5),Vector3(0.12,1.8,1.3),Color(0.34,0.27,0.20))
