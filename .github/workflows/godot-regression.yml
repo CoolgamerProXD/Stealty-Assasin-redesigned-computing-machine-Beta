@@ -231,6 +231,67 @@ jobs:
               for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
           PYCODE
 
+      - name: Preview Assignment 004 districts
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_district_market", "hk_district_commercial"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 tower
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_skyscraper_lobby", "hk_skyscraper_interior"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 targets and Instinct
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_instinct_target_loan_shark", "hk_instinct_target_corporate_fixer"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 harbour target
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          name = "hk_instinct_target_harbour_businessman"
+          path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+          if path.exists():
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 awareness and objective HUD
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_awareness_local", "hk_completed_hud"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+
   windows:
     if: contains(github.event.head_commit.message, '[windows]')
     runs-on: windows-latest
@@ -281,7 +342,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $path = "$env:GITHUB_WORKSPACE\build\windows"
-          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_the_streets', 'mission_the_district', 'mission_the_harbour', 'mission_ngong_ping', 'usb_decryption')
+          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_hong_kong_sandbox', 'mission_ngong_ping', 'usb_decryption')
           foreach ($scene in $scenes) {
             $log = "$path\smoke-$scene.log"
             $arguments = @('--headless', '--quit-after', '120', '--log-file', $log, "res://scenes/$scene.tscn")
