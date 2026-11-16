@@ -326,9 +326,14 @@ func run() -> void:
   if id == "ngong_ping":
    await move_near(world, (world.get("exit_marker") as Node3D).global_position)
    world.call("_interact")
+   check(world.get("extraction_active") and service.progress.completed.has(id) and not player.is_physics_processing(), "final physical extraction saves progression and starts a controlled cinematic")
+   var extraction_skip := InputEventAction.new()
+   extraction_skip.action = "release_mouse"
+   extraction_skip.pressed = true
+   world.call("_input", extraction_skip)
    await process_frame
    await process_frame
-   check(service.progress.completed.has(id), "final physical extraction completes the operation")
+   check(service.progress.completed.has(id), "skipping extraction preserves final operation completion")
    check(current_scene != null and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn" and not service.progress.usb_decryption_seen, "five keys trigger the secure-channel story event")
    if current_scene and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn":
     current_scene.call("_finish")

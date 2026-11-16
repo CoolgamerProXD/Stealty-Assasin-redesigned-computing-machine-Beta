@@ -26,6 +26,10 @@ var reticle: Control
 var intro_camera: Camera3D
 var intro_time: float = 0.0
 var intro_active: bool = true
+var extraction_active: bool = false
+var extraction_camera: Camera3D
+var extraction_time: float = 0.0
+var extraction_next: String = ""
 var target_complete: bool = false
 var key_secured: bool = false
 var train_stage: String = "station"
@@ -178,7 +182,7 @@ func _build_ui() -> void:
  skip_button.text = "SKIP  /  ESC"
  skip_button.position = Vector2(1050,660)
  skip_button.size = Vector2(180,42)
- skip_button.pressed.connect(_end_intro)
+ skip_button.pressed.connect(_skip_cinematic)
  canvas.add_child(skip_button)
  reticle = preload("res://scripts/ui/aim_reticle.gd").new()
  reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -249,13 +253,17 @@ func _end_intro() -> void:
  add_child(pause)
  message = str(config["clue"])
 
+func _skip_cinematic() -> void:
+ if intro_active: _end_intro()
+ elif extraction_active: _finish_extraction()
+
 func _input(event: InputEvent) -> void:
- if intro_active and event.is_action_pressed("release_mouse"):
+ if (intro_active or extraction_active) and event.is_action_pressed("release_mouse"):
   get_viewport().set_input_as_handled()
-  _end_intro()
+  _skip_cinematic()
 
 func _unhandled_input(event: InputEvent) -> void:
- if intro_active: return
+ if intro_active or extraction_active: return
  if event.is_action_pressed("save_game"): save_game()
  elif event.is_action_pressed("load_game"): load_game()
 
@@ -267,6 +275,15 @@ func _process(delta: float) -> void:
   intro_camera.global_position = intro_start.lerp(intro_end, t)
   intro_camera.look_at(intro_look_start.lerp(intro_look_end, t), Vector3.UP)
   if intro_time >= 6.0: _end_intro()
+ if extraction_active:
+  extraction_time += delta
+  var focus := player.global_position + Vector3.UP
+  var offset := Vector3(4,2.5,5) if operation_id in ["tung_chung", "the_streets"] else (Vector3(-4,3,5) if operation_id in ["the_district", "the_harbour"] else Vector3(0,5,8))
+  extraction_camera.global_position = focus + offset.lerp(offset * 1.35, minf(extraction_time / 3.0,1.0))
+  extraction_camera.look_at(focus, Vector3.UP)
+  if extraction_time >= 3.0:
+   _finish_extraction()
+   return
  if train_stage == "aboard":
   for streak: Node3D in train_streaks: streak.position.z = fposmod(streak.position.z + delta * 7.0 + 8.0, 16.0) - 8.0
   if train_contact and not train_contact_complete: train_contact.person.animate_motion(delta, 0.0)
@@ -280,7 +297,7 @@ func _process(delta: float) -> void:
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
  hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nINTEL %s  ·  WITNESS %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, "SECURED" if intel_found else "OPTIONAL", "SPOKEN" if witness_found else "OPTIONAL", player.equipment.coins_remaining]
- reticle.visible = player.aiming and not intro_active
+ reticle.visible = player.aiming and not intro_active and not extraction_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
  _overlay(target.person, red_overlay if player.instinct_active and not target_complete else null)
@@ -307,7 +324,7 @@ func _reachable(pos: Vector3, excluded: RID = RID()) -> bool:
  return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 func _interact() -> void:
- if intro_active: return
+ if intro_active or extraction_active: return
  var placement := str(config["placement"])
  if _reachable(target.global_position, target.get_rid()):
   if not target_complete:
@@ -356,10 +373,39 @@ func _interact() -> void:
    Campaign.ending["intel_found"] = intel_found
    Campaign.ending["witness_found"] = witness_found
    var next := "res://scenes/usb_decryption.tscn" if operation_id == "ngong_ping" and Campaign.progress.usb_ready() and not Campaign.progress.usb_decryption_seen else "res://scenes/ending.tscn"
-   get_tree().change_scene_to_file(next)
+   _begin_extraction(next)
   else: message = "Campaign progress could not be saved."
   return
  message = str(config["clue"])
+
+# Progress is committed before the presentation; Escape never duplicates a
+# completion or awards anything. The scene remains interactive only afterwards.
+func _begin_extraction(next: String) -> void:
+ if extraction_active: return
+ extraction_active = true
+ extraction_time = 0.0
+ extraction_next = next
+ player.set_physics_process(false)
+ player.set_process_unhandled_input(false)
+ player.velocity = Vector3.ZERO
+ player.aiming = false
+ extraction_camera = Camera3D.new()
+ add_child(extraction_camera)
+ var focus := player.global_position + Vector3.UP
+ extraction_camera.global_position = focus + Vector3(4,2.5,5)
+ extraction_camera.look_at(focus, Vector3.UP)
+ extraction_camera.make_current()
+ hud.visible = false
+ reticle.visible = false
+ briefing.text = str(config["extraction_line"])
+ briefing.visible = true
+ skip_button.visible = true
+ Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _finish_extraction() -> void:
+ if not extraction_active: return
+ extraction_active = false
+ get_tree().change_scene_to_file(extraction_next)
 
 # A separate fictional train carriage is staged beyond the station boundary;
 # it is entered by a controlled scene transition, never by rail access gameplay.
@@ -456,7 +502,7 @@ func _use_equipment() -> void:
  message = "Quiet Line requires a nearby unobstructed person."
 
 func _throw_coin() -> void:
- if intro_active: return
+ if intro_active or extraction_active: return
  message = CoinDistraction.use(player, npc_list, self)
 
 func _fire() -> void:
