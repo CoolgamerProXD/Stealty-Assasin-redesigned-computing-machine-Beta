@@ -3,6 +3,10 @@ extends RefCounted
 ## The ordered mission list is the single authority for unlocks and replay.
 var missions: Array[Dictionary] = []
 var equipment: Array[Dictionary] = []
+# The existing Initiation records are the three assessment lesson milestones.
+const LESSON_RECORDS := ["evaluation", "sensor_log", "dispatch"]
+var completed_lessons: Array[String] = []
+var equipped_coins: int = 0
 var completed: Array[String] = []
 var recovered_keys: Array[String] = []
 var usb_decryption_seen: bool = false
@@ -50,6 +54,16 @@ func mark_complete(id: String) -> bool:
  if not completed.has(id): completed.append(id)
  return true
 
+func award_lesson(record_id: String) -> bool:
+ if record_id not in LESSON_RECORDS: return false
+ if not completed_lessons.has(record_id): completed_lessons.append(record_id)
+ return true
+
+func set_equipped_coins(amount: int) -> bool:
+ if amount < 0 or amount > completed_lessons.size(): return false
+ equipped_coins = amount
+ return true
+
 func item_unlocked(id: String) -> bool:
  for entry: Dictionary in equipment:
   if entry["id"] == id:
@@ -86,6 +100,8 @@ func usb_ready() -> bool:
 func restore(data: Dictionary) -> void:
  completed.clear()
  recovered_keys.clear()
+ completed_lessons.clear()
+ equipped_coins = 0
  usb_decryption_seen = false
  var raw_keys: Variant = data.get("recovered_keys", [])
  var raw: Variant = data.get("completed", [])
@@ -99,6 +115,18 @@ func restore(data: Dictionary) -> void:
   var key_id := str(entry.get("key_id", ""))
   if not key_id.is_empty() and key_id in raw_keys and not recovered_keys.has(key_id): recovered_keys.append(key_id)
   if id in raw and (key_id.is_empty() or recovered_keys.has(key_id)): completed.append(id)
+ # Completed legacy Initiation necessarily required all three records.
+ # For new or partial saves, only explicitly recognized lesson IDs count.
+ var raw_lessons: Variant = data.get("completed_lessons", [])
+ if raw_lessons is Array:
+  for lesson: String in LESSON_RECORDS:
+   if lesson in raw_lessons: completed_lessons.append(lesson)
+ if completed.has("initiation"):
+  for lesson: String in LESSON_RECORDS:
+   if not completed_lessons.has(lesson): completed_lessons.append(lesson)
+ var raw_coins: Variant = data.get("equipped_coins", 0)
+ if (raw_coins is int or raw_coins is float) and is_finite(float(raw_coins)):
+  equipped_coins = clampi(int(raw_coins), 0, completed_lessons.size())
  usb_decryption_seen = data.get("usb_decryption_seen", false) == true and usb_ready() and completed.has("ngong_ping")
  var desired: Variant = data.get("selected", "training_sidearm")
  selected = "training_sidearm"
@@ -107,4 +135,4 @@ func restore(data: Dictionary) -> void:
  last_mission = last if last is String and is_unlocked(last) else ""
 
 func snapshot() -> Dictionary:
- return {"completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission}
+ return {"completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission}

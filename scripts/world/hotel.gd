@@ -365,6 +365,7 @@ func _build_player() -> void:
  player.interaction_requested.connect(_interact_nearest)
  player.equipment.configure(Campaign.progress, mission_id())
  player.equipment_use_requested.connect(_use_equipment)
+ player.coin_requested.connect(_throw_coin)
  player.fire_requested.connect(_fire)
  player.equipment_selected.connect(_select_equipment)
 
@@ -694,6 +695,10 @@ func _use_equipment() -> void:
    message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
   else: message = "Quiet Line requires a nearby unobstructed person."
 
+func _throw_coin() -> void:
+ if intro_active: return
+ message = CoinDistraction.use(player, npcs, self)
+
 func _fire() -> void:
  if not player.aiming: return
  if player.equipment.selected != "training_sidearm":
@@ -874,12 +879,18 @@ func _on_interaction(object: Interactable) -> void:
    if not player.inventory.has_item(object.identifier) and not player.inventory.add(object.identifier):
     message = "Inventory full. The record was not collected."
     return
+   if mission_id() == "initiation" and Campaign.active_mission == "initiation":
+    if not Campaign.award_initiation_lesson(object.identifier):
+     message = "Could not save lesson reward. Try again."
+     return
    if not mission.record_clue(object.identifier): return
    object.used = true
    object.visible = false
    for record: Dictionary in mission.available_records:
     if record["id"] == object.identifier:
      message = record["message"]
+     if mission_id() == "initiation" and Campaign.active_mission == "initiation":
+      message += "  /  Lesson complete: permanent coin earned."
      break
   "primary":
    if object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0:
@@ -926,6 +937,11 @@ func load_game() -> void:
   message = "No valid compatible save found."
  else:
   SessionSnapshot.restore(data, player, mission, interactables, safe_position, Campaign.progress)
+  if mission_id() == "initiation" and Campaign.active_mission == "initiation":
+   for record: String in mission.clues:
+    if not Campaign.award_initiation_lesson(record):
+     message = "Could not save migrated lesson rewards. Load again to retry."
+     return
   var relocated := _resolve_furniture_checkpoint()
   message = "Progress loaded. Moved clear of new furniture." if relocated else "Progress loaded. NPCs continue their current routines."
 
@@ -990,6 +1006,7 @@ func _process(_delta: float) -> void:
  equipment_hud.text = Campaign.item_label(player.equipment.selected).to_upper()
  if player.equipment.selected == "training_sidearm": equipment_hud.text += "\nCHARGES  %d / 5" % player.equipment.charges
  elif player.equipment.selected == "quiet_line": equipment_hud.text += "\nQ  /  USE NEARBY"
+ if mission_id() != "initiation": equipment_hud.text += "\nG  /  COINS %d" % player.equipment.coins_remaining
  crosshair.visible = player.aiming
  var nearest := _nearest()
  interaction_dot.visible = nearest != null and not player.aiming

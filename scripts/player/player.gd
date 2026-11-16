@@ -2,6 +2,7 @@ class_name HotelPlayer
 extends CharacterBody3D
 signal interaction_requested
 signal equipment_use_requested
+signal coin_requested
 signal equipment_selected(slot: int)
 signal fire_requested
 var role: String = "visitor"
@@ -90,6 +91,7 @@ func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("equip_primary"): equipment_selected.emit(0)
  if event.is_action_pressed("equip_secondary"): equipment_selected.emit(1)
  if event.is_action_pressed("use_equipment"): equipment_use_requested.emit()
+ if event.is_action_pressed("throw_coin"): coin_requested.emit()
 
 func _notification(what: int) -> void:
  if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:

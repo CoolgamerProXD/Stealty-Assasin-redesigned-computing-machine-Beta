@@ -48,6 +48,15 @@ func begin(id: String, resume: bool = false) -> bool:
  get_tree().change_scene_to_file(str(entry["scene"]))
  return true
 
+func award_initiation_lesson(record_id: String) -> bool:
+ if active_mission != "initiation": return false
+ var previous := progress.completed_lessons.duplicate()
+ if not progress.award_lesson(record_id): return false
+ if not persist():
+  progress.completed_lessons.assign(previous)
+  return false
+ return true
+
 func secure_mission_key(id: String, key_id: String) -> bool:
  if active_mission != id: return false
  var previous := progress.recovered_keys.duplicate()

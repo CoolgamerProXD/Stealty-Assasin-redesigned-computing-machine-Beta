@@ -60,6 +60,13 @@ jobs:
           timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/hong_kong_campaign_test.gd 2>&1 | tee "$RUNNER_TEMP/hk.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^HK FAIL:' "$RUNNER_TEMP/hk.log"; then exit 1; fi
           grep -E '^HK RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hk.log"
+      - name: Permanent lesson coin progression
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/coin_progress_test.gd 2>&1 | tee "$RUNNER_TEMP/coin.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^COIN FAIL:' "$RUNNER_TEMP/coin.log"; then exit 1; fi
+          grep -E '^COIN RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/coin.log"
       - name: Physical NPC route cycles
         shell: bash
         run: |
@@ -117,13 +124,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "import", "startup", "tests", "hk", "hkvisual", "soak", "camera", "visual", "cinema"):
+          for name in ("version", "import", "startup", "tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "hk", "hkvisual", "soak", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+              if name in ("tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
+                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:

@@ -134,15 +134,30 @@ func _start(id: String, resume: bool) -> void:
 
 func _loadout() -> void:
  _clear()
+ panel.add_theme_constant_override("separation", 5)
  _text("LOADOUT", 30)
- _text("Training sidearm is standard. Select Quiet Line as your optional item after unlocking it.", 17)
+ _text("Training sidearm is standard; select your optional item.", 16)
  for entry: Dictionary in Campaign.progress.equipment:
   var id := str(entry["id"])
   var unlocked: bool = Campaign.progress.item_unlocked(id)
   var tag := "SELECTED" if Campaign.progress.selected == id else ("AVAILABLE" if unlocked else "LOCKED")
   _button("%s  /  %s" % [entry.get("name", id), tag], func() -> void: _select_item(id), not unlocked)
   _text(str(entry.get("description", "")), 15)
+ var lessons: Array[String] = Campaign.progress.completed_lessons
+ var labels: Array[String] = []
+ for i: int in range(3):
+  labels.append("L%d %s" % [i + 1, "✓" if lessons.has(CampaignProgress.LESSON_RECORDS[i]) else "—"])
+ _text("COINS  /  EARNED %d   ·   EQUIPPED %d   ·   AVAILABLE %d\n%s" % [lessons.size(), Campaign.progress.equipped_coins, lessons.size() - Campaign.progress.equipped_coins, "    ".join(labels)], 16)
+ _button("COINS: %d   /   CHANGE (0–%d)" % [Campaign.progress.equipped_coins, lessons.size()], _cycle_coins, lessons.is_empty())
  _button("BACK", _home).grab_focus()
+
+func _cycle_coins() -> void:
+ var previous: int = Campaign.progress.equipped_coins
+ Campaign.progress.set_equipped_coins((previous + 1) % (Campaign.progress.completed_lessons.size() + 1))
+ if not Campaign.persist():
+  Campaign.progress.set_equipped_coins(previous)
+  notice = "Could not save coin loadout."
+ _loadout()
 
 func _select_item(id: String) -> void:
  var previous: String = Campaign.progress.selected

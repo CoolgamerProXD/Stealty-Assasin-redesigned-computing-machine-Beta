@@ -78,6 +78,7 @@ func _ready() -> void:
  player.interaction_requested.connect(_interact)
  player.equipment_selected.connect(_select_equipment)
  player.equipment_use_requested.connect(_use_equipment)
+ player.coin_requested.connect(_throw_coin)
  player.fire_requested.connect(_fire)
  _build_markers()
  _build_ui()
@@ -260,7 +261,7 @@ func _process(delta: float) -> void:
  var equipment_text := Campaign.item_label(player.equipment.selected)
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
- hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nE INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message]
+ hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nG COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, player.equipment.coins_remaining]
  reticle.visible = player.aiming and not intro_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
@@ -420,6 +421,10 @@ func _use_equipment() -> void:
    message = "Quiet Line temporarily incapacitated " + npc.profile.identity + "."
    return
  message = "Quiet Line requires a nearby unobstructed person."
+
+func _throw_coin() -> void:
+ if intro_active: return
+ message = CoinDistraction.use(player, npc_list, self)
 
 func _fire() -> void:
  if not player.aiming or player.equipment.selected != "training_sidearm" or player.equipment.charges <= 0: return

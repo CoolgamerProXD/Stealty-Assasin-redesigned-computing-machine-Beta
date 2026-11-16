@@ -38,6 +38,7 @@ load_game={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":4194
 
 equip_primary={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":49)]}
 equip_secondary={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":50)]}
+throw_coin={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":71)]}
 use_equipment={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":81)]}
 aim={"deadzone":0.2,"events":[Object(InputEventMouseButton,"button_index":2)]}
 fire={"deadzone":0.2,"events":[Object(InputEventMouseButton,"button_index":1)]}
