@@ -1,11 +1,11 @@
 # PROJECT ASSASSIN — Technical Handoff and Recovery Audit
 
-**Audit date:** 2026-11-16 (UTC)  
-**Audited checkout:** `CoolgamerProXD/Stealty-Assasin-reimagined-Beta` (the repository actually configured as `origin` in this checkout)  
-**Branch:** `arena/9199c996-stealty-assasin-reimagined-bet`  
-**Exact starting HEAD:** `c5c9f11d9079ba9c906c520ce25227ffd8476fe7`  
-**HEAD subject:** `Document Tung Chung verification and remaining limitations [skip ci]`  
-**Declared parent:** `ddf41938ef1934a3cc26a2d9cdf7c25473fe6ee3` (the parent object is not present in this shallow local clone)  
+**Audit date:** 2026-11-16 (UTC)
+**Audited checkout:** `CoolgamerProXD/Stealty-Assasin-reimagined-Beta` (the repository actually configured as `origin` in this checkout)
+**Branch:** `arena/9199c996-stealty-assasin-reimagined-bet`
+**Exact starting HEAD:** `c5c9f11d9079ba9c906c520ce25227ffd8476fe7`
+**HEAD subject:** `Document Tung Chung verification and remaining limitations [skip ci]`
+**Declared parent:** `ddf41938ef1934a3cc26a2d9cdf7c25473fe6ee3` (the parent object is not present in this shallow local clone)
 **Working tree at start:** clean. No gameplay/source files were changed during this audit.
 
 > The request named `Stealty-Assasin-redesigned-computing-machine-Beta`, while the supplied checkout's `origin` is `Stealty-Assasin-reimagined-Beta`. The present checkout, Git remote configuration, and verified CI run URL belong to the latter. This handoff describes the checkout actually audited, not an uninspected repository inferred from the request URL.
