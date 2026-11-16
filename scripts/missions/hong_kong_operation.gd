@@ -9,6 +9,8 @@ var player: HotelPlayer
 var target: HotelNpc
 var guard: HotelNpc
 var key_marker: Node3D
+var intel_marker: Node3D
+var intel_found: bool = false
 var exit_marker: Node3D
 var hud: Label
 var fps_label: Label
@@ -104,6 +106,18 @@ func _build_markers() -> void:
   _part(key_marker, Vector3(0,0.7,-0.36), Vector3(0.35,0.3,0.05), Color(0.72,0.58,0.30))
  # Gold light-shaped marker is a fictional USB, not an automatic pickup.
  _part(key_marker, Vector3(0,0.9 if placement == "safe" else 0.15,0), Vector3(0.12,0.08,0.28), Color(0.90,0.68,0.23))
+ intel_marker = Node3D.new()
+ intel_marker.name = "OptionalMissionIntel"
+ var annex: Node = scene.find_child("MissionNeighbourhood", true, false)
+ intel_marker.position = annex.call("intel_world_position") if annex else _vec(config["intel_pos"])
+ add_child(intel_marker)
+ _part(intel_marker, Vector3(0,0.22,0), Vector3(0.55,0.42,0.45), Color(0.22,0.48,0.55))
+ var intel_label := Label3D.new()
+ intel_label.text = "OPTIONAL INTEL"
+ intel_label.position = Vector3(0,1.0,0)
+ intel_label.font_size = 27
+ intel_label.pixel_size = 0.004
+ intel_marker.add_child(intel_label)
  exit_marker = Node3D.new()
  exit_marker.name = "Extraction"
  exit_marker.position = _vec(config["exit"])
@@ -261,7 +275,7 @@ func _process(delta: float) -> void:
  var equipment_text := Campaign.item_label(player.equipment.selected)
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
- hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nG COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, player.equipment.coins_remaining]
+ hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nINTEL %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, "SECURED" if intel_found else "OPTIONAL", player.equipment.coins_remaining]
  reticle.visible = player.aiming and not intro_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
@@ -309,6 +323,11 @@ func _interact() -> void:
  if placement == "safe" and not key_secured and _reachable(key_marker.global_position):
   _secure_key()
   return
+ if not intel_found and _reachable(intel_marker.global_position):
+  intel_found = true
+  intel_marker.visible = false
+  message = "Ruby: " + str(config["intel_text"])
+  return
  if train_contact and not train_contact_complete and _reachable(train_contact.global_position, train_contact.get_rid()):
   train_contact_complete = true
   train_contact.complete_objective(false)
@@ -321,7 +340,7 @@ func _interact() -> void:
    _board_train()
   elif operation_id == "tung_chung" and not train_contact_complete:
    message = "Ruby: Speak to the train contact before leaving the carriage."
-  elif Campaign.complete(operation_id, 0):
+  elif Campaign.complete(operation_id, 1 if intel_found else 0):
    var next := "res://scenes/usb_decryption.tscn" if operation_id == "ngong_ping" and Campaign.progress.usb_ready() and not Campaign.progress.usb_decryption_seen else "res://scenes/ending.tscn"
    get_tree().change_scene_to_file(next)
   else: message = "Campaign progress could not be saved."
@@ -458,7 +477,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "intel_found": intel_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -483,6 +502,8 @@ func load_game() -> void:
   train_contact = null
   train_car = null
   if previous_stage == "aboard": player.global_position = _vec(config["spawn"])
+ intel_found = data.get("intel_found", false) == true
+ intel_marker.visible = not intel_found
  target_complete = data.get("target_complete", false) == true
  target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
  key_secured = saved_key_valid
@@ -492,9 +513,11 @@ func load_game() -> void:
  if pos is Array and pos.size() == 3 and (pos[0] is float or pos[0] is int) and (pos[1] is float or pos[1] is int) and (pos[2] is float or pos[2] is int):
   var p := _vec(pos)
   var bound := 21.0 if config["map"] == "station" else 44.0
-  var in_bounds := absf(p.x) < bound and absf(p.z) < bound
-  if train_stage == "aboard": in_bounds = absf(p.x) < 2.0 and p.z > 72.5 and p.z < 87.5
-  if is_finite(p.x) and is_finite(p.y) and is_finite(p.z) and in_bounds and p.y > -1.0 and p.y < 5.0:
+  var in_bounds := absf(p.x) < bound and absf(p.z) < bound and p.y > -1.0 and p.y < 5.0
+  var annex: Node = scene.find_child("MissionNeighbourhood", true, false)
+  if annex and annex.call("contains_world_position", p): in_bounds = true
+  if train_stage == "aboard": in_bounds = absf(p.x) < 2.0 and p.z > 72.5 and p.z < 87.5 and p.y > -1.0 and p.y < 5.0
+  if is_finite(p.x) and is_finite(p.y) and is_finite(p.z) and in_bounds:
    player.global_position = p
    player.velocity = Vector3.ZERO
  message = "Checkpoint loaded. NPC routines are transient."

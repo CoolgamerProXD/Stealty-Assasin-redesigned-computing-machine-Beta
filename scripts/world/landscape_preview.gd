@@ -196,8 +196,15 @@ func _process(_delta: float) -> void:
 
 func _ground(color: Color) -> void:
  _box(Vector3(0,-0.2,0), Vector3(90,0.4,90), color, true)
- for x: float in [-45.0,45.0]: _box(Vector3(x,2,0),Vector3(0.3,4,90),color.darkened(0.2),true)
- for z: float in [-45.0,45.0]: _box(Vector3(0,2,z),Vector3(90,4,0.3),color.darkened(0.2),true)
+ var op := str(get_meta("operation_id", "")) if preview_kind == "city" else ""
+ for x: float in [-45.0,45.0]:
+  if (x < 0.0 and op == "the_streets") or (x > 0.0 and op == "the_district"):
+   for z: float in [-25.5,25.5]: _box(Vector3(x,2,z),Vector3(0.3,4,39),color.darkened(0.2),true)
+  else: _box(Vector3(x,2,0),Vector3(0.3,4,90),color.darkened(0.2),true)
+ for z: float in [-45.0,45.0]:
+  if z < 0.0 and op == "the_harbour":
+   for x: float in [-25.5,25.5]: _box(Vector3(x,2,z),Vector3(39,4,0.3),color.darkened(0.2),true)
+  else: _box(Vector3(0,2,z),Vector3(90,4,0.3),color.darkened(0.2),true)
 
 # Parked street vehicles are fictional low-poly props, not controllable. Their
 # simple body collider is outside all public-space NPC routes and the ramp.
@@ -331,6 +338,22 @@ func _city() -> void:
  for x: float in [-35.0,-25.0,-15.0,-5.0,5.0,15.0,25.0,35.0]:
   _box(Vector3(x,1.4,-38),Vector3(0.12,2.8,0.12),dark)
   _box(Vector3(x,2.85,-38),Vector3(0.7,0.1,0.7),Color(0.95,0.80,0.58))
+ var op := str(get_meta("operation_id", ""))
+ if op in ["the_streets", "the_district", "the_harbour"]:
+  var annex := preload("res://scripts/world/hong_kong_annex.gd").new()
+  annex.operation_id = op
+  annex.name = "MissionNeighbourhood"
+  if op == "the_streets":
+   annex.position = Vector3(-45,0,0)
+   annex.rotation.y = -PI/2.0
+  elif op == "the_district":
+   annex.position = Vector3(45,0,0)
+   annex.rotation.y = PI/2.0
+  else:
+   annex.position = Vector3(0,0,-45)
+   annex.rotation.y = PI
+  add_child(annex)
+  annex.build()
 
 # Three mission-specific, walk-in interiors replace (rather than overlap) a
 # solid scenic block. The surrounding city remains a shared destination.

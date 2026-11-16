@@ -220,8 +220,39 @@ func run() -> void:
    print("HK BACK ROUTE DIAG: ", id, " ", player.global_position)
    var exited: bool = player.global_position.x < -22.5 if id == "the_streets" else (player.global_position.x > 22.5 if id == "the_district" else player.global_position.z > -25.0)
    check(exited, id + " interior connects to a second physical exit")
+   var annex: Node3D = city.find_child("MissionNeighbourhood", true, false)
+   check(annex != null and annex.find_child("NeighbourhoodStreetNavigation", true, false) != null, id + " has a connected mission-specific neighbourhood")
+   player.global_position = annex.to_global(Vector3(0,0.05,-3))
+   player.rotation.y = annex.global_rotation.y
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   Input.action_press("move_back")
+   await create_timer(5.0).timeout
+   Input.action_release("move_back")
+   Engine.time_scale = 1.0
+   print("HK ANNEX GATE DIAG: ", id, " ", annex.to_local(player.global_position))
+   check(annex.to_local(player.global_position).z > 7.0, id + " gateway is physically traversable from the original city")
+   player.global_position = annex.to_global(Vector3(0,0.05,37))
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   Input.action_press("move_back")
+   await create_timer(5.0).timeout
+   Input.action_release("move_back")
+   Engine.time_scale = 1.0
+   print("HK ANNEX RAMP DIAG: ", id, " ", annex.to_local(player.global_position))
+   check(annex.to_local(player.global_position).y > 2.7 and annex.to_local(player.global_position).z > 48.0, id + " elevated lookout is reachable via the physical ramp")
    target.collision_layer = 1
    guard.collision_layer = 1
+  var intel: Node3D = world.get("intel_marker")
+  await move_near(world, intel.global_position)
+  world.call("_interact")
+  check(world.get("intel_found") and not world.get("key_secured"), id + " optional intel is physically collected without granting a key")
+  world.call("save_game")
+  world.set("intel_found", false)
+  world.call("load_game")
+  check(world.get("intel_found"), id + " optional intel survives checkpoint restore")
   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
   world.call("_interact")
   check(not service.progress.completed.has(id) and not world.get("key_secured"), id + " extraction rejects missing target and key")
