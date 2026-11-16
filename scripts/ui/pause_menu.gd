@@ -44,6 +44,7 @@ func _resume() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _clear() -> void:
+ panel.position.y = 110
  for child: Node in panel.get_children():
   panel.remove_child(child)
   child.queue_free()
@@ -78,6 +79,7 @@ func _main() -> void:
 func _settings() -> void:
  state = "settings"
  _clear()
+ panel.position.y = 40
  var settings := SettingsPanel.new()
  panel.add_child(settings)
  settings.back_requested.connect(func() -> void:

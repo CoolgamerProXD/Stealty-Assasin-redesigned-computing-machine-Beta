@@ -50,6 +50,7 @@ func _build_shell() -> void:
  add_child(panel)
 
 func _clear() -> void:
+ panel.position.y = 110
  panel.add_theme_constant_override("separation", 10)
  for child: Node in panel.get_children():
   panel.remove_child(child)
@@ -172,6 +173,7 @@ func _select_item(id: String) -> void:
 
 func _settings() -> void:
  _clear()
+ panel.position.y = 40
  var settings := SettingsPanel.new()
  panel.add_child(settings)
  settings.back_requested.connect(_home)
