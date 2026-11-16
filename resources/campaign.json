@@ -24,29 +24,52 @@
     {
       "id": "tung_chung",
       "name": "02  /  TUNG CHUNG",
-      "description": "In development. Explore the early station map preview from the main menu.",
-      "scene": "",
-      "briefing": "",
-      "debrief": "",
-      "unlock": ""
+      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "scene": "res://scenes/mission_tung_chung.tscn",
+      "briefing": "Ruby: A Covenant courier is moving a train manifest through Tung Chung. Confront the courier, retrieve the key from the courier and reach the platform exit.",
+      "debrief": "Ruby: The manifest points to a handoff in the streets. The train has not revealed who commissioned it.",
+      "unlock": "",
+      "key_id": "key_01"
     },
     {
-      "id": "hong_kong",
-      "name": "03  /  HONG KONG",
-      "description": "Planned city chapter; not playable yet.",
-      "scene": "",
-      "briefing": "",
-      "debrief": "",
-      "unlock": ""
+      "id": "the_streets",
+      "name": "03  /  THE STREETS",
+      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "scene": "res://scenes/mission_the_streets.tscn",
+      "briefing": "Ruby: A market intermediary is arranging the next transfer. Confront the intermediary; their bodyguard carries the second key.",
+      "debrief": "Ruby: The handoff leads to a commercial office. Keep the key separate from the manifest.",
+      "unlock": "",
+      "key_id": "key_02"
+    },
+    {
+      "id": "the_district",
+      "name": "04  /  THE DISTRICT",
+      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "scene": "res://scenes/mission_the_district.tscn",
+      "briefing": "Ruby: A district broker has the office route. Confront the broker and find the key in the nearby records safe.",
+      "debrief": "Ruby: The broker points to a waterfront meeting. We still do not know who is behind the Covenant transfer.",
+      "unlock": "",
+      "key_id": "key_03"
+    },
+    {
+      "id": "the_harbour",
+      "name": "05  /  THE HARBOUR",
+      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "scene": "res://scenes/mission_the_harbour.tscn",
+      "briefing": "Ruby: A waterfront liaison is managing the transfer. Confront the liaison; their bodyguard holds the fourth key.",
+      "debrief": "Ruby: The trail ends in the mountains. Do not confuse the public landmark with the operation.",
+      "unlock": "",
+      "key_id": "key_04"
     },
     {
       "id": "ngong_ping",
-      "name": "04  /  NGONG PING",
-      "description": "Environment and target design in progress; not playable yet.",
-      "scene": "",
-      "briefing": "",
-      "debrief": "",
-      "unlock": ""
+      "name": "06  /  NGONG PING",
+      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "scene": "res://scenes/mission_ngong_ping.tscn",
+      "briefing": "Ruby: The final coordinator is in the surrounding mountain district. Confront them and recover the fifth key from the field safe, away from the landmark.",
+      "debrief": "Ruby: All five keys are secure. The USB can be decrypted on the secure channel; the contents still need analysis.",
+      "unlock": "",
+      "key_id": "key_05"
     }
   ],
   "equipment": [
@@ -57,7 +80,12 @@
       "unlock_after": "",
       "missions": [
         "initiation",
-        "meridian"
+        "meridian",
+        "tung_chung",
+        "the_streets",
+        "the_district",
+        "the_harbour",
+        "ngong_ping"
       ],
       "charges": 5
     },
@@ -67,7 +95,12 @@
       "description": "Temporarily disables one nearby person without graphic effects. Q uses it.",
       "unlock_after": "initiation",
       "missions": [
-        "meridian"
+        "meridian",
+        "tung_chung",
+        "the_streets",
+        "the_district",
+        "the_harbour",
+        "ngong_ping"
       ],
       "charges": 0
     }

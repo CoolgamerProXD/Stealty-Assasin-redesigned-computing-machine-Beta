@@ -53,6 +53,13 @@ jobs:
           timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/run_tests.gd 2>&1 | tee "$RUNNER_TEMP/tests.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^FAIL:' "$RUNNER_TEMP/tests.log"; then exit 1; fi
           grep -E '^RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/tests.log"
+      - name: Integrated Hong Kong campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/hong_kong_campaign_test.gd 2>&1 | tee "$RUNNER_TEMP/hk.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^HK FAIL:' "$RUNNER_TEMP/hk.log"; then exit 1; fi
+          grep -E '^HK RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hk.log"
       - name: Physical NPC route cycles
         shell: bash
         run: |

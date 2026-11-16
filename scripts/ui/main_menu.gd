@@ -90,22 +90,26 @@ func _home() -> void:
 
 func _missions() -> void:
  _clear()
- # Five entries plus descriptions and Back must fit the 720p design canvas.
  panel.add_theme_constant_override("separation", 3)
  _text("MISSION SELECTION", 30)
- _text("Assignments and exploration previews", 15)
+ _text("Assignments  /  USB keys: %d / 5" % Campaign.progress.recovered_keys.size(), 15)
  for entry: Dictionary in Campaign.progress.missions:
   var id := str(entry["id"])
-  var previews := {"tung_chung": "res://scenes/tung_chung_preview.tscn", "hong_kong": "res://scenes/hong_kong_preview.tscn", "ngong_ping": "res://scenes/ngong_ping_preview.tscn"}
-  if previews.has(id):
-   var path := str(previews[id])
-   _button("%s   —   EXPLORE PREVIEW" % entry.get("name", id), func() -> void: get_tree().change_scene_to_file(path))
-   continue
   var unlocked: bool = Campaign.progress.is_unlocked(id)
   var status := "COMPLETED / REPLAY" if Campaign.progress.completed.has(id) else ("AVAILABLE" if unlocked else "LOCKED")
-  var label := "%s   —   %s" % [entry.get("name", id), status]
-  _button(label, func() -> void: _briefing(id), not unlocked)
+  _button("%s   —   %s" % [entry.get("name", id), status], func() -> void: _briefing(id), not unlocked)
+ _button("EXPLORATION PREVIEWS", _previews)
  _button("BACK", _home).grab_focus()
+
+func _previews() -> void:
+ _clear()
+ panel.add_theme_constant_override("separation", 3)
+ _text("EXPLORATION PREVIEWS", 30)
+ _text("Independent map studies; no campaign progress", 15)
+ for entry: Array in [["TUNG CHUNG", "res://scenes/tung_chung_preview.tscn"], ["HONG KONG", "res://scenes/hong_kong_preview.tscn"], ["NGONG PING", "res://scenes/ngong_ping_preview.tscn"]]:
+  var path := str(entry[1])
+  _button(str(entry[0]) + "  —  EXPLORE PREVIEW", func() -> void: get_tree().change_scene_to_file(path))
+ _button("BACK", _missions).grab_focus()
 
 func _briefing(id: String) -> void:
  _clear()

@@ -569,7 +569,7 @@ func run() -> void:
  check(campaign.is_unlocked("initiation") and not campaign.is_unlocked("meridian") and not campaign.is_unlocked("future"), "campaign starts in chronological order")
  check(not campaign.item_unlocked("quiet_line") and not campaign.select_item("quiet_line"), "locked equipment cannot be selected")
  check(campaign.mark_complete("initiation") and campaign.is_unlocked("meridian") and campaign.item_unlocked("quiet_line"), "completion unlocks Meridian and quiet line")
- check(campaign.next_mission().is_empty() and campaign.is_unlocked("meridian"), "unfinished Hong Kong chapter stays locked while legacy Meridian remains selectable")
+ check(campaign.next_mission() == "tung_chung" and campaign.is_unlocked("meridian"), "Hong Kong follows Initiation without requiring optional Meridian")
  check(campaign.select_item("quiet_line") and campaign.item_allowed("quiet_line", "meridian") and not campaign.item_allowed("quiet_line", "initiation"), "equipment restrictions enforced by campaign data")
  var campaign_copy := CampaignProgress.new()
  campaign_copy.configure(campaign_data)
@@ -968,7 +968,7 @@ func run() -> void:
   await process_frame
   await process_frame
   var menu: Node = current_scene
-  menu.call("_missions")
+  menu.call("_previews")
   # Let the container lay out before checking that the actual button is on
   # screen; emitting a signal alone cannot prove mouse reachability.
   await process_frame

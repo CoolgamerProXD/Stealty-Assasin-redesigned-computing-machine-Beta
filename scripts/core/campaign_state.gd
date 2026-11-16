@@ -25,6 +25,8 @@ func persist() -> bool:
 func checkpoint_path(id: String) -> String:
  if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
  if id == "initiation": return "user://initiation_save.json"
+ if id in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
+  return "user://blackline_" + id + "_save.json"
  return ""
 
 func has_checkpoint(id: String) -> bool:
@@ -44,6 +46,15 @@ func begin(id: String, resume: bool = false) -> bool:
  active_mission = id
  load_checkpoint = resume
  get_tree().change_scene_to_file(str(entry["scene"]))
+ return true
+
+func secure_mission_key(id: String, key_id: String) -> bool:
+ if active_mission != id: return false
+ var previous := progress.recovered_keys.duplicate()
+ if not progress.secure_key(id, key_id): return false
+ if not persist():
+  progress.recovered_keys.assign(previous)
+  return false
  return true
 
 func complete(id: String, count: int) -> bool:
