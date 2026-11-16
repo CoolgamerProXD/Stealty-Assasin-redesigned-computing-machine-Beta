@@ -393,6 +393,12 @@ func _mountain() -> void:
  # rather than presenting a six-metre miniature in the landscape.
  _box(Vector3(0,1.2,-29),Vector3(34,2.4,18),Color(0.42,0.39,0.33),true)
  _box(Vector3(0,2.43,-29),Vector3(32,0.15,16),Color(0.64,0.53,0.36))
+ _buddha_approach()
+ # A broad lotus-like ring sits on the pedestal; it remains scenic only.
+ for i: int in range(16):
+  var angle := TAU * float(i) / 16.0
+  var petal := _sphere(Vector3(cos(angle)*12.3,2.80,-29+sin(angle)*5.7),Vector3(3.8,0.65,2.5),Color(0.48,0.39,0.27))
+  petal.rotation.y = -angle
  var landmark := Node3D.new()
  landmark.name = "ScenicBuddhaLandmark"
  landmark.position = Vector3(0,2.5,-29)
@@ -407,6 +413,11 @@ func _mountain() -> void:
  var raised_arm := _landmark_part(landmark, Vector3(-1.95,3.15,-28.75),Vector3(0.85,1.85,0.80),Color(0.43,0.35,0.25))
  raised_arm.rotation.z = -0.22
  _landmark_part(landmark, Vector3(-2.10,4.03,-28.50),Vector3(0.60,0.80,0.24),Color(0.47,0.38,0.27))
+ # Separate raised fingers and thumb distinguish the blessing gesture.
+ for finger: int in range(4):
+  _landmark_part(landmark, Vector3(-2.32+float(finger)*0.14,4.47,-28.50),Vector3(0.11,0.35,0.14),Color(0.47,0.38,0.27))
+ var thumb := _landmark_part(landmark, Vector3(-1.75,4.02,-28.48),Vector3(0.12,0.33,0.14),Color(0.47,0.38,0.27))
+ thumb.rotation.z = -0.75
  _landmark_part(landmark, Vector3(1.10,2.35,-27.78),Vector3(1.2,0.45,0.55),Color(0.47,0.38,0.27))
  _landmark_part(landmark, Vector3(0,2.15,-27.85),Vector3(1.9,0.45,0.8),Color(0.47,0.38,0.27))
  # Broad, low-contrast robe folds follow the chest rather than using signage.
@@ -424,6 +435,13 @@ func _mountain() -> void:
  head.position = Vector3(0,5.0,-29) - Vector3(0,1.65,-29)
  landmark.add_child(head)
  _landmark_part(landmark, Vector3(0,5.75,-29),Vector3(0.55,0.5,0.55),Color(0.37,0.30,0.22))
+ # Small stylised curls describe the hair cap rather than a generic head.
+ for row: int in range(3):
+  for column: int in range(-2,3):
+   var x := float(column) * 0.24
+   var y := 5.53 + float(row) * 0.12
+   var z := -29.48 + float(row) * 0.10
+   _landmark_part(landmark, Vector3(x,y,z),Vector3(0.18,0.18,0.18),Color(0.36,0.30,0.22))
  for x: float in [-0.72,0.72]:
   _landmark_part(landmark, Vector3(x,4.93,-28.94),Vector3(0.23,0.47,0.20),Color(0.46,0.37,0.26))
  for x: float in [-0.25,0.25]:
@@ -456,6 +474,24 @@ func _mountain() -> void:
   _box(Vector3(x,6.3,30),Vector3(2.0,2.3,1.8),Color(0.66,0.26,0.18))
   _box(Vector3(x,6.6,29.08),Vector3(1.6,1.1,0.05),Color(0.30,0.46,0.48))
   _box(Vector3(x,7.8,30),Vector3(0.12,0.7,0.12),dark)
+
+# A broad physical approach to the public viewing terrace. The sloped
+# collider backs the visible shallow steps and overlaps the existing plinth.
+func _buddha_approach() -> void:
+ var ramp := StaticBody3D.new()
+ ramp.name = "BuddhaViewingApproach"
+ ramp.position = Vector3(0,1.17,-18.0)
+ ramp.rotation.x = atan(2.4 / 5.0)
+ add_child(ramp)
+ var shape := BoxShape3D.new()
+ shape.size = Vector3(6.0,0.14,sqrt(2.4*2.4+5.0*5.0))
+ var collider := CollisionShape3D.new()
+ collider.shape = shape
+ ramp.add_child(collider)
+ for i: int in range(10):
+  _box(Vector3(0, float(i)*0.24+0.03, -15.5-float(i)*0.5), Vector3(6.0,0.06,0.48), Color(0.61,0.57,0.48))
+ for side: float in [-1.0,1.0]:
+  _box(Vector3(side*3.15,0.65,-17.8),Vector3(0.15,1.3,5.4),Color(0.44,0.41,0.35))
 
 func _landmark_part(parent: Node3D, pos: Vector3, dimensions: Vector3, color: Color) -> MeshInstance3D:
  var visual := _sphere(pos, dimensions, color)

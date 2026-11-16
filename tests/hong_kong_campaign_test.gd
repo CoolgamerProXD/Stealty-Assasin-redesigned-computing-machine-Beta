@@ -84,11 +84,27 @@ func run() -> void:
    await physics_frame
    Engine.time_scale = 3.0
    Input.action_press("move_forward")
-   await create_timer(2.8).timeout
+   await create_timer(3.6).timeout
    Input.action_release("move_forward")
    Engine.time_scale = 1.0
    print("HK STAIR DIAG: ", player.global_position)
    check(player.global_position.y > 3.0 and player.global_position.z < -3.8, "station stairs connect the concourse to the upper landing")
+  if id == "ngong_ping":
+   target.collision_layer = 0
+   guard.collision_layer = 0
+   player.global_position = Vector3(0,0.05,-14)
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   Input.action_press("move_forward")
+   await create_timer(4.0).timeout
+   Input.action_release("move_forward")
+   Engine.time_scale = 1.0
+   print("HK BUDDHA DIAG: ", player.global_position)
+   check(player.global_position.y > 2.2 and player.global_position.z < -20.0, "public Buddha viewing approach reaches the terrace")
+   target.collision_layer = 1
+   guard.collision_layer = 1
   if id in ["the_streets", "the_district", "the_harbour"]:
    var city: Node = world.get("scene")
    check(city.find_child("InteriorLocalNavigation", true, false) != null, id + " has a walk-in mission interior")
