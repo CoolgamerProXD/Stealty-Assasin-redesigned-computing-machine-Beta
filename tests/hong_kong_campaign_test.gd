@@ -110,6 +110,13 @@ func run() -> void:
  await physics_frame
  check(witness.help_target == officer and witness._try_deliver_report(), "visitor gives a local in-person report to nearby security")
  check(officer.state == "suspicious" and officer.memory.observations.size() == 1 and not witness._try_deliver_report(), "guard investigates one report without immediate hostility or duplicate reports")
+ officer.set_state("idle")
+ officer.memory.observations.clear()
+ witness.warning_cooldown = 0.0
+ witness.set_state("idle")
+ witness.observe_incapacitated(Vector3(42,0,40))
+ check(witness.state == "seeking_help" and witness.incident_help, "a civilian discovering an incapacitated person seeks help rather than attacking")
+ check(witness._try_deliver_report() and officer.state == "suspicious", "a civilian can report an observed incapacitated person to local security")
  officer.queue_free()
  witness.queue_free()
  check(service.progress.mark_complete("initiation"), "Initiation unlocks Hong Kong without mandatory Meridian")

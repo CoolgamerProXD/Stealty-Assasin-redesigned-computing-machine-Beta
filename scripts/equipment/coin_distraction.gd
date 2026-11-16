@@ -16,7 +16,7 @@ static func use(player: HotelPlayer, npcs: Array[HotelNpc], world: Node3D) -> St
  var floor_hit := player.get_world_3d().direct_space_state.intersect_ray(down)
  if not floor_hit.is_empty(): end = floor_hit["position"] + Vector3.UP * 0.04
  player.equipment.coins_remaining -= 1
- player.body_mesh.use_quiet_tool()
+ player.body_mesh.interact()
  var marker := MeshInstance3D.new()
  var mesh := CylinderMesh.new()
  mesh.top_radius = 0.12
@@ -29,6 +29,11 @@ static func use(player: HotelPlayer, npcs: Array[HotelNpc], world: Node3D) -> St
  marker.material_override = material
  world.add_child(marker)
  marker.global_position = end
+ var chime := AudioStreamPlayer3D.new()
+ chime.stream = ProceduralSound.tone(740.0, 0.12, 0.07)
+ chime.max_distance = 8.0
+ marker.add_child(chime)
+ chime.play()
  var timer := world.get_tree().create_timer(8.0)
  timer.timeout.connect(func() -> void:
   if is_instance_valid(marker): marker.queue_free()

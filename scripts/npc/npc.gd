@@ -30,6 +30,7 @@ var exit_hint: Vector3 = Vector3.ZERO
 var help_target: HotelNpc
 var help_incident: Vector3 = Vector3.ZERO
 var help_reported: bool = false
+var incident_help: bool = false
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -110,6 +111,7 @@ func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staf
  memory.observe("trespass", point, 1.0)
  suspicion = minf(100.0, suspicion + 18.0 + profile.alertness * 12.0)
  exit_hint = permitted_exit
+ incident_help = false
  var permission_role := "staff" if profile.occupation == "employee" else profile.occupation
  if profile.occupation == "civilian" or not AccessRules.can_enter(permission_role, area):
   alert_remaining = 4.0
@@ -154,6 +156,21 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
    set_state("returning")
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
 
+# A visitor who sees a disabled person seeks a nearby guard, without
+# assuming the player caused it or becoming hostile.
+func observe_incapacitated(point: Vector3) -> void:
+ if profile.occupation != "civilian":
+  observe_disturbance(point)
+  return
+ if objective_completed or stunned_time > 0.0 or warning_cooldown > 0.0 or state in ["warning", "alerted", "seeking_help", "suspicious", "investigating"]: return
+ memory.observe("disturbance", point, 1.0)
+ investigation_target = point
+ incident_help = true
+ alert_remaining = 8.0
+ set_state("seeking_help")
+ _seek_help(point)
+ trespass_notice.emit(self, profile.identity + ": Someone needs help. I am looking for security.", global_position)
+
 func _seek_help(incident: Vector3) -> void:
  if not agent: return
  help_incident = incident
@@ -187,6 +204,10 @@ func _try_deliver_report() -> bool:
  help_target.observe_disturbance(help_incident)
  help_reported = true
  trespass_notice.emit(self, profile.identity + ": Security, please check that area.", exit_hint)
+ warning_cooldown = 5.0
+ incident_help = false
+ set_state("returning")
+ if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
  return true
 
 # A fictional short-range assessment pulse. Solid geometry blocks it; there is
@@ -270,7 +291,14 @@ func _physics_process(delta: float) -> void:
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
   return
  if person: person.rotation.z = move_toward(person.rotation.z, 0.0, delta * 3.0)
- if player: tick_trespass(delta, not AccessRules.can_enter(player.role, _player_access_area()))
+ if state == "seeking_help" and incident_help:
+  alert_remaining -= delta
+  if alert_remaining <= 0.0:
+   incident_help = false
+   warning_cooldown = 5.0
+   set_state("returning")
+   if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+ elif player: tick_trespass(delta, not AccessRules.can_enter(player.role, _player_access_area()))
  advance_simulation(delta)
  if state == "seeking_help": _try_deliver_report()
  # Perception is throttled by the physics clock, not checked every frame.
