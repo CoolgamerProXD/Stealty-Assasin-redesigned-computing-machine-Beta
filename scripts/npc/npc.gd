@@ -109,6 +109,7 @@ func observe_trespass(point: Vector3) -> void:
 func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staff") -> void:
  if objective_completed or stunned_time > 0.0 or warning_cooldown > 0.0 or state in ["warning", "alerted", "seeking_help"]: return
  memory.observe("trespass", point, 1.0)
+ investigation_target = point
  suspicion = minf(100.0, suspicion + 18.0 + profile.alertness * 12.0)
  exit_hint = permitted_exit
  incident_help = false
@@ -144,6 +145,7 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
     suspicion = maxf(suspicion, 80.0)
     set_state("alerted")
     alert_pulse_clock = 1.2
+    _notify_nearby_security()
     trespass_notice.emit(self, profile.identity + ": Security alert. Leave the restricted area.", exit_hint)
    else:
     set_state("seeking_help")
@@ -155,6 +157,19 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
    warning_cooldown = 5.0
    set_state("returning")
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+
+# Nearby guards can share an alert only across an unobstructed local line
+# of sight. Receiving guards investigate; they do not become hostile on hearsay.
+func _notify_nearby_security() -> void:
+ if not is_inside_tree() or not get_parent(): return
+ for candidate: Node in get_parent().get_children():
+  if not candidate is HotelNpc or candidate == self: continue
+  var officer := candidate as HotelNpc
+  if officer.profile.occupation != "security" or officer.objective_completed or officer.stunned_time > 0.0 or global_position.distance_to(officer.global_position) > 8.0: continue
+  var ray := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP, officer.global_position + Vector3.UP)
+  ray.exclude = [get_rid(), officer.get_rid()]
+  if get_world_3d().direct_space_state.intersect_ray(ray).is_empty():
+   officer.observe_disturbance(player.global_position if player else investigation_target)
 
 # A visitor who sees a disabled person seeks a nearby guard, without
 # assuming the player caused it or becoming hostile.

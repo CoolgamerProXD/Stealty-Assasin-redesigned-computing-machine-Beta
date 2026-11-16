@@ -879,6 +879,7 @@ func _on_interaction(object: Interactable) -> void:
    if not player.inventory.has_item(object.identifier) and not player.inventory.add(object.identifier):
     message = "Inventory full. The record was not collected."
     return
+   var lesson_already: bool = Campaign.progress.completed_lessons.has(object.identifier)
    if mission_id() == "initiation" and Campaign.active_mission == "initiation":
     if not Campaign.award_initiation_lesson(object.identifier):
      message = "Could not save lesson reward. Try again."
@@ -890,7 +891,7 @@ func _on_interaction(object: Interactable) -> void:
     if record["id"] == object.identifier:
      message = record["message"]
      if mission_id() == "initiation" and Campaign.active_mission == "initiation":
-      message += "  /  Lesson complete: permanent coin earned."
+      message += "  /  Lesson complete: coin already earned." if lesson_already else "  /  Lesson complete: permanent coin earned."
      break
   "primary":
    if object.get_parent() is HotelNpc and (object.get_parent() as HotelNpc).stunned_time > 0.0:

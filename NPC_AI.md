@@ -1,6 +1,6 @@
 # Current local reporting
 
-Visitors who see trespass or an incapacitated person can seek a nearby, available security NPC in the same scene. A report is delivered once only within 2.5 metres and unobstructed line of sight; security begins a bounded local investigation, not automatic global hostility. If no guard is nearby, the visitor retreats toward a schedule point and eventually resumes. Security still warns trespassers for about three seconds, de-escalates when they leave and uses short, cover-blocked fictional stagger pulses only during unresolved alert. Navigation and social coordination remain local and incomplete; no global search, realistic combat or comprehensive crowd simulation is claimed.
+Visitors who see trespass or an incapacitated person can seek a nearby, available security NPC in the same scene. A report is delivered once only within 2.5 metres and unobstructed line of sight; security begins a bounded local investigation, not automatic global hostility. If no guard is nearby, the visitor retreats toward a schedule point and eventually resumes. On escalation, an unobstructed nearby guard can be asked to investigate rather than immediately attack. Security still warns trespassers for about three seconds, de-escalates when they leave and uses short, cover-blocked fictional stagger pulses only during unresolved alert. Navigation and social coordination remain local and incomplete; no global search, realistic combat or comprehensive crowd simulation is claimed.
 
 # Current trespass behavior
 

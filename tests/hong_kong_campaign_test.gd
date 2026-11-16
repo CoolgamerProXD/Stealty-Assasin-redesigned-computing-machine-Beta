@@ -119,6 +119,24 @@ func run() -> void:
  check(witness._try_deliver_report() and officer.state == "suspicious", "a civilian can report an observed incapacitated person to local security")
  officer.queue_free()
  witness.queue_free()
+ var guard_one := HotelNpc.new()
+ guard_one.profile = NpcProfile.new()
+ guard_one.profile.occupation = "security"
+ guard_one.position = Vector3(35,0,35)
+ root.add_child(guard_one)
+ guard_one.set_physics_process(false)
+ var guard_two := HotelNpc.new()
+ guard_two.profile = NpcProfile.new()
+ guard_two.profile.occupation = "security"
+ guard_two.position = Vector3(37,0,35)
+ root.add_child(guard_two)
+ guard_two.set_physics_process(false)
+ await physics_frame
+ guard_one.warn_trespass(Vector3(36,0,32), Vector3(30,0,35), "staff")
+ guard_one.tick_trespass(3.1, true)
+ check(guard_one.state == "alerted" and guard_two.state == "suspicious", "security shares a local warning escalation without making other guards immediately hostile")
+ guard_one.queue_free()
+ guard_two.queue_free()
  check(service.progress.mark_complete("initiation"), "Initiation unlocks Hong Kong without mandatory Meridian")
  var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
  var intro_paths: Dictionary = {}

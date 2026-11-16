@@ -36,7 +36,7 @@
       "name": "03  /  THE STREETS",
       "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_the_streets.tscn",
-      "briefing": "Ruby: A market intermediary is arranging the next transfer. Confront the intermediary; their bodyguard carries the second key.",
+      "briefing": "Ruby: A market intermediary arranged the transfer. Speak to the vendor for context, confront the intermediary, and recover the second key from their bodyguard. The nearby market lanes have a lookout and a service room.",
       "debrief": "Ruby: The handoff leads to a commercial office. Keep the key separate from the manifest.",
       "unlock": "",
       "key_id": "key_02"
@@ -46,7 +46,7 @@
       "name": "04  /  THE DISTRICT",
       "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_the_district.tscn",
-      "briefing": "Ruby: A district broker has the office route. Confront the broker and find the key in the nearby records safe.",
+      "briefing": "Ruby: A district broker knows the office route. Speak to the records clerk, confront the broker and find the third key in the records safe. The commercial quarter has a lookout and an upper service room.",
       "debrief": "Ruby: The broker points to a waterfront meeting. We still do not know who is behind the Covenant transfer.",
       "unlock": "",
       "key_id": "key_03"
@@ -56,7 +56,7 @@
       "name": "05  /  THE HARBOUR",
       "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_the_harbour.tscn",
-      "briefing": "Ruby: A waterfront liaison is managing the transfer. Confront the liaison; their bodyguard holds the fourth key.",
+      "briefing": "Ruby: A waterfront liaison is managing the transfer. Speak to the quay attendant, confront the liaison and recover the fourth key from their bodyguard. Explore the promenade and service room for alternatives.",
       "debrief": "Ruby: The trail ends in the mountains. Do not confuse the public landmark with the operation.",
       "unlock": "",
       "key_id": "key_04"
