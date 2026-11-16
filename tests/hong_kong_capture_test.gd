@@ -101,6 +101,7 @@ func run() -> void:
   if id in ["tung_chung", "the_district", "ngong_ping"]:
    await sample_quality(service,id,"LOW")
    await sample_quality(service,id,"MEDIUM")
+   await sample_quality(service,id,"HIGH")
   world.queue_free()
   await process_frame
  service.settings = old_settings
