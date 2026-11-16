@@ -1,5 +1,16 @@
 # PROJECT ASSASSIN — Technical Handoff and Recovery Audit
 
+## Assignment 003 progress — 2026-11-16 (active branch)
+
+This is the latest status note and supersedes the Assignment 002 “current working tree” wording below for the Assignment 003 implementation. The checkout and remote were verified before changes: `CoolgamerProXD/Stealty-Assasin-reimagined-Beta`, branch `arena/9199c996-stealty-assasin-reimagined-bet`, baseline `aea3ad8e16e323967d33bf7ecf05b72b367b6a80`.
+
+- Mission target status now distinguishes temporary target incapacitation from permanent objective completion. The Quiet Line updates only the temporary status for the Meridian primary; recovery clears it, it cannot unlock extraction, and Mission HUD text explicitly states it is not complete. Checkpoints record the temporary status and remaining stun duration, and restore it without converting it to permanent completion. The assessment pulse/tag and target conversation remain permanent completion paths with existing idempotence; ordinary bystanders remain separate.
+- Tung Chung’s train now has a physical luggage trolley with a route split and readable “pass either side” signage. The courier starts moving only after the player crosses the first-car trigger, traverses into the forward car using collision-aware CharacterBody motion, and stops for a playable catch/confrontation. The player is never moved by the chase; seat rows around the trolley were adjusted to keep both sidesteps navigable. Checkpoints preserve the courier position and chase flags. The existing five-key, mission order, physical pickup and extraction rules are unchanged.
+- Automated coverage was added for non-completing temporary target status, recovery, checkpoint restoration, collidable route obstacle, actual player movement through the chase, and chase checkpoint restoration. Existing five-key/campaign/HK cases remain in place.
+- Checks completed in this checkout: Python data unit tests **8/8 passed**; `git diff --check` passed. `gdformat --check` parsed the six edited GDScript/test files, but reports they would be reformatted; formatting is not the project’s test gate. **Godot behavioral tests have not run yet.** No Godot executable was preinstalled, and downloading the official 4.4.1 release failed when GitHub redirected to `release-assets.githubusercontent.com`, which is outside the sandbox’s allowed outbound hosts.
+- **Not yet verified:** full Godot 4.4.1 regression workflow, any Windows export/smoke test, rendered image evidence, interactive human playtesting, and Windows/Iris Xe hardware performance. No results for these are claimed. Push the current checkpoint to this branch to use the repository workflow; the Windows job requires `[windows]` in the commit message.
+- Current local changes are uncommitted in `scripts/missions/{mission,hong_kong_operation}.gd`, `scripts/save/session_snapshot.gd`, `scripts/world/hotel.gd`, `tests/{run_tests,hong_kong_campaign_test}.gd`, plus this handoff update. Review, commit and push only to the current branch after checking the final diff and CI results.
+
 **Audit date:** 2026-11-16 (UTC)
 **Audited checkout:** `CoolgamerProXD/Stealty-Assasin-reimagined-Beta` (the repository actually configured as `origin` in this checkout)
 **Branch:** `arena/9199c996-stealty-assasin-reimagined-bet`

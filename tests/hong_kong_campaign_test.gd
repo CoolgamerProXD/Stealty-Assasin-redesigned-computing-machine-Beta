@@ -408,13 +408,28 @@ func run() -> void:
    check(world.get("train_stage") == "aboard" and player.global_position.z > 14.0 and player.global_position.z < 20.0, "legacy carriage checkpoint migrates safely to the new train")
    SaveStore.write(aboard_path, aboard_save)
    world.call("load_game")
+   var courier_start: Vector3 = (world.get("train_contact") as HotelNpc).global_position
+   var carriage: Node3D = world.get("train_car")
+   check(carriage.find_child("LuggageRouteObstacle", true, false) is StaticBody3D and carriage.find_child("TrainPursuitTrigger", true, false) is Area3D, "train has a physical route obstacle and a connected pursuit trigger")
    player.rotation.y = 0.0
    player.velocity = Vector3.ZERO
+   # Deterministically begin just before the trolley, then sidestep and
+   # recenter with real movement input before continuing into car two.
+   player.global_position = Vector3(19.0, 0.05, 21.2)
    Engine.time_scale = 3.0
-   await walk_steps([["move_back",7.0]])
+   await walk_steps([["move_left",0.35],["move_back",0.9],["move_right",0.35],["move_back",5.0]])
    Engine.time_scale = 1.0
    print("HK TRAIN PURSUIT DIAG: ", player.global_position)
+   var courier_end: Vector3 = (world.get("train_contact") as HotelNpc).global_position
    check(player.global_position.z > 32.0, "connected carriages are physically traversable")
+   check(world.get("train_chase_active") and courier_end.z > courier_start.z and world.get("train_chase_finished") and not world.get("train_contact_complete"), "player follows a moving courier across connected carriages before the encounter concludes")
+   world.call("save_game")
+   var chase_checkpoint: Dictionary = SaveStore.read(world.get("save_path"))
+   (world.get("train_contact") as HotelNpc).global_position = Vector3(19.0, 0.05, 36.0)
+   world.set("train_chase_finished", false)
+   world.call("load_game")
+   var resumed_courier: HotelNpc = world.get("train_contact")
+   check(world.get("train_chase_active") and world.get("train_chase_finished") and is_equal_approx(resumed_courier.global_position.z, float(chase_checkpoint["train_contact_position"][2])), "checkpoint restores courier position and pursuit stage without completing the encounter")
    await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
    world.call("_interact")
    check(world.get("story_phase") == "roof" and not world.get("train_contact_complete"), "courier confrontation starts the skippable carriage contact exchange")

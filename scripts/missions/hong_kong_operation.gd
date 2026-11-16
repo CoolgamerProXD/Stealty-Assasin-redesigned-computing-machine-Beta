@@ -42,10 +42,13 @@ var key_secured: bool = false
 var train_stage: String = "station"
 var train_contact: HotelNpc
 var train_contact_complete: bool = false
+var train_chase_active: bool = false
+var train_chase_finished: bool = false
 var train_car: Node3D
 var train_streaks: Array[Node3D] = []
 var departure_streaks: Array[Node3D] = []
 var train_gate: StaticBody3D
+var train_chase_trigger: Area3D
 var train_passengers: Array[StylizedPerson] = []
 var train_ambience: AudioStreamPlayer
 var escape_seen: bool = false
@@ -349,8 +352,12 @@ func _next_objective() -> String:
  if operation_id == "tung_chung":
   if not escape_seen: return "Watch the courier's escape."
   if train_stage == "station": return "Walk through the open platform door to board the train."
-  if not train_contact_complete: return "Follow the courier through the connected carriages and confront them."
+  if not train_contact_complete: return "PURSUE KAI THROUGH BOTH CARS · WEAVE AROUND THE LUGGAGE CART · CATCH HIM IN FRONT."
  return "Reach the extraction marker and press E."
+
+func _physics_process(delta: float) -> void:
+ if train_stage == "aboard" and story_phase.is_empty() and not intro_active and not extraction_active:
+  _update_train_chase(delta)
 
 func _process(delta: float) -> void:
  if player == null: return
@@ -724,6 +731,8 @@ func _board_train() -> void:
 
 func _enter_train() -> void:
  train_stage = "aboard"
+ train_chase_active = false
+ train_chase_finished = false
  if train_ambience and not train_ambience.playing: train_ambience.play()
  exit_marker.global_position = Vector3(19,0.05,44)
  for child: Node in exit_marker.get_children():
@@ -731,6 +740,34 @@ func _enter_train() -> void:
  if train_contact: train_contact.visible = true
  message = "Ruby: Follow the courier through the connected carriages."
  if not train_departure_seen: _begin_story("departure")
+
+func _update_train_chase(delta: float) -> void:
+ if not train_contact or train_contact_complete or train_chase_finished: return
+ # A positional fallback keeps old saves/test fixtures safe if an Area enters
+ # before the body signal connects; the normal path is the physical trigger.
+ if not train_chase_active and player.global_position.z >= 26.5:
+  _on_train_chase_trigger(player)
+ if not train_chase_active: return
+ # The courier travels through both connected car sections. CharacterBody
+ # collision resolves the route; player movement remains wholly user controlled.
+ var remaining := 43.0 - train_contact.global_position.z
+ if remaining <= 0.05:
+  train_chase_finished = true
+  train_contact.velocity = Vector3.ZERO
+  train_contact.person.animate_motion(delta, 0.0)
+  return
+ var step := minf(remaining, 2.8 * delta)
+ train_contact.velocity = Vector3(0, 0, 2.8)
+ train_contact.move_and_collide(Vector3(0, 0, step))
+ train_contact.person.animate_motion(delta, 2.8)
+ if train_contact.global_position.z >= 42.95:
+  train_chase_finished = true
+  train_contact.velocity = Vector3.ZERO
+
+func _on_train_chase_trigger(body: Node3D) -> void:
+ if body != player or train_stage != "aboard" or train_chase_active or train_contact_complete: return
+ train_chase_active = true
+ message = "Ruby: Kai is moving! Pick either side of the luggage cart and catch him in the forward carriage."
 
 func _sync_train_gate() -> void:
  if not train_gate: return
@@ -772,9 +809,11 @@ func _build_train() -> void:
     train_car.add_child(streak)
     _part(streak,Vector3.ZERO,Vector3(0.035,0.045,1.1),Color(0.32,0.72,0.78,0.82),"emissive")
     train_streaks.append(streak)
-   # Four fixed seat rows per side; fabric, armrests and pedestal are separate
-   # materials, and the central aisle remains clear for the contact encounter.
+   # Four fixed seat rows per side; fabric, armrests and pedestal are separate.
    for z: float in [-5.3,-1.5,2.3,5.7]:
+    # Keep the trolley approach and exit clear of seat collisions so either
+    # side route remains a genuinely navigable choice.
+    if car_offset == 0.0 and z in [-1.5, 2.3]: continue
     _train_solid(Vector3(side*1.62,0.39,z+car_offset),Vector3(1.02,0.72,1.35),Color(0.36,0.50,0.49),"fabric")
     _part(train_car,Vector3(side*1.62,0.82,z+car_offset-0.34),Vector3(1.02,0.72,0.48),Color(0.42,0.57,0.56),"fabric")
     _part(train_car,Vector3(side*1.62,0.83,z+car_offset+0.20),Vector3(0.82,0.10,0.56),Color(0.48,0.62,0.59),"fabric")
@@ -800,6 +839,30 @@ func _build_train() -> void:
   sign.pixel_size = 0.006
   sign.modulate = Color(0.83,0.76,0.60)
   train_car.add_child(sign)
+ # The trolley creates a readable route split. Its narrow width leaves room
+ # for a player-controlled left or right sidestep inside the carriage aisle.
+ var route_obstacle := _train_solid(Vector3(0,0.48,0.4),Vector3(1.14,0.96,0.82),Color(0.40,0.34,0.27),"wood")
+ route_obstacle.name = "LuggageRouteObstacle"
+ _part(train_car,Vector3(0,0.98,0.4),Vector3(1.22,0.08,0.88),Color(0.55,0.48,0.37),"brushed_metal")
+ var route_sign := Label3D.new()
+ route_sign.text = "LUGGAGE  /  PASS EITHER SIDE"
+ route_sign.position = Vector3(0,1.55,0.4)
+ route_sign.font_size = 18
+ route_sign.pixel_size = 0.005
+ route_sign.modulate = Color(0.96,0.78,0.49)
+ train_car.add_child(route_sign)
+ train_chase_trigger = Area3D.new()
+ train_chase_trigger.name = "TrainPursuitTrigger"
+ train_chase_trigger.position = Vector3(0,1.1,4.5)
+ train_chase_trigger.collision_layer = 0
+ train_chase_trigger.collision_mask = 1
+ var trigger_shape := CollisionShape3D.new()
+ var trigger_box := BoxShape3D.new()
+ trigger_box.size = Vector3(3.7,2.2,0.55)
+ trigger_shape.shape = trigger_box
+ train_chase_trigger.add_child(trigger_shape)
+ train_chase_trigger.body_entered.connect(_on_train_chase_trigger)
+ train_car.add_child(train_chase_trigger)
  _train_solid(Vector3(0,1.5,24),Vector3(4.5,3,0.2),Color(0.29,0.35,0.36),"painted_metal")
  # The inter-carriage vestibule is intentionally open; side jambs and header
  # frame it without blocking the aisle or creating an invisible threshold.
@@ -836,7 +899,7 @@ func _build_train() -> void:
  train_contact.set_physics_process(false)
  train_contact.visible = false
 
-func _train_solid(pos: Vector3, size: Vector3, color: Color, finish: String = "plain") -> void:
+func _train_solid(pos: Vector3, size: Vector3, color: Color, finish: String = "plain") -> StaticBody3D:
  var body := StaticBody3D.new()
  body.position = pos
  train_car.add_child(body)
@@ -846,6 +909,7 @@ func _train_solid(pos: Vector3, size: Vector3, color: Color, finish: String = "p
  shape.size = size
  collider.shape = shape
  body.add_child(collider)
+ return body
 
 func _train_collision(pos: Vector3, size: Vector3) -> void:
  var body := StaticBody3D.new()
@@ -924,7 +988,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "escape_seen": escape_seen, "dropped_key_pos": [key_marker.global_position.x,key_marker.global_position.y,key_marker.global_position.z], "train_contact_complete": train_contact_complete, "train_departure_seen": train_departure_seen, "train_chase_active": train_chase_active, "train_chase_finished": train_chase_finished, "train_contact_position": [train_contact.global_position.x, train_contact.global_position.y, train_contact.global_position.z] if train_contact else [], "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -962,6 +1026,12 @@ func load_game() -> void:
   if data.get("train_stage", "") == "aboard" and target_complete and saved_key_valid and escape_seen:
    _board_train()
    train_contact_complete = data.get("train_contact_complete", false) == true
+   train_chase_active = data.get("train_chase_active", false) == true
+   train_chase_finished = data.get("train_chase_finished", false) == true
+   var courier_position: Variant = data.get("train_contact_position", [])
+   if courier_position is Array and courier_position.size() == 3 and (courier_position[0] is int or courier_position[0] is float) and (courier_position[1] is int or courier_position[1] is float) and (courier_position[2] is int or courier_position[2] is float):
+    var courier_point := _vec(courier_position)
+    if courier_point.is_finite() and absf(courier_point.x - 19.0) < 1.0 and courier_point.y > -1.0 and courier_point.y < 4.0 and courier_point.z >= 35.0 and courier_point.z <= 43.1: train_contact.global_position = courier_point
    train_contact.restore_objective(false, false)
    train_contact.collision_layer = 1
    train_contact.visible = true

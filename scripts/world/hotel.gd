@@ -694,6 +694,8 @@ func _use_equipment() -> void:
     best = distance
   if nearest:
    nearest.incapacitate(12.0)
+   if nearest == primary_npc:
+    mission.set_target_temporary_incapacitation(str(mission.primary_target.get("id", "")), true)
    player.body_mesh.use_quiet_tool()
    gadget_audio.play()
    message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
@@ -931,7 +933,7 @@ func _on_interaction(object: Interactable) -> void:
    else: message = mission.objective_text()
 
 func save_game() -> void:
- if SaveStore.write(save_path, SessionSnapshot.capture(player, mission)):
+ if SaveStore.write(save_path, SessionSnapshot.capture(player, mission, primary_npc)):
   message = "Progress saved."
  else:
   message = "Save failed. Check storage permissions."
@@ -993,6 +995,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
  if player == null or hud == null: return
  _update_instinct(_delta)
+ if primary_npc and mission.target_temporarily_incapacitated and primary_npc.stunned_time <= 0.0:
+  mission.set_target_temporary_incapacitation(str(mission.primary_target.get("id", "")), false)
  var area := AccessRules.area_at(player.global_position)
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0

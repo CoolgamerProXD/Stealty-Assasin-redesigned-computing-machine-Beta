@@ -3,7 +3,7 @@ extends RefCounted
 ## Persistence for the current greybox mission. Unknown or malformed values are ignored.
 const KNOWN_ROLES := ["visitor", "staff"]
 
-static func capture(player: HotelPlayer, mission: Mission) -> Dictionary:
+static func capture(player: HotelPlayer, mission: Mission, primary_npc: HotelNpc = null) -> Dictionary:
  var p := player.global_position
  return {
   "position": [p.x, p.y, p.z],
@@ -15,6 +15,8 @@ static func capture(player: HotelPlayer, mission: Mission) -> Dictionary:
   "target_id": mission.primary_target.get("id", ""),
   "target_complete": mission.target_complete,
   "target_incapacitated": mission.target_incapacitated,
+  "target_temporarily_incapacitated": mission.target_temporarily_incapacitated,
+  "target_stun_remaining": primary_npc.stunned_time if primary_npc and mission.target_temporarily_incapacitated else 0.0,
   "target_discovered": mission.target_discovered,
   "equipment": player.equipment.snapshot(),
  }
@@ -42,6 +44,7 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
  var same_target: bool = data.get("target_id", "") == mission.primary_target.get("id", "")
  mission.target_complete = same_target and data.get("target_complete", false) == true
  mission.target_incapacitated = mission.target_complete and data.get("target_incapacitated", false) == true
+ mission.target_temporarily_incapacitated = not mission.primary_target.is_empty() and not mission.target_complete and same_target and data.get("target_temporarily_incapacitated", false) == true
  # The briefing already identifies the mission primary, including old saves.
  mission.target_discovered = not mission.primary_target.is_empty() or (same_target and data.get("target_discovered", false) == true)
  # A previously completed Meridian save must not become incomplete after adding Locke.
@@ -56,7 +59,16 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
   elif object.kind == "primary":
    object.used = mission.target_complete
    if object.get_parent() is HotelNpc:
-    (object.get_parent() as HotelNpc).restore_objective(mission.target_complete, mission.target_incapacitated)
+    var npc := object.get_parent() as HotelNpc
+    npc.restore_objective(mission.target_complete, mission.target_incapacitated)
+    if mission.target_temporarily_incapacitated:
+     var remaining: Variant = data.get("target_stun_remaining", 12.0)
+     var safe_remaining := 12.0
+     if (remaining is int or remaining is float) and is_finite(float(remaining)):
+      safe_remaining = clampf(float(remaining), 0.1, 12.0)
+     if npc.incapacitate(safe_remaining): npc.set_state("disabled")
+    elif not mission.target_complete:
+     mission.target_temporarily_incapacitated = false
   elif object.kind == "robot":
    object.used = mission.action_complete
    continue # The disabled training unit remains visible.
