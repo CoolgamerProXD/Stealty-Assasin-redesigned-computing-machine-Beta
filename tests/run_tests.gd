@@ -695,11 +695,15 @@ func run() -> void:
  var station_player: HotelPlayer = station.get("player")
  var suspect: HotelNpc = station.get("robber")
  check(station_people.size() == 16 and suspect != station.get("operative"), "station preview creates two distinct physical characters and fourteen passengers")
+ # NavigationServer publishes region changes asynchronously on physics
+ # frames; wait for the prior world's region to disappear and this one to sync.
+ for frame: int in range(5): await physics_frame
  var station_map: RID = station_player.get_world_3d().get_navigation_map()
  var island_path: PackedVector3Array = NavigationServer3D.map_get_path(station_map, Vector3(-5,0,0), Vector3(3,0,0), true)
  var avoids_island := false
  for point: Vector3 in island_path:
   if absf(point.z) > 1.3: avoids_island = true
+ if not avoids_island: print("STATION_NAV_DIAG: ", island_path)
  check(island_path.size() >= 3 and avoids_island, "station navigation routes around the solid information island")
  var station_start := station_people[0].global_position
  await create_timer(1.5).timeout
