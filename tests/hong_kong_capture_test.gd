@@ -58,7 +58,7 @@ func run() -> void:
   world.call("_end_intro")
   var player: HotelPlayer = world.get("player")
   check(player.camera.current and player.is_physics_processing(), id + " gameplay camera resumes")
-  check(root.get_visible_rect().encloses((world.get("hud") as Label).get_global_rect()), id + " objective HUD fits at 720p")
+  check(root.get_visible_rect().encloses((world.get("hud") as Control).get_global_rect()), id + " objective HUD fits at 720p")
   if id == "tung_chung":
    var target: HotelNpc = world.get("target")
    var people: Array[HotelNpc] = world.get("npc_list")

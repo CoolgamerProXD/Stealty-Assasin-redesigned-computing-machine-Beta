@@ -173,6 +173,20 @@ func run() -> void:
    world.call("_process", 0.0)
    check((world.get("fps_label") as Label).visible, "FPS setting appears in Hong Kong HUD")
    service.settings["show_fps"] = old_fps
+   var tracker: Control = world.get("hud")
+   check((tracker.get("stage") as Label).text.contains("MANDATORY REMAIN") and (tracker.get("status") as Label).text.contains("EXTRACTION LOCKED"), "tracker shows mandatory progress and extraction state")
+   var optional_key := InputEventKey.new()
+   optional_key.keycode = KEY_O
+   optional_key.pressed = true
+   tracker.call("_unhandled_input", optional_key)
+   check((tracker.get("optional") as Label).visible, "optional tracker details can be expanded")
+   var tab_key := InputEventKey.new()
+   tab_key.keycode = KEY_TAB
+   tab_key.pressed = true
+   tracker.call("_unhandled_input", tab_key)
+   check(not (tracker.get("objective") as Label).visible, "tracker can be minimized")
+   tracker.call("_unhandled_input", tab_key)
+   check((tracker.get("objective") as Label).visible, "tracker can be restored")
   # Walk from the actual deployment point to each target with fixed inputs.
   # Background agents are frozen/temporarily non-colliding to isolate world
   # geometry; this does not claim crowd navigation or a human playthrough.

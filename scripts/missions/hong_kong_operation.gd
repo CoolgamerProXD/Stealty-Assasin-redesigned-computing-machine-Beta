@@ -16,7 +16,7 @@ var uniform_marker: Node3D
 var uniform_found: bool = false
 var intel_found: bool = false
 var exit_marker: Node3D
-var hud: Label
+var hud: Control
 var fps_label: Label
 var briefing: Label
 var skip_button: Button
@@ -182,14 +182,8 @@ func _part(parent: Node3D, pos: Vector3, size: Vector3, color: Color) -> void:
 func _build_ui() -> void:
  var canvas := CanvasLayer.new()
  add_child(canvas)
- hud = Label.new()
+ hud = preload("res://scripts/ui/mission_tracker.gd").new()
  hud.position = Vector2(24,20)
- hud.size = Vector2(1200,220)
- hud.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
- hud.add_theme_font_size_override("font_size", 18)
- hud.add_theme_color_override("font_shadow_color", Color.BLACK)
- hud.add_theme_constant_override("shadow_offset_x", 2)
- hud.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(hud)
  fps_label = Label.new()
  fps_label.position = Vector2(1120,20)
@@ -317,7 +311,9 @@ func _unhandled_input(event: InputEvent) -> void:
 # intel never participate in this decision.
 func _next_objective() -> String:
  if not target_complete: return "Confront or tag " + str(config["target"]) + "."
- if not key_secured: return str(config["clue"])
+ if not key_secured:
+  if operation_id == "tung_chung" and target_complete: return "Recover Key 01 from the concourse."
+  return str(config["clue"])
  if operation_id == "tung_chung":
   if not escape_seen: return "Watch the courier's escape."
   if train_stage == "station": return "Walk through the open platform door to board the train."
@@ -357,14 +353,15 @@ func _process(delta: float) -> void:
   if train_contact and not train_contact_complete: train_contact.person.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
- var keys: Array[String] = []
- for i: int in range(1,6):
-  var id := "key_%02d" % i
-  keys.append("%02d" % i if Campaign.progress.recovered_keys.has(id) else "--")
+ var total := 5 if operation_id == "tung_chung" else 3
+ var remaining := int(not target_complete) + int(not key_secured) + 1
+ if operation_id == "tung_chung": remaining += int(train_stage == "station") + int(not train_contact_complete)
+ var current := total - remaining + 1
+ var extraction := "AVAILABLE" if remaining == 1 else "LOCKED"
  var equipment_text := Campaign.item_label(player.equipment.selected)
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
- hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nNEXT: %s\nINTEL %s  ·  WITNESS %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, _next_objective(), "SECURED" if intel_found else "OPTIONAL", "SPOKEN" if witness_found else "OPTIONAL", player.equipment.coins_remaining]
+ hud.call("set_state", str(entry.get("name", operation_id)), "STAGE %d / %d   ·   %d MANDATORY REMAIN" % [current,total,remaining], _next_objective(), "%s %s   ·   EXTRACTION %s\n%s   ·   G COIN %d" % [key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "MISSING", extraction, equipment_text, player.equipment.coins_remaining], "OPTIONAL INTEL: %s   ·   WITNESS: %s" % ["SECURED" if intel_found else "OPEN", "SPOKEN" if witness_found else "OPEN"], message)
  reticle.visible = player.aiming and not intro_active and not extraction_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
