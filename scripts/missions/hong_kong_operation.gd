@@ -18,6 +18,10 @@ var intro_time: float = 0.0
 var intro_active: bool = true
 var target_complete: bool = false
 var key_secured: bool = false
+var train_stage: String = "station"
+var train_contact: HotelNpc
+var train_contact_complete: bool = false
+var train_car: Node3D
 var message: String = ""
 var npc_list: Array[HotelNpc] = []
 var red_overlay: StandardMaterial3D
@@ -228,14 +232,76 @@ func _interact() -> void:
  if placement == "safe" and not key_secured and _reachable(key_marker.global_position):
   _secure_key()
   return
+ if train_contact and not train_contact_complete and _reachable(train_contact.global_position, train_contact.get_rid()):
+  train_contact_complete = true
+  train_contact.complete_objective(false)
+  message = "Train contact: The manifest was routed through a market intermediary. Ruby: Take the carriage exit."
+  return
  if _reachable(exit_marker.global_position):
   if not target_complete or not key_secured:
    message = "Extraction locked: confront the target and physically secure this operation's key."
+  elif operation_id == "tung_chung" and train_stage == "station":
+   _board_train()
+  elif operation_id == "tung_chung" and not train_contact_complete:
+   message = "Ruby: Speak to the train contact before leaving the carriage."
   elif Campaign.complete(operation_id, 0):
    get_tree().change_scene_to_file("res://scenes/ending.tscn")
   else: message = "Campaign progress could not be saved."
   return
  message = str(config["clue"])
+
+# A separate fictional train carriage is staged beyond the station boundary;
+# it is entered by a controlled scene transition, never by rail access gameplay.
+func _board_train() -> void:
+ if train_car == null: _build_train()
+ train_stage = "aboard"
+ player.global_position = Vector3(0,0.05,85)
+ player.velocity = Vector3.ZERO
+ player.rotation.y = 0.0
+ exit_marker.global_position = Vector3(0,0.05,74)
+ message = "Ruby: You are aboard. Find the train contact, then leave through the carriage door."
+
+func _build_train() -> void:
+ train_car = Node3D.new()
+ train_car.name = "FictionalTrainCarriage"
+ train_car.position = Vector3(0,0,80)
+ add_child(train_car)
+ _train_solid(Vector3(0,-0.15,0), Vector3(4.5,0.3,16), Color(0.36,0.39,0.39))
+ _train_solid(Vector3(-2.25,1.5,0), Vector3(0.2,3,16), Color(0.66,0.69,0.67))
+ _train_solid(Vector3(2.25,1.5,0), Vector3(0.2,3,16), Color(0.66,0.69,0.67))
+ _train_solid(Vector3(0,1.5,8), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
+ _train_solid(Vector3(0,1.5,-8), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
+ _part(train_car, Vector3(0,3.05,0), Vector3(4.5,0.12,16), Color(0.46,0.52,0.51))
+ for side: float in [-1.0,1.0]:
+  for z: float in [-5.0,-2.0,1.0,4.0]:
+   _part(train_car, Vector3(side*2.12,1.9,z), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
+   _train_solid(Vector3(side*1.65,0.42,z), Vector3(0.9,0.75,1.2), Color(0.24,0.31,0.34))
+   _part(train_car, Vector3(side*1.93,1.05,z), Vector3(0.35,1.1,1.2), Color(0.24,0.31,0.34))
+ var title := Label3D.new()
+ title.text = "BLACKLINE  /  TRAIN CONTACT"
+ title.position = Vector3(0,2.4,-7.8)
+ title.font_size = 32
+ title.pixel_size = 0.004
+ train_car.add_child(title)
+ var profile := NpcProfile.new()
+ profile.identity = "Train contact"
+ profile.occupation = "special"
+ train_contact = HotelNpc.new()
+ train_contact.profile = profile
+ train_contact.position = Vector3(0,0.05,79)
+ add_child(train_contact)
+ train_contact.set_physics_process(false)
+
+func _train_solid(pos: Vector3, size: Vector3, color: Color) -> void:
+ var body := StaticBody3D.new()
+ body.position = pos
+ train_car.add_child(body)
+ _part(body, Vector3.ZERO, size, color)
+ var collider := CollisionShape3D.new()
+ var shape := BoxShape3D.new()
+ shape.size = size
+ collider.shape = shape
+ body.add_child(collider)
 
 func _secure_key() -> void:
  var id := str(Campaign.progress.mission(operation_id).get("key_id", ""))
@@ -283,7 +349,9 @@ func _fire() -> void:
  player.shot_feedback()
  if not hit.is_empty() and hit["collider"] is HotelNpc:
   var npc := hit["collider"] as HotelNpc
-  if npc == target and not target_complete:
+  if npc == train_contact and not train_contact_complete:
+   message = "Ruby: We need the contact's account. Speak to them instead."
+  elif npc == target and not target_complete:
    target_complete = true
    target.complete_objective(true)
    message = "Ruby: Target tagged. " + str(config["clue"])
@@ -295,7 +363,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -303,6 +371,18 @@ func load_game() -> void:
  if data.get("mission_id", "") != operation_id:
   message = "No valid checkpoint for this operation."
   return
+ if operation_id == "tung_chung" and data.get("train_stage", "") == "aboard" and data.get("target_complete", false) == true and data.get("key_secured", false) == true:
+  _board_train()
+  train_contact_complete = data.get("train_contact_complete", false) == true
+  if train_contact_complete: train_contact.complete_objective(false)
+ else:
+  train_stage = "station"
+  exit_marker.global_position = _vec(config["exit"])
+  train_contact_complete = false
+  if train_contact: train_contact.queue_free()
+  if train_car: train_car.queue_free()
+  train_contact = null
+  train_car = null
  target_complete = data.get("target_complete", false) == true
  target.restore_objective(target_complete, data.get("target_incapacitated", false) == true)
  var expected := str(Campaign.progress.mission(operation_id).get("key_id", ""))
@@ -313,7 +393,9 @@ func load_game() -> void:
  if pos is Array and pos.size() == 3 and (pos[0] is float or pos[0] is int) and (pos[1] is float or pos[1] is int) and (pos[2] is float or pos[2] is int):
   var p := _vec(pos)
   var bound := 21.0 if config["map"] == "station" else 44.0
-  if is_finite(p.x) and is_finite(p.y) and is_finite(p.z) and absf(p.x) < bound and absf(p.z) < bound and p.y > -1.0 and p.y < 5.0:
+  var in_bounds := absf(p.x) < bound and absf(p.z) < bound
+  if train_stage == "aboard": in_bounds = absf(p.x) < 2.0 and p.z > 72.5 and p.z < 87.5
+  if is_finite(p.x) and is_finite(p.y) and is_finite(p.z) and in_bounds and p.y > -1.0 and p.y < 5.0:
    player.global_position = p
    player.velocity = Vector3.ZERO
  message = "Checkpoint loaded. NPC routines are transient."

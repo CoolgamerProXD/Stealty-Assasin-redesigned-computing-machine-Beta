@@ -109,6 +109,9 @@ func run() -> void:
    check(entered, id + " entrance is physically traversable")
    target.collision_layer = 1
    guard.collision_layer = 1
+  await move_near(world, (world.get("exit_marker") as Node3D).global_position)
+  world.call("_interact")
+  check(not service.progress.completed.has(id) and not world.get("key_secured"), id + " extraction rejects missing target and key")
   await move_near(world, target.global_position)
   world.call("_interact")
   check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")
@@ -118,11 +121,24 @@ func run() -> void:
   else: await move_near(world, (world.get("key_marker") as Node3D).global_position)
   world.call("_interact")
   check(world.get("key_secured") and service.progress.recovered_keys.has(key_id), id + " requires a separate physical key interaction")
+  if id == "tung_chung":
+   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
+   world.call("_interact")
+   check(world.get("train_stage") == "aboard" and not world.get("train_contact_complete"), "station objectives transition to a distinct train carriage")
+   await move_near(world, (world.get("train_contact") as HotelNpc).global_position)
+   world.call("_interact")
+   check(world.get("train_contact_complete"), "train contact must be physically questioned")
   world.call("save_game")
   world.set("target_complete", false)
   world.set("key_secured", false)
   world.call("load_game")
   check(world.get("target_complete") and world.get("key_secured"), id + " isolated checkpoint restores target and key")
+  if id == "tung_chung": check(world.get("train_stage") == "aboard" and world.get("train_contact_complete"), "train stage survives checkpoint load")
+  if id == "ngong_ping":
+   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
+   world.call("_interact")
+   await process_frame
+   check(service.progress.completed.has(id), "final physical extraction completes the operation")
   check(service.complete(id, 0), id + " completes after target/key and saves progression")
   if i < 4: check(service.progress.is_unlocked(ids[i+1]), id + " unlocks next operation")
   world.queue_free()
