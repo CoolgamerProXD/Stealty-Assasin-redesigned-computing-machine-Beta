@@ -429,6 +429,11 @@ func _begin_intro() -> void:
   establishing_start = Vector3(0,4.2,7)
   establishing_end = Vector3(2,3.5,5)
   establishing_focus = Vector3(-3,1.5,-4)
+ elif operation_id == "hong_kong_sandbox":
+  has_establishing = true
+  establishing_start = Vector3(0,24,66)
+  establishing_end = Vector3(0,18,48)
+  establishing_focus = Vector3(0,2,-26)
  intro_camera.global_position = establishing_start if has_establishing else intro_start
  intro_camera.look_at(establishing_focus if has_establishing else intro_look_start, Vector3.UP)
  intro_camera.make_current()
