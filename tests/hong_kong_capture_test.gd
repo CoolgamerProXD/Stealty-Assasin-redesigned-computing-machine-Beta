@@ -115,12 +115,12 @@ func run() -> void:
    player.instinct_active = true
    for index: int in range(targets.size()):
     var npc := targets[index] as HotelNpc
-    var id := str(records[index]["id"])
+    var target_capture_id := str(records[index]["id"])
     player.global_position = npc.global_position + Vector3(0,0,4.0)
     shot.global_position = npc.global_position + Vector3(0,2.3,5.0)
     shot.look_at(npc.global_position + Vector3.UP,Vector3.UP)
     world.call("_process",0.0)
-    await capture("hk_instinct_target_" + id)
+    await capture("hk_instinct_target_" + target_capture_id)
    player.instinct_active = false
    # Local, in-person security state is shown independently of distant guards.
    var local_guard: HotelNpc = null

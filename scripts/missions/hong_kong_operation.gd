@@ -570,8 +570,8 @@ func _process(delta: float) -> void:
    var target_id := str(sandbox_target_data[index]["id"])
    _overlay(sandbox_targets[index].person, red_overlay if player.instinct_active and not bool(sandbox_target_completed.get(target_id, false)) else null)
   for index: int in range(sandbox_key_markers.size()):
-   var key_id := str(sandbox_key_markers[index].get_meta("key_id", ""))
-   var active := not Campaign.progress.recovered_keys.has(key_id)
+   var marker_key_id := str(sandbox_key_markers[index].get_meta("key_id", ""))
+   var active := not Campaign.progress.recovered_keys.has(marker_key_id)
    _overlay(sandbox_key_markers[index], yellow_overlay if player.instinct_active and active else null)
   for index: int in range(sandbox_intel_markers.size()):
    var intel_id := str(sandbox_intel_markers[index].get_meta("intel_id", ""))
