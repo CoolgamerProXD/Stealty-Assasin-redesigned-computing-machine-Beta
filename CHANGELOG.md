@@ -1,3 +1,10 @@
+# Tung Chung story and presentation checkpoint
+
+- Made the required courier and train-contact stages explicit, removed the resolved contact's blocking collision, kept the witness and intel optional, and added an extraction-to-debrief regression. The original user-reported failure's exact cause was not independently established; hidden guidance and contact collision were plausible contributors.
+- Added a skippable courier escape, separate physical key pickup, walk-on platform, two connected fictional carriages, an exterior cinematic and final extraction. Checkpoints preserve or migrate the new states. Passengers and train remain procedural prototypes; exterior action is noninteractive.
+- Added a compact Hong Kong intelligence tracker (Tab minimizes; O toggles optional details) and persistent Master, Music, SFX, Ambient and Dialogue bus controls. Existing generated effects and ambience are routed; there is no dedicated music or voiced dialogue asset.
+- Run 43826351110 verified the code at `ddf4193`, including Windows export/headless smoke; interactive Windows testing, human audio/visual review and target-device benchmarking remain open. See TESTING.md.
+
 # Full development sprint checkpoint
 
 Added permanent, independently stored Initiation lesson coins, an equip/replenish loadout and throwable NPC distraction; three connected city neighbourhoods with walk-in rooms, upper-floor service disguises, local routines and optional lookout evidence; mission-specific witnesses, debrief outcomes and extraction presentation; local witness/guard reports; procedural character interaction and hit-response fixes; optional clue Instinct highlighting; quality-controlled practical lights, shadow and view-distance controls. These are still prototype implementations: the 15× destination, production animation/art, comprehensive combat/AI and human Windows/Iris Xe verification remain open. See TESTING.md for completed runs and WINDOWS_PLAYTEST_CHECKLIST.md for manual checks.
