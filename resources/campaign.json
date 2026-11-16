@@ -77,7 +77,6 @@
       "description": "Temporarily disables one nearby person without graphic effects. Q uses it.",
       "unlock_after": "initiation",
       "missions": [
-        "initiation",
         "meridian",
         "tung_chung",
         "hong_kong_sandbox",
