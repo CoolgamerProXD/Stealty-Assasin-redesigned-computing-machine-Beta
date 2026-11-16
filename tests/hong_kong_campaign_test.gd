@@ -195,6 +195,8 @@ func run() -> void:
   if id in ["the_streets", "the_district", "the_harbour"]:
    var city: Node = world.get("scene")
    check(city.find_child("InteriorLocalNavigation", true, false) != null, id + " has a walk-in mission interior")
+   var furnishings := city.find_child("CityInteriorFurniture", true, false)
+   check(furnishings != null and furnishings.get_child_count() >= 4, id + " interior includes attributed furniture and work surfaces")
    target.collision_layer = 0
    guard.collision_layer = 0
    player.rotation.y = 0.0

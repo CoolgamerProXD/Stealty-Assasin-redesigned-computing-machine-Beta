@@ -85,7 +85,7 @@ func run() -> void:
    shot.look_at(Vector3(0,11,-29),Vector3.UP)
   elif id == "tung_chung":
    world.call("_board_train")
-   shot.global_position = Vector3(0,2.1,86)
+   shot.global_position = Vector3(0,2.1,84.4)
    shot.look_at(Vector3(0,1.2,78),Vector3.UP)
   else:
    shot.global_position = focus + Vector3(2.0,1.2,2.5)

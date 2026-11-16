@@ -361,6 +361,34 @@ func _operation_interior(x: float, z: float) -> void:
  _box(Vector3(desk_x,0.5,z-2.8),Vector3(1.6,1.0,1.0),Color(0.36,0.25,0.18),true)
  _box(Vector3(desk_x,1.2,z-2.8),Vector3(0.65,0.5,0.12),Color(0.18,0.31,0.33))
  _box(Vector3(x,4.12,z),Vector3(2.8,0.08,0.6),Color(0.95,0.84,0.62))
+ # Batched wall panels, skirting and a woven floor inset add material rhythm
+ # without changing either doorway or the local navigation space.
+ var accent := Color(0.42,0.30,0.24) if op == "the_streets" else (Color(0.25,0.39,0.39) if op == "the_district" else Color(0.38,0.30,0.24))
+ _accent(Vector3(x,0.04,z),Vector3(3.2,0.02,4.1),accent.darkened(0.22))
+ for side: float in [-1.0,1.0]:
+  _accent(Vector3(x,0.18,z+side*4.34),Vector3(9.7,0.25,0.06),dark)
+  for dx: float in [-3.0,0.0,3.0]:
+   _accent(Vector3(x+dx,2.3,z+side*4.32),Vector3(1.5,1.2,0.05),accent)
+   _accent(Vector3(x+dx,2.3,z+side*4.28),Vector3(1.30,1.0,0.04),accent.lightened(0.18))
+  _accent(Vector3(x+side*4.75,3.85,z),Vector3(0.08,0.12,8.6),dark)
+ var practical := OmniLight3D.new()
+ practical.position = Vector3(x,3.8,z)
+ practical.light_color = Color(1.0,0.83,0.65)
+ practical.light_energy = 0.42
+ practical.omni_range = 7.5
+ practical.shadow_enabled = false
+ practical.add_to_group("quality_practicals")
+ practical.visible = Campaign.settings["graphics"] != "LOW"
+ add_child(practical)
+ # Reuse the repository's attributed CC0 furniture, visual-only and placed
+ # away from routes; the desk retains its separately authored collider.
+ var furniture := preload("res://scripts/visuals/hotel_furniture.gd").new()
+ furniture.name = "CityInteriorFurniture"
+ add_child(furniture)
+ furniture.call("_place", preload("res://assets/kenney_furniture/laptop.glb"), Vector3(desk_x,1.0,z-2.8), Vector3(0.132,0,-0.12), Vector3(1.2,1.2,1.2), 0.0)
+ furniture.call("_place", preload("res://assets/kenney_furniture/books.glb"), Vector3(desk_x,1.0,z-2.3), Vector3(0.075,0,-0.047), Vector3(1.2,1.2,1.2), 0.0)
+ furniture.call("_place", preload("res://assets/kenney_furniture/chairCushion.glb"), Vector3(desk_x,0,z+3.0), Vector3(0.10,0,-0.10), Vector3(1.8,1.8,1.8), 0.0)
+ furniture.call("_place", preload("res://assets/kenney_furniture/pottedPlant.glb"), Vector3(x-3.8,0,z-3.6), Vector3.ZERO, Vector3(2.1,2.1,2.1), 0.0)
  var label := "MARKET OFFICE" if op == "the_streets" else ("DISTRICT RECORDS" if op == "the_district" else "HARBOUR LIAISON")
  _sign(label, Vector3(x,2.9,z+4.31), 34)
  var region := NavigationRegion3D.new()

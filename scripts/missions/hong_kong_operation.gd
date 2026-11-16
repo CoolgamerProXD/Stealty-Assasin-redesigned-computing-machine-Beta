@@ -349,6 +349,8 @@ func _build_train() -> void:
  _train_solid(Vector3(0,1.5,8), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
  _train_solid(Vector3(0,1.5,-8), Vector3(4.5,3,0.2), Color(0.55,0.59,0.57))
  _part(train_car, Vector3(0,3.05,0), Vector3(4.5,0.12,16), Color(0.46,0.52,0.51))
+ for z: float in [-6.0,-2.0,2.0,6.0]:
+  _part(train_car,Vector3(0,2.95,z),Vector3(1.9,0.04,0.28),Color(0.88,0.88,0.76))
  for side: float in [-1.0,1.0]:
   for z: float in [-5.0,-2.0,1.0,4.0]:
    _part(train_car, Vector3(side*2.12,1.9,z), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
