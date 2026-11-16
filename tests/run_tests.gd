@@ -878,6 +878,9 @@ func run() -> void:
  var deployed: Node = current_scene
  check(deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn", "campaign changes to Initiation scene")
  if deployed != null and deployed.scene_file_path == "res://scenes/initiation.tscn":
+  check(deployed.get("intro_active") and not (deployed.get("player") as HotelPlayer).is_physics_processing(), "Initiation starts with a skippable entry cinematic")
+  deployed.get("entry_intro").call("end_intro")
+  check(not deployed.get("intro_active") and (deployed.get("player") as HotelPlayer).is_physics_processing(), "skipping entry cinematic restores the player")
   var pause_menu: Node = null
   for child: Node in deployed.get_children():
    if child.get_script() and child.get_script().resource_path == "res://scripts/ui/pause_menu.gd": pause_menu = child

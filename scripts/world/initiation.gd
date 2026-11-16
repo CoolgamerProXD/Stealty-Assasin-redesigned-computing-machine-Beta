@@ -90,6 +90,7 @@ func _guard(identity: String, spawn: Vector3, route: Array[ScheduleEntry]) -> vo
  var guard := HotelNpc.new()
  guard.profile = profile
  guard.player = player
+ guard.trespass_notice.connect(_on_trespass_notice)
  guard.position = spawn
  add_child(guard)
  npcs.append(guard)

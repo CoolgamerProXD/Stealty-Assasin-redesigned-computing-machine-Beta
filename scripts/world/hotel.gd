@@ -1,6 +1,8 @@
 extends Node3D
 ## Original greybox: The Meridian Hotel, after a missing archive incident.
 var save_path: String = "user://meridian_save.json"
+var intro_active: bool = false
+var entry_intro: Node
 var player: HotelPlayer
 var mission: Mission = Mission.new()
 var interactables: Array[Interactable] = []
@@ -73,12 +75,20 @@ func _ready() -> void:
  _setup_instinct()
  if Campaign.active_mission == mission_id():
   player.mouse_sensitivity = float(Campaign.settings["sensitivity"])
-  var pause := preload("res://scripts/ui/pause_menu.gd").new()
-  pause.world = self
-  add_child(pause)
   if Campaign.load_checkpoint:
    load_game()
    Campaign.load_checkpoint = false
+  intro_active = true
+  entry_intro = preload("res://scripts/ui/mission_intro.gd").new()
+  entry_intro.set("world", self)
+  add_child(entry_intro)
+
+func _finish_entry_intro() -> void:
+ if not intro_active: return
+ intro_active = false
+ var pause := preload("res://scripts/ui/pause_menu.gd").new()
+ pause.world = self
+ add_child(pause)
 
 func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = true) -> void:
  var holder: Node3D = StaticBody3D.new() if solid else Node3D.new()
@@ -391,6 +401,7 @@ func _build_npcs() -> void:
   primary_npc = HotelNpc.new()
   primary_npc.profile = profile
   primary_npc.player = player
+  primary_npc.trespass_notice.connect(_on_trespass_notice)
   primary_npc.position = _vector(data_target["start"])
   add_child(primary_npc)
   npcs.append(primary_npc)
@@ -953,6 +964,7 @@ func _standing_space_clear(point: Vector3) -> bool:
  return player.get_world_3d().direct_space_state.intersect_shape(_checkpoint_query(point), 32).is_empty()
 
 func _unhandled_input(event: InputEvent) -> void:
+ if intro_active: return
  if event.is_action_pressed("save_game"): save_game()
  elif event.is_action_pressed("load_game"): load_game()
 

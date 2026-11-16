@@ -78,13 +78,13 @@ func run() -> void:
   world.call("_end_intro")
   check(not world.get("intro_active") and player.is_physics_processing(), id + " skip initializes gameplay")
   if id == "tung_chung":
-   player.global_position = Vector3(14.5,0.05,2.0)
+   player.global_position = Vector3(14.5,0.05,4.0)
    player.rotation.y = 0.0
    player.velocity = Vector3.ZERO
    await physics_frame
    Engine.time_scale = 3.0
    Input.action_press("move_forward")
-   await create_timer(3.6).timeout
+   await create_timer(4.6).timeout
    Input.action_release("move_forward")
    Engine.time_scale = 1.0
    print("HK STAIR DIAG: ", player.global_position)

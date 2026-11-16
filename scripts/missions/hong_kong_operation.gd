@@ -12,6 +12,11 @@ var key_marker: Node3D
 var exit_marker: Node3D
 var hud: Label
 var briefing: Label
+var skip_button: Button
+var intro_start: Vector3
+var intro_end: Vector3
+var intro_look_start: Vector3
+var intro_look_end: Vector3
 var reticle: Control
 var intro_camera: Camera3D
 var intro_time: float = 0.0
@@ -136,6 +141,12 @@ func _build_ui() -> void:
  briefing.add_theme_constant_override("shadow_offset_x", 2)
  briefing.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(briefing)
+ skip_button = Button.new()
+ skip_button.text = "SKIP  /  ESC"
+ skip_button.position = Vector2(1050,660)
+ skip_button.size = Vector2(180,42)
+ skip_button.pressed.connect(_end_intro)
+ canvas.add_child(skip_button)
  reticle = preload("res://scripts/ui/aim_reticle.gd").new()
  reticle.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
  reticle.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -152,15 +163,40 @@ func _begin_intro() -> void:
  intro_camera = Camera3D.new()
  add_child(intro_camera)
  var at := target.global_position
- intro_camera.global_position = at + Vector3(-5,4,7)
- intro_camera.look_at(at + Vector3.UP, Vector3.UP)
+ intro_look_start = at + Vector3.UP
+ intro_look_end = intro_look_start
+ match operation_id:
+  "tung_chung":
+   intro_start = at + Vector3(-6,3.3,5)
+   intro_end = at + Vector3(-2,2.0,3)
+  "the_streets":
+   intro_start = at + Vector3(1.5,2.6,3.2)
+   intro_end = at + Vector3(-1.4,1.8,2.0)
+  "the_district":
+   intro_start = at + Vector3(-1.5,2.8,-3.1)
+   intro_end = at + Vector3(1.3,2.0,2.2)
+  "the_harbour":
+   intro_start = at + Vector3(1.6,2.6,-3)
+   intro_end = at + Vector3(-1.4,1.8,2)
+  "ngong_ping":
+   intro_start = Vector3(0,10,9)
+   intro_end = at + Vector3(3,3,5)
+   intro_look_start = Vector3(0,12,-29)
+  _:
+   intro_start = at + Vector3(-5,4,7)
+   intro_end = at + Vector3(4,2.5,4)
+ intro_camera.global_position = intro_start
+ intro_camera.look_at(intro_look_start, Vector3.UP)
  intro_camera.make_current()
+ Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  briefing.text = str(Campaign.progress.mission(operation_id).get("briefing", "")) + "\n\nESC  /  SKIP BRIEFING"
 
 func _end_intro() -> void:
  if not intro_active: return
  intro_active = false
  briefing.visible = false
+ skip_button.visible = false
+ Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
  player.set_physics_process(true)
  player.set_process_unhandled_input(true)
  player.camera.make_current()
@@ -185,9 +221,8 @@ func _process(delta: float) -> void:
  if intro_active:
   intro_time += delta
   var t := minf(intro_time / 6.0, 1.0)
-  var at := target.global_position
-  intro_camera.global_position = at + Vector3(-5,4,7).lerp(Vector3(4,2.5,4), t)
-  intro_camera.look_at(at + Vector3.UP, Vector3.UP)
+  intro_camera.global_position = intro_start.lerp(intro_end, t)
+  intro_camera.look_at(intro_look_start.lerp(intro_look_end, t), Vector3.UP)
   if intro_time >= 6.0: _end_intro()
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))

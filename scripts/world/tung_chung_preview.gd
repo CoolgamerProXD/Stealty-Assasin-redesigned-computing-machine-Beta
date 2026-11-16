@@ -144,7 +144,7 @@ func _station() -> void:
  _sign("TEA HOUSE", Vector3(4,3,-11.28), 30)
  _sign("MARKET", Vector3(11,3,-11.28), 30)
  # Fictional concourse stairway and upper landing; no railway access.
- _box(Vector3(17,3.2,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true)
+ _box(Vector3(17,3.125,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true)
  _station_stair_collision()
  _box(Vector3(17,3.9,-3.95), Vector3(8,1.1,0.12), Color(0.31,0.47,0.49))
  for i: int in range(11):
@@ -187,12 +187,12 @@ func _station() -> void:
 func _station_stair_collision() -> void:
  var ramp := StaticBody3D.new()
  ramp.name = "StationStairCollision"
- ramp.position = Vector3(14.5,1.665,-1.35)
- ramp.rotation.x = atan(3.45 / 5.7)
+ ramp.position = Vector3(14.5,1.64,-0.25)
+ ramp.rotation.x = atan(3.45 / 7.5)
  add_child(ramp)
  var collider := CollisionShape3D.new()
  var box := BoxShape3D.new()
- box.size = Vector3(2.4,0.14,sqrt(3.45*3.45 + 5.7*5.7))
+ box.size = Vector3(2.4,0.14,sqrt(3.45*3.45 + 7.5*7.5))
  collider.shape = box
  ramp.add_child(collider)
 
