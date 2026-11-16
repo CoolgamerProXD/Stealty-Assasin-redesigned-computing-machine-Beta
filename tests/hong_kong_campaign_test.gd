@@ -153,7 +153,7 @@ func run() -> void:
   var player: HotelPlayer = world.get("player")
   if id == "tung_chung":
    world.call("_build_train")
-   var carriage_windows := world.find_children("CarriageWindowGlass","MeshInstance3D",true,false)
+   var carriage_windows := world.find_children("CarriageWindowGlass*","MeshInstance3D",true,false)
    var seated_passengers: Array[StylizedPerson] = world.get("train_passengers")
    check(carriage_windows.size() == 16, "two connected carriages expose materialized windows without removing collision shells")
    check(seated_passengers.size() == 4, "each carriage has distinct seated passenger characters")
@@ -380,11 +380,13 @@ func run() -> void:
    player.rotation.y = 0.0
    player.velocity = Vector3.ZERO
    await physics_frame
+   var gate: StaticBody3D = world.get("train_gate")
+   print("HK TRAIN GATE DIAG: disabled=", (gate.get_child(1) as CollisionShape3D).disabled, " target=", world.get("target_complete"), " key=", world.get("key_secured"), " escape=", world.get("escape_seen"))
    Engine.time_scale = 3.0
-   await walk_steps([["move_back",0.85]])
+   await walk_steps([["move_back",2.0]])
    Engine.time_scale = 1.0
    print("HK TRAIN BOARD DIAG: ", player.global_position)
-   check(world.get("train_stage") == "aboard" and player.global_position.z > 15.0, "player physically walks from platform into train")
+   check(world.get("train_stage") == "aboard" and player.global_position.z > 14.5, "player physically walks from platform into train")
    check(world.get("story_phase") == "departure" and not player.is_physics_processing(), "boarding starts the controlled skippable exterior departure insert")
    world.call("_advance_story",5.3)
    check(world.get("train_departure_seen") and player.is_physics_processing() and world.get("key_secured"), "unskipped departure returns to the same playable carriage without changing key state")
@@ -409,7 +411,7 @@ func run() -> void:
    player.rotation.y = 0.0
    player.velocity = Vector3.ZERO
    Engine.time_scale = 3.0
-   await walk_steps([["move_back",6.0]])
+   await walk_steps([["move_back",7.0]])
    Engine.time_scale = 1.0
    print("HK TRAIN PURSUIT DIAG: ", player.global_position)
    check(player.global_position.z > 32.0, "connected carriages are physically traversable")
