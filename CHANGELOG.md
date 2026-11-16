@@ -3,7 +3,8 @@
 - Added nine CC0 Kenney furniture models, glazed hotel bays and restaurant screen, procedural floor finishes, new guest-room beds, and aligned dining chair collisions. Legacy checkpoints overlapping new furniture are relocated where possible.
 - Added suite-local target and upper-gallery movement; separated station routes and added accelerated physical round-trip tests for all 16 station actors and four Meridian wing actors. Cross-floor pathfinding remains unimplemented.
 - Added contextual synthetic ambient beds and surface-dependent steps, compacted selection and settings to fit 720p, populated the city with fictional parked traffic and skyline, and enlarged the purely scenic mountain landmark.
-- Character primitives now share immutable meshes while retaining per-character materials and joint transforms. No performance improvement on the target laptop is claimed without a measurement.
+- Character primitives now share immutable meshes while retaining per-character materials and joint transforms; procedural running and crouching keep shoes near the floor. Quiet Line has a hand-held visual and brief use pose. No performance improvement on the target laptop is claimed without a measurement.
+- Fixed the mountain terrain's collision winding after a physical traversal test exposed a blocked seam; added traversal checks on both terrain patches and preview routes, and prevented explicitly mismatched mission action IDs from completing objectives in checkpoint restores.
 - Windows CI now launches the exported main menu, both missions and all three previews headlessly. This is not an interactive Windows playtest.
 
 # Second pass — incremental prototype improvements
