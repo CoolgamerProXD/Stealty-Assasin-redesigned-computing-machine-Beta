@@ -87,7 +87,9 @@ func run() -> void:
  var cycle: Button
  var fits := true
  for child: Node in panel.get_children():
-  if child is Control and not root.get_visible_rect().encloses((child as Control).get_global_rect()): fits = false
+  if child is Control and not root.get_visible_rect().encloses((child as Control).get_global_rect()):
+   print("COIN BOUNDS DIAG: ", child.name, " ", (child as Control).get_global_rect(), " viewport=", root.get_visible_rect())
+   fits = false
   if child is Button and str((child as Button).text).begins_with("COINS:"): cycle = child
  check(cycle != null and fits, "coin loadout control fits within 720p")
  if cycle: cycle.pressed.emit()

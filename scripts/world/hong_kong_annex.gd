@@ -54,16 +54,32 @@ func build() -> void:
  _box(Vector3(0,-0.2,35),Vector3(70,0.4,70),paving,true)
  # Solid boundaries and a 12m gateway back to the existing city.
  for x: float in [-35.0,35.0]: _box(Vector3(x,2,35),Vector3(0.3,4,70),dark,true)
- _box(Vector3(0,2,70),Vector3(70,4,0.3),dark,true)
+ if operation_id == "the_harbour":
+  _box(Vector3(0,0.55,70),Vector3(70,1.1,0.3),dark,true)
+ else: _box(Vector3(0,2,70),Vector3(70,4,0.3),dark,true)
  for x: float in [-20.5,20.5]: _box(Vector3(x,2,0),Vector3(29,4,0.3),dark,true)
  _box(Vector3(0,0.03,35),Vector3(9,0.05,70),paving.darkened(0.35))
  for z: float in [10.0,30.0,50.0,65.0]:
   _box(Vector3(0,0.04,z),Vector3(69,0.06,6),paving.lightened(0.10))
   for x: float in [-3.0,-1.5,0.0,1.5,3.0]: _box(Vector3(x,0.08,z),Vector3(0.7,0.02,2.8),Color(0.73,0.71,0.62))
- # Six open rooms each have front/back access and separate pedestrian alleys.
+ # Open rooms have front/back access and separate pedestrian alleys.
  for x: float in [-17.0,17.0]:
   for z: float in [18.0,38.0,58.0]:
+   # Different open plazas interrupt the grid and preserve varied views.
+   if (operation_id == "the_harbour" and x > 0.0 and z == 58.0) or (operation_id == "the_district" and x < 0.0 and z == 38.0):
+    _box(Vector3(x,0.035,z),Vector3(10,0.05,10),paving.lightened(0.15))
+    _box(Vector3(x-3,0.5,z+3),Vector3(2.5,0.13,0.8),accent,true)
+    _box(Vector3(x+3,0.45,z-3),Vector3(1.1,0.9,1.1),wall.darkened(0.25))
+    _box(Vector3(x+3,1.4,z-3),Vector3(1.7,1.4,1.7),Color(0.25,0.43,0.29))
+    continue
    _room(x,z,wall,accent,dark)
+ if business:
+  # A taller, non-interactive commercial skyline over the offices.
+  for x: float in [-17.0,17.0]:
+   _box(Vector3(x,11.0,18),Vector3(7,8,7),wall.darkened(0.12))
+   for y: float in [8.5,10.5,12.5,14.0]:
+    for dx: float in [-2.0,0.0,2.0]:
+     _box(Vector3(x+dx,y,21.55),Vector3(1.1,1.2,0.06),Color(0.24,0.40,0.44))
  # Each district's side lanes carry different everyday activities; the
  # objects are kept clear of the central street and both room entrances.
  for side: float in [-1.0,1.0]:

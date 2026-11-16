@@ -1,3 +1,7 @@
+# Current local reporting
+
+Visitors who see trespass or an incapacitated person can seek a nearby, available security NPC in the same scene. A report is delivered once only within 2.5 metres and unobstructed line of sight; security begins a bounded local investigation, not automatic global hostility. If no guard is nearby, the visitor retreats toward a schedule point and eventually resumes. Security still warns trespassers for about three seconds, de-escalates when they leave and uses short, cover-blocked fictional stagger pulses only during unresolved alert. Navigation and social coordination remain local and incomplete; no global search, realistic combat or comprehensive crowd simulation is claimed.
+
 # Current trespass behavior
 
 Visible restricted-area trespass creates a local memory. Authorized staff/security issue a warning with an exit direction and a three-second grace period that does not restart on each sighting. Leaving de-escalates; security otherwise raises a stylized alert pose, while other roles seek help on a bounded local route. Visitors do not immediately become hostile. Alerted security can fire a non-graphic, cover-blocked pulse that briefly staggers the player. There is no player health, coordinated backup, full pursuit combat or comprehensive obstacle avoidance. Station navigation now excludes the information island and pillars; other navigation remains partial.

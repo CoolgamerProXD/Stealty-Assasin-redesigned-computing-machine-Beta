@@ -287,6 +287,8 @@ func _city() -> void:
  for i: int in range(13):
   var x := -45.0 + float(i)*7.5
   var h := 10.0 + float((i*11)%7)*1.3
+  # Keep the waterfront gateway visibly open as well as physically open.
+  if str(get_meta("operation_id", "")) == "the_harbour" and absf(x) < 8.0: continue
   _accent(Vector3(x,h*0.5,-49),Vector3(6.8,h,3.0),Color(0.20+float(i%3)*0.025,0.28,0.31))
   for y: float in [4.0,7.0,10.0]:
    if y < h - 0.5:

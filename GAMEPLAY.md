@@ -1,3 +1,9 @@
+# Current additions: Initiation coins and Hong Kong clues
+
+Initiation's existing evaluation, sensor-log and dispatch records are the three labelled assessment lesson milestones. Each grants one permanent coin, at most three, recorded separately from USB keys and mission equipment. An existing completed campaign save receives all three; an in-progress Initiation checkpoint awards only its validated saved records when loaded. Use LOADOUT to cycle equipped coins between zero and the earned total. In later missions press **G** to toss a fictional coin forward: nearby eligible NPCs investigate its landing point, the mission stock decreases, and a fresh deployment replenishes the equipped amount. A checkpoint preserves remaining stock; the permanent count is never spent.
+
+Each Hong Kong operation adds a witness and optional evidence clue. These are optional and do not award keys; complete the primary objective, physically secure that mission's single key, and use extraction. Tung Chung also requires the train contact. The new city lookout intel is reached via a ramp in the attached neighbourhood. Debriefs distinguish optional evidence and witness status. The extraction camera runs after progression is saved and may be skipped with Escape.
+
 # Current Hong Kong gameplay
 
 After Initiation, the five operations unlock in order. Press E to confront the named target, then separately collect that mission's key from the indicated target, bodyguard or safe. Reach the marked extraction after both objectives. In Tung Chung the platform transition leads to a fictional carriage, where the train contact must be questioned before the exit. The USB HUD displays all five persistent keys; the final extraction opens a skippable secure-channel event without a fabricated revelation. F5/F9 save/load that operation only. Escape skips an entry camera or opens pause after the camera. Loadout, aim/fire and Instinct remain available.

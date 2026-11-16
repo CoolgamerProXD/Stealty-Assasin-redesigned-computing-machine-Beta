@@ -1,5 +1,14 @@
 ## Current prototype status
 
+## Current Hong Kong development checkpoint
+
+Each city operation now connects the original 90 × 90 m city footprint to its own 70 × 70 m fictional neighbourhood: market lanes, a commercial quarter, or a waterfront extension. These add 4,900 m² of gross ground footprint per operation (about 60% of the original 8,100 m²), plus a small elevated lookout—not a verified 15× playable destination. Five or six two-door rooms, side lanes, local NPC routes and optional rooftop intel give the extensions purpose, but they remain stylized prototype environments with repeated modular architecture. Tung Chung has optional upper-concourse intel and a train contact; Ngong Ping has mountain intel and a field office separate from the public statue. Each operation has a physical optional witness, a separate intel clue, a skippable extraction camera and an expanded debrief. Primary target and physical key remain required and separate.
+
+**Initiation coins:** the existing evaluation, sensor-log and dispatch record interactions are now labelled lessons 1–3. Each permanently records one coin once; a legacy completed Initiation migrates all three, and a loaded partial Initiation checkpoint migrates only its recognized records. Loadout cycles the number equipped up to the earned total. In later missions, press **G** to toss a temporary distraction; the deployed stock is replenished on a new deployment, while campaign rewards are never consumed. Coins are independent of USB keys.
+
+NPCs can seek out nearby security and report an incident in person; security investigates instead of receiving omniscient global knowledge. Local lights and shadows can be disabled in settings; LOW disables both, while a shadowless neighbourhood beacon changes intensity. These are limited procedural systems, not production-quality AI, animation, lighting or art. Windows interactive playtesting and Iris Xe measurements remain outstanding; see TESTING.md.
+
+
 Five early Hong Kong operations now follow Initiation in campaign order; Meridian remains a separate optional assignment. Each operation has a physical target, a separately collected key, extraction, its own checkpoint and an entry briefing. Tung Chung includes a fictional train-car encounter. The three city operations share one city blockout and add distinct walk-in interiors; Ngong Ping has a separate field office and public monument approach. These are early playable slices, **not** the requested 15-times-larger, densely realised destination or finished production missions. See `TESTING.md` for exact automated evidence. No human playthrough or Windows/Iris Xe benchmark has been performed.
 
 # PROJECT ASSASSIN

@@ -141,8 +141,8 @@ func _loadout() -> void:
   var id := str(entry["id"])
   var unlocked: bool = Campaign.progress.item_unlocked(id)
   var tag := "SELECTED" if Campaign.progress.selected == id else ("AVAILABLE" if unlocked else "LOCKED")
-  _button("%s  /  %s" % [entry.get("name", id), tag], func() -> void: _select_item(id), not unlocked)
-  _text(str(entry.get("description", "")), 15)
+  var item_button := _button("%s  /  %s" % [entry.get("name", id), tag], func() -> void: _select_item(id), not unlocked)
+  item_button.tooltip_text = str(entry.get("description", ""))
  var lessons: Array[String] = Campaign.progress.completed_lessons
  var labels: Array[String] = []
  for i: int in range(3):
