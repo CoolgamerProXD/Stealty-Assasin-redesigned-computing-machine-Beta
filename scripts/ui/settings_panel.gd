@@ -32,6 +32,13 @@ func _ready() -> void:
   Campaign.settings["show_fps"] = value
   _save())
  display.add_child(fps)
+ var view := CheckBox.new()
+ view.text = "Far view"
+ view.button_pressed = Campaign.settings["long_view"]
+ view.toggled.connect(func(value: bool) -> void:
+  Campaign.settings["long_view"] = value
+  _save())
+ display.add_child(view)
  _add_row("DISPLAY", display)
  var quality := OptionButton.new()
  for label: String in ["LOW", "MEDIUM", "HIGH"]: quality.add_item(label)

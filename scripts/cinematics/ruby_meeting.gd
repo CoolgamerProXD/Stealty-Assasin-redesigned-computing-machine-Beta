@@ -64,6 +64,7 @@ func _ready() -> void:
  ruby.rotation.y = PI
  add_child(ruby)
  camera = Camera3D.new()
+ Campaign.configure_camera(camera)
  add_child(camera)
  camera.current = true
  var canvas := CanvasLayer.new()

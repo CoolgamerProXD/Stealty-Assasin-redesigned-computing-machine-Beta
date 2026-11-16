@@ -51,6 +51,7 @@ func _ready() -> void:
  pivot.add_child(arm)
  arm.add_excluded_object(get_rid())
  camera = Camera3D.new()
+ Campaign.configure_camera(camera)
  arm.add_child(camera)
  camera.current = true
  camera.fov = 68.0

@@ -227,6 +227,7 @@ func _begin_intro() -> void:
  player.set_physics_process(false)
  player.set_process_unhandled_input(false)
  intro_camera = Camera3D.new()
+ Campaign.configure_camera(intro_camera)
  add_child(intro_camera)
  var at := target.global_position
  intro_look_start = at + Vector3.UP
@@ -448,6 +449,7 @@ func _begin_extraction(next: String) -> void:
  player.velocity = Vector3.ZERO
  player.aiming = false
  extraction_camera = Camera3D.new()
+ Campaign.configure_camera(extraction_camera)
  add_child(extraction_camera)
  var focus := player.global_position + Vector3.UP
  extraction_camera.global_position = focus + Vector3(4,2.5,5)

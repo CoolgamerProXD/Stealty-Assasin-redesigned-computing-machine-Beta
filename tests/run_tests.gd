@@ -136,6 +136,12 @@ func run() -> void:
  settings_service.apply_settings()
  var sun_lights := get_nodes_in_group("quality_lights")
  check(not (practicals[0] as Light3D).visible and not (sun_lights[0] as Light3D).shadow_enabled, "lighting overrides disable practicals and shadows without restart")
+ settings_service.settings["long_view"] = false
+ settings_service.apply_settings()
+ check(is_equal_approx(player.camera.far, 75.0), "view distance applies to the live player camera")
+ settings_service.settings["long_view"] = true
+ settings_service.apply_settings()
+ check(is_equal_approx(player.camera.far, 220.0), "long view restores without restarting")
  settings_service.settings["shadows"] = true
  settings_service.settings["practicals"] = true
  settings_service.settings["graphics"] = old_quality

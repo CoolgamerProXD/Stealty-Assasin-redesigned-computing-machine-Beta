@@ -16,6 +16,7 @@ func _ready() -> void:
  player.set_process_unhandled_input(false)
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  camera = Camera3D.new()
+ Campaign.configure_camera(camera)
  world.add_child(camera)
  var mission_id: String = world.call("mission_id")
  if mission_id == "initiation":
