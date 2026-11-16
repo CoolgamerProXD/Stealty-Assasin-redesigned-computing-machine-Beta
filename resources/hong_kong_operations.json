@@ -32,9 +32,9 @@
     "target_line": "The manifest is on the train. The market intermediary arranged the next handoff.",
     "intel_text": "A departure note names the market office as the next handoff; the courier retains Key 01.",
     "intel_pos": [
-      -0.5,
-      0.05,
-      -8.0
+      17,
+      3.3,
+      -6
     ],
     "witness": "Platform attendant",
     "witness_pos": [

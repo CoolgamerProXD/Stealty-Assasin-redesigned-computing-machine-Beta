@@ -92,6 +92,11 @@ func run() -> void:
    shot.look_at(focus,Vector3.UP)
   shot.make_current()
   await capture("hk_play_" + id)
+  if id in ["the_streets", "the_district", "the_harbour"]:
+   var neighbourhood: Node3D = (world.get("scene") as Node).find_child("MissionNeighbourhood", true, false)
+   shot.global_position = neighbourhood.to_global(Vector3(0,6.0,9))
+   shot.look_at(neighbourhood.to_global(Vector3(0,2.0,42)),Vector3.UP)
+   await capture("hk_neighbourhood_" + id)
   if id in ["tung_chung", "the_district", "ngong_ping"]:
    await sample_quality(service,id,"LOW")
    await sample_quality(service,id,"MEDIUM")

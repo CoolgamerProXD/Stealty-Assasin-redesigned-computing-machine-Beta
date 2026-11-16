@@ -64,6 +64,25 @@ func build() -> void:
  for x: float in [-17.0,17.0]:
   for z: float in [18.0,38.0,58.0]:
    _room(x,z,wall,accent,dark)
+ # Each district's side lanes carry different everyday activities; the
+ # objects are kept clear of the central street and both room entrances.
+ for side: float in [-1.0,1.0]:
+  for z: float in [9.0,29.0,49.0]:
+   var x := side * 27.0
+   if market:
+    _box(Vector3(x,0.5,z),Vector3(3.6,1.0,1.8),Color(0.39,0.26,0.17),true)
+    _box(Vector3(x,2.4,z),Vector3(4.0,0.12,2.2),accent)
+    for dx: float in [-1.5,1.5]: _box(Vector3(x+dx,1.65,z),Vector3(0.1,1.5,0.1),dark)
+    for dx: float in [-1.0,0.0,1.0]: _box(Vector3(x+dx,1.12,z),Vector3(0.65,0.22,0.6),Color(0.70,0.48,0.24) if dx != 0.0 else Color(0.48,0.59,0.29))
+   elif business:
+    _box(Vector3(x,0.45,z),Vector3(3.2,0.13,0.8),Color(0.43,0.34,0.24),true)
+    for dx: float in [-1.2,1.2]: _box(Vector3(x+dx,0.2,z),Vector3(0.15,0.4,0.7),dark)
+    _box(Vector3(x+side*2.4,0.35,z),Vector3(0.8,0.7,0.8),Color(0.45,0.42,0.34))
+    _box(Vector3(x+side*2.4,1.0,z),Vector3(1.5,1.2,1.5),Color(0.26,0.43,0.29))
+   else:
+    _box(Vector3(x,0.6,z),Vector3(2.0,1.2,1.4),Color(0.45,0.35,0.24),true)
+    _box(Vector3(x,1.28,z),Vector3(1.7,0.08,1.2),Color(0.59,0.48,0.32))
+    for dx: float in [-0.7,0.7]: _box(Vector3(x+dx,0.62,z-0.72),Vector3(0.08,1.1,0.08),dark)
  # Roof viewing platform with a solid low-gradient ramp and useful intel.
  var ramp := _box(Vector3(0,1.42,43),Vector3(5,0.18,10.5),paving.lightened(0.12),true)
  ramp.rotation.x = -atan(3.0/10.0)
@@ -131,6 +150,17 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
  _box(Vector3(x,0.025,z),Vector3(9.7,0.04,9.7),wall.lightened(0.10))
  _box(Vector3(x,0.5,z-3.5),Vector3(4,1,1),dark,true)
  _box(Vector3(x,1.07,z-3.5),Vector3(3.8,0.08,0.9),accent)
+ # Differentiated interior storytelling, placed at the rear wall.
+ for dx: float in [-2.0,0.0,2.0]:
+  if operation_id == "the_streets":
+   _box(Vector3(x+dx,1.22,z-3.5),Vector3(0.55,0.22,0.5),Color(0.75,0.57,0.30))
+   _box(Vector3(x+dx,2.7,z-4.86),Vector3(1.1,0.8,0.04),accent.lightened(0.2))
+  elif operation_id == "the_district":
+   _box(Vector3(x+dx,1.32,z-3.5),Vector3(0.55,0.5,0.1),Color(0.19,0.33,0.36))
+   _box(Vector3(x+dx,2.55,z-4.86),Vector3(1.2,0.9,0.04),Color(0.67,0.68,0.59))
+  else:
+   _box(Vector3(x+dx,1.25,z-3.5),Vector3(0.5,0.32,0.5),Color(0.45,0.32,0.21))
+   _box(Vector3(x+dx,2.55,z-4.86),Vector3(1.2,0.9,0.04),Color(0.36,0.49,0.52))
  for side: float in [-1.0,1.0]:
   _box(Vector3(x+side*4.85,3.1,z),Vector3(0.1,0.5,6),accent)
   for dz: float in [-3.4,3.4]:
