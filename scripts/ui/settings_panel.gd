@@ -30,6 +30,22 @@ func _ready() -> void:
   Campaign.settings["graphics"] = ["LOW", "MEDIUM", "HIGH"][index]
   _save())
  _add_row("GRAPHICS", quality)
+ var lighting := HBoxContainer.new()
+ var shadows := CheckBox.new()
+ shadows.text = "Shadows"
+ shadows.button_pressed = Campaign.settings["shadows"]
+ shadows.toggled.connect(func(value: bool) -> void:
+  Campaign.settings["shadows"] = value
+  _save())
+ lighting.add_child(shadows)
+ var practicals := CheckBox.new()
+ practicals.text = "Local lights"
+ practicals.button_pressed = Campaign.settings["practicals"]
+ practicals.toggled.connect(func(value: bool) -> void:
+  Campaign.settings["practicals"] = value
+  _save())
+ lighting.add_child(practicals)
+ _add_row("LIGHTING (LOW OFF)", lighting)
  var fps := CheckButton.new()
  fps.button_pressed = Campaign.settings["show_fps"]
  fps.toggled.connect(func(value: bool) -> void:

@@ -131,6 +131,13 @@ func run() -> void:
  settings_service.settings["graphics"] = "HIGH"
  settings_service.apply_settings()
  check(fine_detail.visible and (practicals[0] as Light3D).visible, "HIGH enables fine decoration and practical lights")
+ settings_service.settings["shadows"] = false
+ settings_service.settings["practicals"] = false
+ settings_service.apply_settings()
+ var sun_lights := get_nodes_in_group("quality_lights")
+ check(not (practicals[0] as Light3D).visible and not (sun_lights[0] as Light3D).shadow_enabled, "lighting overrides disable practicals and shadows without restart")
+ settings_service.settings["shadows"] = true
+ settings_service.settings["practicals"] = true
  settings_service.settings["graphics"] = old_quality
  settings_service.apply_settings()
  var npcs: Array[HotelNpc] = world.get("npcs")

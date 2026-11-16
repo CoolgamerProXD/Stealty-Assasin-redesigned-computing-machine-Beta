@@ -68,7 +68,17 @@ func _environment() -> void:
  var sun := DirectionalLight3D.new()
  sun.rotation_degrees = Vector3(-55, -25, 0)
  sun.light_energy = 0.85
- sun.shadow_enabled = Campaign.settings["graphics"] != "LOW"
+ var operation := str(get_meta("operation_id", ""))
+ if operation == "the_streets":
+  sun.light_color = Color(1.0,0.82,0.68)
+ elif operation == "the_district":
+  sun.light_color = Color(0.84,0.92,1.0)
+ elif operation == "the_harbour":
+  sun.light_color = Color(0.70,0.84,1.0)
+  sun.light_energy = 0.75
+ elif operation == "ngong_ping":
+  sun.light_color = Color(1.0,0.91,0.75)
+ sun.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])
  sun.add_to_group("quality_lights")
  add_child(sun)
  var nav := NavigationRegion3D.new()

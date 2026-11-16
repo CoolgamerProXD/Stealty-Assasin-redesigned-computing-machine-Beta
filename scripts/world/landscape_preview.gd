@@ -401,7 +401,7 @@ func _operation_interior(x: float, z: float) -> void:
  practical.omni_range = 7.5
  practical.shadow_enabled = false
  practical.add_to_group("quality_practicals")
- practical.visible = Campaign.settings["graphics"] != "LOW"
+ practical.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
  add_child(practical)
  # Reuse the repository's attributed CC0 furniture, visual-only and placed
  # away from routes; the desk retains its separately authored collider.

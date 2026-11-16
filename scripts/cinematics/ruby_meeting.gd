@@ -40,7 +40,7 @@ func _ready() -> void:
  light.rotation_degrees = Vector3(-45, 35, 0)
  light.light_energy = 1.0
  light.add_to_group("quality_lights")
- light.shadow_enabled = Campaign.settings["graphics"] != "LOW"
+ light.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])
  add_child(light)
  _box(Vector3(0, -0.15, 3), Vector3(12, 0.3, 8), Color(0.30, 0.33, 0.34))
  _box(Vector3(0, -0.15, -5), Vector3(20, 0.3, 10), Color(0.33, 0.34, 0.31))

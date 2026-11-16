@@ -5,6 +5,8 @@ var operation_id := ""
 var mesh_cache: Dictionary = {}
 var material_cache: Dictionary = {}
 var intel_position := Vector3(0,3.3,57)
+var beacon: OmniLight3D
+var beacon_clock: float = 0.0
 
 func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = false) -> Node3D:
  var holder: Node3D = StaticBody3D.new() if solid else Node3D.new()
@@ -84,8 +86,19 @@ func build() -> void:
    light.omni_range = 6.0
    light.shadow_enabled = false
    light.add_to_group("quality_practicals")
-   light.visible = Campaign.settings["graphics"] != "LOW"
+   light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
    add_child(light)
+ # One low-cost animated beacon gives each neighbourhood a changing light
+ # without multiplying shadow maps or overlapping large light volumes.
+ beacon = OmniLight3D.new()
+ beacon.position = Vector3(0,4.1,8)
+ beacon.light_color = accent.lightened(0.45)
+ beacon.light_energy = 0.32
+ beacon.omni_range = 7.0
+ beacon.shadow_enabled = false
+ beacon.add_to_group("quality_practicals")
+ beacon.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
+ add_child(beacon)
  # The corridor navmesh deliberately excludes the new buildings and ramp.
  var region := NavigationRegion3D.new()
  region.name = "NeighbourhoodStreetNavigation"
@@ -133,3 +146,8 @@ func intel_world_position() -> Vector3:
 func contains_world_position(point: Vector3) -> bool:
  var local := to_local(point)
  return absf(local.x) < 34.0 and local.z >= 0.0 and local.z < 69.0 and local.y > -1.0 and local.y < 8.0
+
+func _process(delta: float) -> void:
+ if beacon and beacon.visible:
+  beacon_clock += delta
+  beacon.light_energy = 0.30 + 0.08 * sin(beacon_clock * 1.4)

@@ -77,7 +77,7 @@ func _lamp(pos: Vector3, color: Color, energy: float, distance: float) -> void:
  light.omni_range = distance
  light.shadow_enabled = false
  light.add_to_group("quality_practicals")
- light.visible = Campaign.settings["graphics"] != "LOW"
+ light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
  add_child(light)
 
 func _sofa(x: float, z: float) -> void:

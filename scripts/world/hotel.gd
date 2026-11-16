@@ -148,7 +148,7 @@ func _build_environment() -> void:
  light.rotation_degrees = Vector3(-55, -30, 0)
  light.light_energy = 0.8
  light.add_to_group("quality_lights")
- light.shadow_enabled = Campaign.settings["graphics"] != "LOW"
+ light.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])
  add_child(light)
  _box(Vector3(0, -0.15, 0), Vector3(24, 0.3, 16), Color(0.34, 0.32, 0.29))
  # Preserve the original hotel and open its west wall into the new wing.
@@ -315,7 +315,7 @@ func _build_meridian_wing() -> void:
    light.omni_range = 8.0
    light.shadow_enabled = false
    light.add_to_group("quality_practicals")
-   light.visible = Campaign.settings["graphics"] != "LOW"
+   light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
    add_child(light)
  # Restaurant tables sit beyond the corridor lights' range. Two warm,
  # shadowless pools make the dining room readable without per-table lights.
@@ -328,7 +328,7 @@ func _build_meridian_wing() -> void:
   dining_light.shadow_enabled = false
   dining_light.add_to_group("quality_practicals")
   dining_light.add_to_group("dining_practicals")
-  dining_light.visible = Campaign.settings["graphics"] != "LOW"
+  dining_light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
   add_child(dining_light)
  for entry: Array in [["DINING / LOUNGE", Vector3(-18,2.4,-8.0)], ["GUEST ROOMS", Vector3(-10,6.5,0)], ["PRIVATE SUITE", Vector3(-33.8,6.5,-9.5)]]:
   var sign := Label3D.new()

@@ -9,7 +9,7 @@ var active_mission: String = ""
 var load_checkpoint: bool = false
 var return_to_maps: bool = false
 var ending: Dictionary = {}
-var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "graphics": "MEDIUM", "show_fps": false}
+var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "graphics": "MEDIUM", "show_fps": false, "shadows": true, "practicals": true}
 
 func _ready() -> void:
  var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
@@ -103,6 +103,9 @@ func _load_settings() -> void:
  if (volume is int or volume is float) and is_finite(float(volume)): settings["volume"] = clampf(float(volume), 0.0, 1.0)
  var graphics: Variant = data.get("graphics", "MEDIUM")
  if graphics is String and graphics in ["LOW", "MEDIUM", "HIGH"]: settings["graphics"] = graphics
+ for option: String in ["shadows", "practicals"]:
+  var value: Variant = data.get(option, true)
+  if value is bool: settings[option] = value
  var show_fps: Variant = data.get("show_fps", false)
  if show_fps is bool: settings["show_fps"] = show_fps
  apply_settings()
@@ -117,9 +120,9 @@ func apply_settings() -> void:
  viewport.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if quality == "HIGH" else Viewport.SCREEN_SPACE_AA_DISABLED
  viewport.positional_shadow_atlas_size = 2048 if quality == "HIGH" else (1024 if quality == "MEDIUM" else 0)
  for light: Node in get_tree().get_nodes_in_group("quality_lights"):
-  (light as Light3D).shadow_enabled = quality != "LOW"
+  (light as Light3D).shadow_enabled = quality != "LOW" and bool(settings["shadows"])
  for light: Node in get_tree().get_nodes_in_group("quality_practicals"):
-  (light as Light3D).visible = quality != "LOW"
+  (light as Light3D).visible = quality != "LOW" and bool(settings["practicals"])
  for detail: Node in get_tree().get_nodes_in_group("quality_detail"):
   (detail as Node3D).visible = quality == "HIGH"
  for probe: Node in get_tree().get_nodes_in_group("quality_reflections"):

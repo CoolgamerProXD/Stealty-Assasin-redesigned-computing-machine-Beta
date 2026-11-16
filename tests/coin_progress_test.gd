@@ -69,12 +69,36 @@ func run() -> void:
  var text := CoinDistraction.use(player, npcs, world)
  check(text.begins_with("Coin tossed") and player.equipment.coins_remaining == 1 and npcs[0].state == "suspicious", "a thrown coin spends mission stock and creates a local investigation")
  check(service.progress.completed_lessons.size() == 3 and service.progress.equipped_coins == 2, "throwing never spends permanent campaign rewards")
+ var before_migration: Dictionary = service.progress.snapshot()
+ var partial: Dictionary = SessionSnapshot.capture(player, world.get("mission"))
+ partial["clues"] = ["evaluation", "sensor_log"]
+ check(SaveStore.write(temp + "_partial", partial), "write a legacy in-progress Initiation checkpoint")
+ world.set("save_path", temp + "_partial")
+ service.progress.restore({})
+ world.call("load_game")
+ check(service.progress.completed_lessons.size() == 2 and service.progress.completed_lessons.has("sensor_log"), "loading a partial legacy checkpoint migrates only completed lessons")
+ service.progress.restore(before_migration)
+ var menu: Control = load("res://scenes/main_menu.tscn").instantiate()
+ root.add_child(menu)
+ await process_frame
+ menu.call("_loadout")
+ await process_frame
+ var panel: Control = menu.get("panel")
+ var cycle: Button
+ var fits := true
+ for child: Node in panel.get_children():
+  if child is Control and not root.get_visible_rect().encloses((child as Control).get_global_rect()): fits = false
+  if child is Button and str((child as Button).text).begins_with("COINS:"): cycle = child
+ check(cycle != null and fits, "coin loadout control fits within 720p")
+ if cycle: cycle.pressed.emit()
+ check(service.progress.equipped_coins == 3 and SaveStore.read(temp).get("equipped_coins", 0) == 3, "loadout button changes and persists equipped coins")
+ menu.queue_free()
  world.queue_free()
  await process_frame
  service.progress.restore(old_progress)
  service.campaign_path = old_path
  service.active_mission = old_active
- for suffix: String in ["", ".bak", ".tmp"]:
+ for suffix: String in ["", ".bak", ".tmp", "_partial", "_partial.bak", "_partial.tmp"]:
   if FileAccess.file_exists(temp + suffix): DirAccess.remove_absolute(ProjectSettings.globalize_path(temp + suffix))
  print("COIN RESULT: %d checks, %d failures" % [checks, failures])
  quit(0 if failures == 0 else 1)
