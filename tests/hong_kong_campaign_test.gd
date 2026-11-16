@@ -360,6 +360,22 @@ func run() -> void:
   SaveStore.write(test_path, wrong_mission)
   world.call("load_game")
   check(world.get("target_complete") and world.get("key_secured"), id + " ignores a different mission's checkpoint")
+  if id == "tung_chung":
+   # Reproduce the reported flow, including the actual final interaction;
+   # never bypass the world by calling Campaign.complete as the only proof.
+   check(world.get("witness_found") and world.get("target_complete") and world.get("key_secured") and world.get("train_contact_complete"), "station witness, confrontation, physical key and train contact survive reload")
+   check((world.get("train_contact") as HotelNpc).collision_layer == 0, "completed contact no longer blocks the carriage aisle")
+   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
+   world.call("_interact")
+   check(world.get("extraction_active") and service.progress.completed.has(id), "Tung Chung actually completes through its extraction interaction")
+   world.call("_finish_extraction")
+   await process_frame
+   await process_frame
+   check(current_scene != null and current_scene.scene_file_path == "res://scenes/ending.tscn", "Tung Chung extraction opens its debrief")
+   if current_scene:
+    current_scene.queue_free()
+    current_scene = null
+   await process_frame
   if id == "ngong_ping":
    await move_near(world, (world.get("exit_marker") as Node3D).global_position)
    world.call("_interact")

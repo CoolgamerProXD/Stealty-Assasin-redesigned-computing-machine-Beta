@@ -151,7 +151,7 @@ func _build_markers() -> void:
  add_child(exit_marker)
  _part(exit_marker, Vector3(0,0.04,0), Vector3(1.7,0.06,1.7), Color(0.28,0.65,0.62))
  var exit_label := Label3D.new()
- exit_label.text = "EXTRACTION"
+ exit_label.text = "BOARD TRAIN" if operation_id == "tung_chung" else "EXTRACTION"
  exit_label.position = Vector3(0,1.5,0)
  exit_label.font_size = 30
  exit_label.pixel_size = 0.004
@@ -284,7 +284,7 @@ func _end_intro() -> void:
  pause_menu = preload("res://scripts/ui/pause_menu.gd").new()
  pause_menu.set("world", self)
  add_child(pause_menu)
- message = str(config["clue"])
+ message = "Ruby: " + _next_objective()
 
 func _skip_cinematic() -> void:
  if intro_active: _end_intro()
@@ -299,6 +299,16 @@ func _unhandled_input(event: InputEvent) -> void:
  if intro_active or extraction_active: return
  if event.is_action_pressed("save_game"): save_game()
  elif event.is_action_pressed("load_game"): load_game()
+
+# A single source of truth for the next mandatory step. Optional witnesses and
+# intel never participate in this decision.
+func _next_objective() -> String:
+ if not target_complete: return "Confront or tag " + str(config["target"]) + "."
+ if not key_secured: return str(config["clue"])
+ if operation_id == "tung_chung":
+  if train_stage == "station": return "Board the train at the platform marker."
+  if not train_contact_complete: return "Speak to the train contact in the carriage."
+ return "Reach the extraction marker and press E."
 
 func _process(delta: float) -> void:
  if player == null: return
@@ -333,7 +343,7 @@ func _process(delta: float) -> void:
  var equipment_text := Campaign.item_label(player.equipment.selected)
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
- hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nINTEL %s  ·  WITNESS %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, "SECURED" if intel_found else "OPTIONAL", "SPOKEN" if witness_found else "OPTIONAL", player.equipment.coins_remaining]
+ hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nNEXT: %s\nINTEL %s  ·  WITNESS %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, _next_objective(), "SECURED" if intel_found else "OPTIONAL", "SPOKEN" if witness_found else "OPTIONAL", player.equipment.coins_remaining]
  reticle.visible = player.aiming and not intro_active and not extraction_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
@@ -416,11 +426,14 @@ func _interact() -> void:
  if train_contact and not train_contact_complete and _reachable(train_contact.global_position, train_contact.get_rid()):
   train_contact_complete = true
   train_contact.complete_objective(false)
+  # The contact used to stand immovably in the narrow center aisle after the
+  # conversation. Keep the actor visible but clear the route to extraction.
+  train_contact.collision_layer = 0
   message = "Train contact: The manifest was routed through a market intermediary. Ruby: Take the carriage exit."
   return
  if _reachable(exit_marker.global_position):
   if not target_complete or not key_secured:
-   message = "Extraction locked: confront the target and physically secure this operation's key."
+   message = "Ruby: " + _next_objective()
   elif operation_id == "tung_chung" and train_stage == "station":
    _board_train()
   elif operation_id == "tung_chung" and not train_contact_complete:
@@ -476,6 +489,8 @@ func _board_train() -> void:
  player.velocity = Vector3.ZERO
  player.rotation.y = 0.0
  exit_marker.global_position = Vector3(0,0.05,74)
+ for child: Node in exit_marker.get_children():
+  if child is Label3D: (child as Label3D).text = "EXTRACTION"
  message = "Ruby: You are aboard. Find the train contact, then leave through the carriage door."
 
 func _build_train() -> void:
@@ -611,10 +626,14 @@ func load_game() -> void:
  if operation_id == "tung_chung" and data.get("train_stage", "") == "aboard" and data.get("target_complete", false) == true and saved_key_valid:
   _board_train()
   train_contact_complete = data.get("train_contact_complete", false) == true
-  if train_contact_complete: train_contact.complete_objective(false)
+  if train_contact_complete:
+   train_contact.complete_objective(false)
+   train_contact.collision_layer = 0
  else:
   train_stage = "station"
   exit_marker.global_position = _vec(config["exit"])
+  for child: Node in exit_marker.get_children():
+   if child is Label3D: (child as Label3D).text = "BOARD TRAIN" if operation_id == "tung_chung" else "EXTRACTION"
   train_contact_complete = false
   if train_contact: train_contact.queue_free()
   if train_car: train_car.queue_free()
