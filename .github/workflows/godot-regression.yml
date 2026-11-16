@@ -110,13 +110,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "environment", "import", "startup", "tests", "soak", "camera", "visual", "cinema"):
+          for name in ("version", "environment", "import", "startup", "tests", "hk", "soak", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "soak", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+              if name in ("tests", "hk", "soak", "camera", "visual", "cinema"):
+                  selected = [line for line in lines if re.search(r"^HK RESULT:|^HK FAIL:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -254,7 +254,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $path = "$env:GITHUB_WORKSPACE\build\windows"
-          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview')
+          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_the_streets', 'mission_the_district', 'mission_the_harbour', 'mission_ngong_ping')
           foreach ($scene in $scenes) {
             $log = "$path\smoke-$scene.log"
             $arguments = @('--headless', '--quit-after', '120', '--log-file', $log, "res://scenes/$scene.tscn")
