@@ -45,6 +45,8 @@ var train_contact_complete: bool = false
 var train_car: Node3D
 var train_streaks: Array[Node3D] = []
 var train_gate: StaticBody3D
+var train_passengers: Array[StylizedPerson] = []
+var train_ambience: AudioStreamPlayer
 var escape_seen: bool = false
 var story_phase: String = ""
 var story_time: float = 0.0
@@ -351,6 +353,7 @@ func _process(delta: float) -> void:
    var segment := 16.0 if streak.has_meta("second_car") else 0.0
    streak.position.z = fposmod(streak.position.z - segment + delta * 7.0 + 8.0, 16.0) - 8.0 + segment
   if train_contact and not train_contact_complete: train_contact.person.animate_motion(delta, 0.0)
+  for passenger: StylizedPerson in train_passengers: passenger.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
  var total := 5 if operation_id == "tung_chung" else 3
@@ -606,6 +609,7 @@ func _board_train() -> void:
 
 func _enter_train() -> void:
  train_stage = "aboard"
+ if train_ambience and not train_ambience.playing: train_ambience.play()
  exit_marker.global_position = Vector3(19,0.05,44)
  for child: Node in exit_marker.get_children():
   if child is Label3D: (child as Label3D).text = "EXTRACTION"
@@ -624,6 +628,10 @@ func _build_train() -> void:
  train_car.name = "FictionalTrainCarriages"
  train_car.position = Vector3(19,0,22)
  add_child(train_car)
+ train_ambience = AudioStreamPlayer.new()
+ train_ambience.bus = "Ambient"
+ train_ambience.stream = ProceduralSound.ambience("train")
+ add_child(train_ambience)
  for car_offset: float in [0.0,16.0]:
   _train_solid(Vector3(0,-0.15,car_offset), Vector3(4.5,0.3,16.1), Color(0.36,0.39,0.39))
   for side: float in [-1.0,1.0]:
@@ -631,6 +639,21 @@ func _build_train() -> void:
   _part(train_car, Vector3(0,3.05,car_offset), Vector3(4.5,0.12,16), Color(0.46,0.52,0.51))
   for z: float in [-6.0,-2.0,2.0,6.0]:
    _part(train_car,Vector3(0,2.95,z+car_offset),Vector3(1.9,0.04,0.28),Color(0.88,0.88,0.76))
+  var light := OmniLight3D.new()
+  light.position = Vector3(0,2.75,car_offset)
+  light.light_color = Color(0.83,0.91,0.85)
+  light.light_energy = 0.55
+  light.omni_range = 8.0
+  light.add_to_group("quality_practicals")
+  light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
+  train_car.add_child(light)
+  for side: float in [-1.0,1.0]:
+   var passenger := StylizedPerson.new()
+   passenger.role = "civilian"
+   passenger.position = Vector3(side*1.55,0,car_offset-3.5)
+   passenger.rotation.y = -side*PI*0.5
+   train_car.add_child(passenger)
+   train_passengers.append(passenger)
   for side: float in [-1.0,1.0]:
    for z: float in [-5.0,-2.0,1.0,4.0]:
     _part(train_car, Vector3(side*2.12,1.9,z+car_offset), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
@@ -791,6 +814,7 @@ func load_game() -> void:
     train_contact.visible = false
   else:
    train_stage = "station"
+   if train_ambience: train_ambience.stop()
    exit_marker.global_position = _vec(config["exit"])
    for child: Node in exit_marker.get_children():
     if child is Label3D: (child as Label3D).text = "BOARD TRAIN"
