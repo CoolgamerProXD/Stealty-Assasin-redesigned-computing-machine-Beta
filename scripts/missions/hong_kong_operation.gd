@@ -12,6 +12,8 @@ var witness: HotelNpc
 var witness_found: bool = false
 var key_marker: Node3D
 var intel_marker: Node3D
+var uniform_marker: Node3D
+var uniform_found: bool = false
 var intel_found: bool = false
 var exit_marker: Node3D
 var hud: Label
@@ -121,6 +123,18 @@ func _build_markers() -> void:
  intel_marker = Node3D.new()
  intel_marker.name = "OptionalMissionIntel"
  var annex: Node = scene.find_child("MissionNeighbourhood", true, false)
+ if annex:
+  uniform_marker = Node3D.new()
+  uniform_marker.name = "ServiceDisguise"
+  uniform_marker.position = annex.call("uniform_world_position")
+  add_child(uniform_marker)
+  _part(uniform_marker, Vector3(0,0.8,0), Vector3(0.6,1.2,0.3), Color(0.27,0.42,0.44))
+  var uniform_label := Label3D.new()
+  uniform_label.text = "STAFF DISGUISE"
+  uniform_label.position = Vector3(0,1.65,0)
+  uniform_label.font_size = 27
+  uniform_label.pixel_size = 0.004
+  uniform_marker.add_child(uniform_label)
  intel_marker.position = annex.call("intel_world_position") if annex else _vec(config["intel_pos"])
  add_child(intel_marker)
  _part(intel_marker, Vector3(0,0.22,0), Vector3(0.55,0.42,0.45), Color(0.22,0.48,0.55))
@@ -365,6 +379,12 @@ func _interact() -> void:
  if placement == "safe" and not key_secured and _reachable(key_marker.global_position):
   _secure_key()
   return
+ if uniform_marker and not uniform_found and _reachable(uniform_marker.global_position):
+  uniform_found = true
+  uniform_marker.visible = false
+  player.set_disguise("staff")
+  message = "Staff disguise acquired. Staff areas permit this role; secure areas still do not."
+  return
  if not witness_found and _reachable(witness.global_position, witness.get_rid()):
   if witness.stunned_time > 0.0:
    message = "The witness cannot speak while incapacitated."
@@ -558,7 +578,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "uniform_found": uniform_found, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -583,6 +603,9 @@ func load_game() -> void:
   train_contact = null
   train_car = null
   if previous_stage == "aboard": player.global_position = _vec(config["spawn"])
+ uniform_found = uniform_marker != null and data.get("uniform_found", false) == true
+ player.set_disguise("staff" if uniform_found else "visitor")
+ if uniform_marker: uniform_marker.visible = not uniform_found
  witness_found = data.get("witness_found", false) == true
  intel_found = data.get("intel_found", false) == true
  intel_marker.visible = not intel_found

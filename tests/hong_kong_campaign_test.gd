@@ -268,6 +268,25 @@ func run() -> void:
    Engine.time_scale = 1.0
    print("HK ANNEX RAMP DIAG: ", id, " ", annex.to_local(player.global_position))
    check(annex.to_local(player.global_position).y > 2.7 and annex.to_local(player.global_position).z > 48.0, id + " elevated lookout is reachable via the physical ramp")
+   player.global_position = annex.to_global(Vector3(-17,0.05,2.5))
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   Input.action_press("move_back")
+   await create_timer(5.5).timeout
+   Input.action_release("move_back")
+   Engine.time_scale = 1.0
+   print("HK UPPER OFFICE DIAG: ", id, " ", annex.to_local(player.global_position))
+   check(annex.to_local(player.global_position).y > 3.7 and annex.to_local(player.global_position).z > 13.0, id + " upper service room is reached by a physical ramp")
+   var uniform: Node3D = world.get("uniform_marker")
+   await move_near(world, uniform.global_position)
+   world.call("_interact")
+   check(world.get("uniform_found") and player.role == "staff", id + " optional upper-floor disguise grants staff access")
+   world.call("save_game")
+   player.set_disguise("visitor")
+   world.set("uniform_found", false)
+   world.call("load_game")
+   check(world.get("uniform_found") and player.role == "staff", id + " disguise and access survive checkpoint restore")
    target.collision_layer = 1
    guard.collision_layer = 1
   var witness_npc: HotelNpc = world.get("witness")

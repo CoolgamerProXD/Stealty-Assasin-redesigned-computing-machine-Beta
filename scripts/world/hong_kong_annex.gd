@@ -5,6 +5,7 @@ var operation_id := ""
 var mesh_cache: Dictionary = {}
 var material_cache: Dictionary = {}
 var intel_position := Vector3(0,3.3,57)
+var uniform_position := Vector3(-17,4.0,19)
 var beacon: OmniLight3D
 var beacon_clock: float = 0.0
 
@@ -73,6 +74,11 @@ func build() -> void:
     _box(Vector3(x+3,1.4,z-3),Vector3(1.7,1.4,1.7),Color(0.25,0.43,0.29))
     continue
    _room(x,z,wall,accent,dark)
+ # A walkable second storey over the south-west room has its own exterior
+ # approach; it is not merely a visual rooftop facade.
+ var stair := _box(Vector3(-17,1.98,8),Vector3(3.0,0.18,10.8),paving.lightened(0.10),true)
+ stair.rotation.x = -atan(3.95/10.0)
+ stair.name = "UpperOfficeRamp"
  if business:
   # A taller, non-interactive commercial skyline over the offices.
   for x: float in [-17.0,17.0]:
@@ -181,13 +187,25 @@ func _room(x: float, z: float, wall: Color, accent: Color, dark: Color) -> void:
   _box(Vector3(x+side*4.85,3.1,z),Vector3(0.1,0.5,6),accent)
   for dz: float in [-3.4,3.4]:
    _box(Vector3(x+side*5.12,2.0,z+dz),Vector3(0.06,1.4,2.0),Color(0.26,0.41,0.43))
- for dx: float in [-3.0,0.0,3.0]:
-  _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
-  _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
+ if x == -17.0 and z == 18.0:
+  for side: float in [-1.0,1.0]:
+   _box(Vector3(x+side*5,5.55,z),Vector3(0.18,3.2,10),wall,true)
+   _box(Vector3(x+side*3.25,5.55,z-5),Vector3(3.5,3.2,0.18),wall,true)
+  _box(Vector3(x,5.55,z+5),Vector3(10,3.2,0.18),wall,true)
+  _box(Vector3(x,7.25,z),Vector3(10,0.2,10),dark,true)
+  _box(Vector3(x+3,4.45,z+3),Vector3(2,0.9,1),accent,true)
+  _sign("UPPER SERVICE / STAFF",Vector3(x,6.8,z-4.86),PI)
+ else:
+  for dx: float in [-3.0,0.0,3.0]:
+   _box(Vector3(x+dx,5.5,z),Vector3(2.2,3.0,8),wall.darkened(0.08))
+   _box(Vector3(x+dx,5.6,z+4.05),Vector3(1.6,1.7,0.06),Color(0.21,0.34,0.37))
  _sign("TEA / MARKET" if operation_id == "the_streets" else ("OFFICE / RECORDS" if operation_id == "the_district" else "PIER / SERVICES"),Vector3(x,2.7,z+4.86))
 
 func intel_world_position() -> Vector3:
  return to_global(intel_position)
+
+func uniform_world_position() -> Vector3:
+ return to_global(uniform_position)
 
 func contains_world_position(point: Vector3) -> bool:
  var local := to_local(point)
