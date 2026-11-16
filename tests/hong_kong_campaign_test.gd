@@ -23,6 +23,37 @@ func run() -> void:
  var temp := "user://assassin_hk_test_%d" % Time.get_ticks_usec()
  service.campaign_path = temp + "_campaign.json"
  service.progress.restore({})
+ var test_guard := HotelNpc.new()
+ test_guard.profile = NpcProfile.new()
+ test_guard.profile.occupation = "security"
+ root.add_child(test_guard)
+ test_guard.set_physics_process(false)
+ test_guard.warn_trespass(Vector3.ZERO, Vector3.LEFT, "staff")
+ check(test_guard.state == "warning" and is_equal_approx(test_guard.warning_remaining, 3.0), "security issues a three-second warning")
+ test_guard.tick_trespass(2.0, true)
+ test_guard.warn_trespass(Vector3.ZERO, Vector3.LEFT, "staff")
+ check(test_guard.state == "warning" and test_guard.warning_remaining <= 1.01, "repeated sightings do not restart the grace period")
+ test_guard.tick_trespass(1.1, true)
+ check(test_guard.state == "alerted", "security escalates after the grace period")
+ test_guard.tick_trespass(0.1, false)
+ check(test_guard.state == "returning", "leaving the restricted area de-escalates security")
+ test_guard.queue_free()
+ var visitor := HotelNpc.new()
+ visitor.profile = NpcProfile.new()
+ visitor.profile.occupation = "civilian"
+ root.add_child(visitor)
+ visitor.set_physics_process(false)
+ visitor.warn_trespass(Vector3.ZERO, Vector3.LEFT, "staff")
+ check(visitor.state == "seeking_help", "visitor seeks help instead of becoming hostile")
+ visitor.queue_free()
+ var staff := HotelNpc.new()
+ staff.profile = NpcProfile.new()
+ staff.profile.occupation = "employee"
+ root.add_child(staff)
+ staff.set_physics_process(false)
+ staff.warn_trespass(Vector3.ZERO, Vector3.LEFT, "secure")
+ check(staff.state == "seeking_help", "staff without secure-area permission seek help")
+ staff.queue_free()
  check(service.progress.mark_complete("initiation"), "Initiation unlocks Hong Kong without mandatory Meridian")
  var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
  for i: int in range(ids.size()):
@@ -46,6 +77,18 @@ func run() -> void:
   check(world.get("intro_active") and not player.is_physics_processing(), id + " intro starts before gameplay")
   world.call("_end_intro")
   check(not world.get("intro_active") and player.is_physics_processing(), id + " skip initializes gameplay")
+  if id == "tung_chung":
+   player.global_position = Vector3(14.5,0.05,2.0)
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   Input.action_press("move_forward")
+   await create_timer(2.8).timeout
+   Input.action_release("move_forward")
+   Engine.time_scale = 1.0
+   print("HK STAIR DIAG: ", player.global_position)
+   check(player.global_position.y > 3.0 and player.global_position.z < -3.8, "station stairs connect the concourse to the upper landing")
   await move_near(world, target.global_position)
   world.call("_interact")
   check(world.get("target_complete") and not world.get("key_secured") and not service.progress.recovered_keys.has(key_id), id + " target completion does not grant key")

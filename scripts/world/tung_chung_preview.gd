@@ -36,6 +36,22 @@ func _start_ambience(kind: String) -> void:
  add_child(ambience)
  ambience.play()
 
+# Campaign instances may designate a small authored restricted zone. The
+# independent exploration previews remain public and keep their old behavior.
+func player_access_area(point: Vector3) -> String:
+ var area: Variant = get_meta("restricted_rect", null)
+ if area is Rect2 and area.has_point(Vector2(point.x, point.z)): return "staff"
+ return "public"
+
+func permitted_exit(point: Vector3) -> Vector3:
+ var area: Variant = get_meta("restricted_rect", null)
+ if not area is Rect2: return point
+ var options: Array[Vector3] = [Vector3(area.position.x - 0.8,point.y,point.z), Vector3(area.end.x + 0.8,point.y,point.z), Vector3(point.x,point.y,area.position.y - 0.8), Vector3(point.x,point.y,area.end.y + 0.8)]
+ var best := options[0]
+ for candidate: Vector3 in options:
+  if candidate.distance_squared_to(point) < best.distance_squared_to(point): best = candidate
+ return best
+
 func footstep_surface(_point: Vector3) -> String:
  return "stone"
 
@@ -127,8 +143,9 @@ func _station() -> void:
  _sign("PAPER & PRESS", Vector3(-3,3,-11.28), 30)
  _sign("TEA HOUSE", Vector3(4,3,-11.28), 30)
  _sign("MARKET", Vector3(11,3,-11.28), 30)
- # Fictional, decorative escalator and mezzanine; neither represents railway access.
- _box(Vector3(17,3.2,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47))
+ # Fictional concourse stairway and upper landing; no railway access.
+ _box(Vector3(17,3.2,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true)
+ _station_stair_collision()
  _box(Vector3(17,3.9,-3.95), Vector3(8,1.1,0.12), Color(0.31,0.47,0.49))
  for i: int in range(11):
   _box(Vector3(14.5, float(i)*0.29+0.1, 1.0-float(i)*0.44), Vector3(2.4,0.18,0.46), Color(0.34,0.39,0.38))
@@ -164,6 +181,20 @@ func _station() -> void:
   _box(Vector3(x,1.0,11.83),Vector3(0.035,1.9,0.035),Color(0.92,0.65,0.27))
   _box(Vector3(x,2.9,11.83),Vector3(0.8,0.10,0.035),Color(0.92,0.65,0.27))
 
+
+# Invisible smooth collision follows the visible stair treads. The ends
+# overlap the concourse and landing to avoid a capsule-catching vertical lip.
+func _station_stair_collision() -> void:
+ var ramp := StaticBody3D.new()
+ ramp.name = "StationStairCollision"
+ ramp.position = Vector3(14.5,1.665,-1.35)
+ ramp.rotation.x = atan(3.45 / 5.7)
+ add_child(ramp)
+ var collider := CollisionShape3D.new()
+ var box := BoxShape3D.new()
+ box.size = Vector3(2.4,0.14,sqrt(3.45*3.45 + 5.7*5.7))
+ collider.shape = box
+ ramp.add_child(collider)
 
 func _population() -> void:
  var coats: Array[Color] = [Color(0.55,0.31,0.24), Color(0.25,0.36,0.46), Color(0.42,0.44,0.30), Color(0.48,0.36,0.46), Color(0.28,0.45,0.42), Color(0.60,0.52,0.38), Color(0.31,0.32,0.35)]

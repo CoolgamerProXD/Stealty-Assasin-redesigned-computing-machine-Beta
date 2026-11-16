@@ -189,7 +189,9 @@ func animate_motion(delta: float, speed: float) -> void:
  right_leg.position.y += adjustment_delta
  ground_adjust = correction
  var left_pose := -swing * 0.7
- if speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
+ if speed < 0.1 and idle_activity == "warning": left_pose = 0.95 + sin(idle_phase * 0.6) * 0.08
+ elif speed < 0.1 and idle_activity == "seeking_help": left_pose = 0.58 + sin(idle_phase * 0.9) * 0.12
+ elif speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
  elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(idle_phase * 0.5) * 0.06
  left_pose = lerpf(left_pose, 0.40 + quiet_tool_action * 0.35, quiet_tool_draw)
  left_arm.rotation.x = lerp_angle(left_arm.rotation.x, lerpf(left_pose, 1.05, weapon_aim_blend), blend)

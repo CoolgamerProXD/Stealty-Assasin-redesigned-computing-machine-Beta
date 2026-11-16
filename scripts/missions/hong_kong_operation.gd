@@ -54,6 +54,11 @@ func _ready() -> void:
   target = scene.call("_target", str(config["target"]), "manager", t, t + Vector3(0,0,1.8)) as HotelNpc
   guard = scene.call("_target", "Bodyguard", "security", g, g + Vector3(0,0,1.8)) as HotelNpc
  npc_list = scene.get("npcs")
+ var restricted_center := _vec(config["target_pos"])
+ scene.set_meta("restricted_rect", Rect2(restricted_center.x-3.0, restricted_center.z-3.0, 6.0, 6.0))
+ for npc: HotelNpc in npc_list:
+  npc.player = player
+  npc.trespass_notice.connect(_on_trespass_notice)
  player.equipment.configure(Campaign.progress, operation_id)
  player.interaction_requested.connect(_interact)
  player.equipment_selected.connect(_select_equipment)
@@ -238,6 +243,12 @@ func _secure_key() -> void:
   key_marker.visible = false
   message = "Ruby: " + id.to_upper().replace("_", " ") + " secured. Reach extraction after completing the target."
  else: message = "Could not secure the key. Check campaign save permissions."
+
+func _on_trespass_notice(_npc: HotelNpc, text: String, exit_point: Vector3) -> void:
+ var direction := exit_point - player.global_position
+ var axis := "east" if direction.x > 0.0 else "west"
+ if absf(direction.z) > absf(direction.x): axis = "south" if direction.z > 0.0 else "north"
+ message = text + "  /  EXIT: " + axis.to_upper()
 
 func _select_equipment(slot: int) -> void:
  message = "Equipped: " + Campaign.item_label(player.equipment.selected) if player.equipment.select_slot(slot) else "No equipment in that slot."

@@ -1,6 +1,7 @@
 class_name HotelNpc
 extends CharacterBody3D
 signal state_changed(npc: HotelNpc, new_state: String)
+signal trespass_notice(npc: HotelNpc, text: String, exit_point: Vector3)
 
 const SPEED: float = 1.45
 var profile: NpcProfile
@@ -20,6 +21,10 @@ var person: StylizedPerson
 # Terminal mission state is independent of temporary incapacitation.
 var objective_completed: bool = false
 var completed_incapacitated: bool = false
+var warning_remaining: float = 0.0
+var alert_remaining: float = 0.0
+var warning_cooldown: float = 0.0
+var exit_hint: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -34,6 +39,7 @@ func _ready() -> void:
  person.role = profile.occupation
  person.appearance_seed = profile.identity.hash()
  add_child(person)
+ if profile.occupation == "security": person.add_sidearm()
  agent = NavigationAgent3D.new()
  agent.path_desired_distance = 0.35
  agent.target_desired_distance = 0.45
@@ -87,9 +93,69 @@ func observe_trespass(point: Vector3) -> void:
  set_state("suspicious")
  if agent: agent.target_position = point
 
+# Perception invokes this once per incident, not once per sighting. The same
+# local suspicion/memory remains in use; visitors seek help rather than enforce.
+func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staff") -> void:
+ if objective_completed or stunned_time > 0.0 or warning_cooldown > 0.0 or state in ["warning", "alerted", "seeking_help"]: return
+ memory.observe("trespass", point, 1.0)
+ suspicion = minf(100.0, suspicion + 18.0 + profile.alertness * 12.0)
+ exit_hint = permitted_exit
+ var permission_role := "staff" if profile.occupation == "employee" else profile.occupation
+ if profile.occupation == "civilian" or not AccessRules.can_enter(permission_role, area):
+  alert_remaining = 4.0
+  set_state("seeking_help")
+  trespass_notice.emit(self, profile.identity + ": Someone is in a restricted area. I should find staff.", exit_hint)
+ else:
+  warning_remaining = 3.0
+  set_state("warning")
+  trespass_notice.emit(self, profile.identity + ": This area is restricted. Please leave now.", exit_hint)
+
+func tick_trespass(delta: float, still_restricted: bool) -> void:
+ warning_cooldown = maxf(0.0, warning_cooldown - delta)
+ if state not in ["warning", "alerted", "seeking_help"]: return
+ if not still_restricted:
+  warning_remaining = 0.0
+  alert_remaining = 0.0
+  warning_cooldown = 3.0
+  suspicion = maxf(0.0, suspicion - 20.0)
+  set_state("returning")
+  if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+  trespass_notice.emit(self, profile.identity + ": Thank you for leaving.", exit_hint)
+  return
+ if state == "warning":
+  warning_remaining = maxf(0.0, warning_remaining - delta)
+  if warning_remaining <= 0.0:
+   alert_remaining = 6.0
+   if profile.occupation == "security":
+    suspicion = maxf(suspicion, 80.0)
+    set_state("alerted")
+    trespass_notice.emit(self, profile.identity + ": Security alert. Leave the restricted area.", exit_hint)
+   else:
+    set_state("seeking_help")
+    trespass_notice.emit(self, profile.identity + ": I am calling security.", exit_hint)
+ else:
+  alert_remaining -= delta
+  if alert_remaining <= 0.0:
+   warning_cooldown = 5.0
+   set_state("returning")
+   if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+
+func _player_access_area() -> String:
+ if not player: return "public"
+ var world := player.get_parent()
+ if world and world.has_method("player_access_area"): return str(world.call("player_access_area", player.global_position))
+ return AccessRules.area_at(player.global_position)
+
+func _permitted_exit() -> Vector3:
+ if not player: return global_position
+ var world := player.get_parent()
+ if world and world.has_method("permitted_exit"): return world.call("permitted_exit", player.global_position)
+ return Vector3(1.5, player.global_position.y, player.global_position.z)
+
 func advance_simulation(delta: float) -> void:
  if objective_completed or stunned_time > 0.0: return
  memory.tick(delta)
+ if state in ["warning", "alerted", "seeking_help"]: return
  if state == "suspicious":
   set_state("investigating")
  elif state == "investigating":
@@ -140,12 +206,13 @@ func _physics_process(delta: float) -> void:
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
   return
  if person: person.rotation.z = move_toward(person.rotation.z, 0.0, delta * 3.0)
+ if player: tick_trespass(delta, not AccessRules.can_enter(player.role, _player_access_area()))
  advance_simulation(delta)
  # Perception is throttled by the physics clock, not checked every frame.
  perception_clock += delta
  if perception_clock >= 0.4:
   perception_clock = 0.0
-  if player and not AccessRules.can_enter(player.role, AccessRules.area_at(player.global_position)) and can_see(player.global_position):
+  if player and not AccessRules.can_enter(player.role, _player_access_area()) and can_see(player.global_position):
    var ray_start := global_position + Vector3.UP * 1.3
    # Target the actual stance, so cover geometry, not a magic crouch bonus,
    # determines whether the player is visible.
@@ -153,7 +220,7 @@ func _physics_process(delta: float) -> void:
    var query := PhysicsRayQueryParameters3D.create(ray_start, ray_end)
    query.exclude = [get_rid(), player.get_rid()]
    var clear := get_world_3d().direct_space_state.intersect_ray(query).is_empty()
-   if can_see(player.global_position, clear): observe_trespass(player.global_position)
+   if can_see(player.global_position, clear): warn_trespass(player.global_position, _permitted_exit(), _player_access_area())
  if agent and state in ["walking", "returning", "investigating"]:
   if agent.is_navigation_finished():
    if state == "walking" and not profile.schedule.is_empty():
@@ -176,6 +243,9 @@ func _physics_process(delta: float) -> void:
  move_and_slide()
  if person:
   person.idle_activity = state
+  if profile.occupation == "security":
+   person.weapon_equipped = state == "alerted"
+   person.weapon_aiming = state == "alerted"
   person.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
   if velocity.length_squared() > 0.1:
    person.rotation.y = lerp_angle(person.rotation.y, atan2(-velocity.x, -velocity.z), 1.0 - exp(-delta * 8.0))

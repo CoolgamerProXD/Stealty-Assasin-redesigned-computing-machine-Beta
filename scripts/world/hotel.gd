@@ -376,6 +376,7 @@ func _build_npcs() -> void:
   var npc := HotelNpc.new()
   npc.profile = profile
   npc.player = player
+  npc.trespass_notice.connect(_on_trespass_notice)
   npc.position = _vector(record["start"])
   add_child(npc)
   npcs.append(npc)
@@ -654,6 +655,10 @@ func _build_ui() -> void:
  prompt.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
  prompt.custom_minimum_size.x = 280
  bottom.add_child(prompt)
+
+func _on_trespass_notice(_npc: HotelNpc, text: String, exit_point: Vector3) -> void:
+ var direction := exit_point - player.global_position
+ message = text + ("  /  EXIT WEST" if direction.x < 0.0 else "  /  EXIT EAST")
 
 func _select_equipment(slot: int) -> void:
  if player.equipment.select_slot(slot):
