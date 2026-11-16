@@ -52,10 +52,12 @@ func run() -> void:
   await physics_frame
   var intro: Camera3D = world.get("intro_camera")
   check(intro.current and world.get("intro_active"), id + " entry camera is active")
+  check(root.get_visible_rect().encloses((world.get("skip_button") as Button).get_global_rect()), id + " skip button fits at 720p")
   await capture("hk_intro_" + id)
   world.call("_end_intro")
   var player: HotelPlayer = world.get("player")
   check(player.camera.current and player.is_physics_processing(), id + " gameplay camera resumes")
+  check(root.get_visible_rect().encloses((world.get("hud") as Label).get_global_rect()), id + " objective HUD fits at 720p")
   if id == "tung_chung":
    var target: HotelNpc = world.get("target")
    var people: Array[HotelNpc] = world.get("npc_list")

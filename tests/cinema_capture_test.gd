@@ -196,6 +196,12 @@ func run() -> void:
  await process_frame
  menu.call("_missions")
  await capture("cinema_mission_selection")
+ var menu_fits := true
+ for child: Node in menu.get("panel").get_children():
+  if child is Control and not root.get_visible_rect().encloses((child as Control).get_global_rect()):
+   print("CINEMA_METRIC: selection outside viewport ", child.name, " ", (child as Control).get_global_rect())
+   menu_fits = false
+ check(menu_fits, "all campaign selection controls fit within 720p")
  menu.call("_settings")
  await capture("cinema_graphics_settings")
  check(menu.get("panel").get_child_count() > 0, "settings panel opens from main menu")
