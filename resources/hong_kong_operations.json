@@ -35,7 +35,14 @@
       -0.5,
       0.05,
       -8.0
-    ]
+    ],
+    "witness": "Platform attendant",
+    "witness_pos": [
+      -16,
+      0.05,
+      2
+    ],
+    "witness_line": "The courier signed for a sealed manifest. Ruby: The courier carries the first key; the train contact can corroborate the transfer."
   },
   "the_streets": {
     "map": "city",
@@ -68,7 +75,14 @@
       0
     ],
     "target_line": "The broker in the district records office made the arrangements.",
-    "intel_text": "A market receipt names the district records broker and says the bodyguard carries Key 02."
+    "intel_text": "A market receipt names the district records broker and says the bodyguard carries Key 02.",
+    "witness": "Market vendor",
+    "witness_pos": [
+      -6,
+      0.05,
+      19
+    ],
+    "witness_line": "A guarded courier made the market handoff. Ruby: The bodyguard has the key; the market receipt identifies the next broker."
   },
   "the_district": {
     "map": "city",
@@ -101,7 +115,14 @@
       0
     ],
     "target_line": "The next meeting is at a harbour liaison office. I never met the buyer.",
-    "intel_text": "A routing slip identifies the records safe as the Key 03 location and names a waterfront liaison."
+    "intel_text": "A routing slip identifies the records safe as the Key 03 location and names a waterfront liaison.",
+    "witness": "Records clerk",
+    "witness_pos": [
+      6,
+      0.05,
+      19
+    ],
+    "witness_line": "Our broker kept one sealed item in the records safe. Ruby: The routing slip should identify the waterfront contact."
   },
   "the_harbour": {
     "map": "city",
@@ -134,7 +155,14 @@
       -35
     ],
     "target_line": "The final coordinator took the archive route toward the mountains.",
-    "intel_text": "A quay ledger confirms the liaison’s bodyguard holds Key 04 and references a mountain field archive."
+    "intel_text": "A quay ledger confirms the liaison’s bodyguard holds Key 04 and references a mountain field archive.",
+    "witness": "Quay attendant",
+    "witness_pos": [
+      4,
+      0.05,
+      -20
+    ],
+    "witness_line": "The liaison arrived with an escort and asked about a mountain delivery. Ruby: Watch the bodyguard for the key."
   },
   "ngong_ping": {
     "map": "mountain",
@@ -172,6 +200,13 @@
       -26,
       1.3,
       -8
-    ]
+    ],
+    "witness": "Village guide",
+    "witness_pos": [
+      -5,
+      0.05,
+      10
+    ],
+    "witness_line": "Field workers used an archive office near the village, not the monument. Ruby: The safe is our priority."
   }
 }

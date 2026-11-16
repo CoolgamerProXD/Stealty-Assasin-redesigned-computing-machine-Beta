@@ -8,6 +8,8 @@ var scene: Node3D
 var player: HotelPlayer
 var target: HotelNpc
 var guard: HotelNpc
+var witness: HotelNpc
+var witness_found: bool = false
 var key_marker: Node3D
 var intel_marker: Node3D
 var intel_found: bool = false
@@ -70,6 +72,8 @@ func _ready() -> void:
   var g := _vec(config["guard_pos"])
   target = scene.call("_target", str(config["target"]), "manager", t, t + Vector3(0,0,1.8)) as HotelNpc
   guard = scene.call("_target", "Bodyguard", "security", g, g + Vector3(0,0,1.8)) as HotelNpc
+ var witness_at := _vec(config["witness_pos"])
+ witness = scene.call("_target", str(config["witness"]), "civilian", witness_at, witness_at + Vector3(0,0,1.4)) as HotelNpc
  npc_list = scene.get("npcs")
  var restricted_center := _vec(config["target_pos"])
  scene.set_meta("restricted_rect", Rect2(restricted_center.x-3.0, restricted_center.z-3.0, 6.0, 6.0))
@@ -275,7 +279,7 @@ func _process(delta: float) -> void:
  var equipment_text := Campaign.item_label(player.equipment.selected)
  if player.equipment.selected == "training_sidearm": equipment_text += "  %d / 5" % player.equipment.charges
  else: equipment_text += "  /  Q USE"
- hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nINTEL %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, "SECURED" if intel_found else "OPTIONAL", player.equipment.coins_remaining]
+ hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nINTEL %s  ·  WITNESS %s  ·  G COIN %d   ·   E INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message, "SECURED" if intel_found else "OPTIONAL", "SPOKEN" if witness_found else "OPTIONAL", player.equipment.coins_remaining]
  reticle.visible = player.aiming and not intro_active
  fps_label.visible = bool(Campaign.settings["show_fps"])
  if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
@@ -323,6 +327,14 @@ func _interact() -> void:
  if placement == "safe" and not key_secured and _reachable(key_marker.global_position):
   _secure_key()
   return
+ if not witness_found and _reachable(witness.global_position, witness.get_rid()):
+  if witness.stunned_time > 0.0:
+   message = "The witness cannot speak while incapacitated."
+   return
+  witness_found = true
+  witness.person.interact()
+  message = str(config["witness"]) + ": " + str(config["witness_line"])
+  return
  if not intel_found and _reachable(intel_marker.global_position):
   intel_found = true
   intel_marker.visible = false
@@ -340,7 +352,9 @@ func _interact() -> void:
    _board_train()
   elif operation_id == "tung_chung" and not train_contact_complete:
    message = "Ruby: Speak to the train contact before leaving the carriage."
-  elif Campaign.complete(operation_id, 1 if intel_found else 0):
+  elif Campaign.complete(operation_id, int(intel_found) + int(witness_found)):
+   Campaign.ending["intel_found"] = intel_found
+   Campaign.ending["witness_found"] = witness_found
    var next := "res://scenes/usb_decryption.tscn" if operation_id == "ngong_ping" and Campaign.progress.usb_ready() and not Campaign.progress.usb_decryption_seen else "res://scenes/ending.tscn"
    get_tree().change_scene_to_file(next)
   else: message = "Campaign progress could not be saved."
@@ -477,7 +491,7 @@ func _fire() -> void:
 
 func save_game() -> void:
  var p := player.global_position
- var data := {"mission_id": operation_id, "intel_found": intel_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
+ var data := {"mission_id": operation_id, "intel_found": intel_found, "witness_found": witness_found, "target_complete": target_complete, "target_incapacitated": target.completed_incapacitated, "key_id": str(Campaign.progress.mission(operation_id).get("key_id", "")), "key_secured": key_secured, "train_stage": train_stage, "train_contact_complete": train_contact_complete, "position": [p.x,p.y,p.z], "equipment": player.equipment.snapshot()}
  message = "Checkpoint saved." if SaveStore.write(save_path, data) else "Checkpoint save failed."
 
 func load_game() -> void:
@@ -502,6 +516,7 @@ func load_game() -> void:
   train_contact = null
   train_car = null
   if previous_stage == "aboard": player.global_position = _vec(config["spawn"])
+ witness_found = data.get("witness_found", false) == true
  intel_found = data.get("intel_found", false) == true
  intel_marker.visible = not intel_found
  target_complete = data.get("target_complete", false) == true

@@ -18,7 +18,7 @@ func _ready() -> void:
  _label("BLACKLINE  /  OPERATION COMPLETE", 34)
  _label(str(Campaign.ending.get("name", "ASSIGNMENT")), 25)
  if str(Campaign.ending.get("id", "")) in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
-  _label("PRIMARY COMPLETE   /   PHYSICAL KEY SECURED   /   OPTIONAL INTEL %s" % ("SECURED" if int(Campaign.ending.get("records", 0)) > 0 else "NOT SECURED"), 19)
+  _label("PRIMARY COMPLETE   /   PHYSICAL KEY SECURED\nOPTIONAL INTEL %s   /   WITNESS %s" % ["SECURED" if Campaign.ending.get("intel_found", false) else "NOT SECURED", "SPOKEN" if Campaign.ending.get("witness_found", false) else "NOT SPOKEN"], 19)
  else:
   _label("Records secured: %d" % Campaign.ending.get("records", 0), 20)
  _label("RUBY  /  DEBRIEF\n" + str(Campaign.ending.get("debrief", "")), 21)
