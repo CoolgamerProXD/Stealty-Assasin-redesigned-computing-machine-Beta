@@ -52,7 +52,11 @@ func build() -> void:
  var wall := Color(0.63,0.53,0.41) if market else (Color(0.47,0.56,0.57) if business else Color(0.55,0.54,0.48))
  var accent := Color(0.73,0.27,0.18) if market else (Color(0.24,0.48,0.49) if business else Color(0.18,0.40,0.49))
  var dark := Color(0.19,0.25,0.26)
- _box(Vector3(0,-0.2,35),Vector3(70,0.4,70),paving,true)
+ var ground := _box(Vector3(0,-0.2,35),Vector3(70,0.4,70),paving,true)
+ var paving_material := ShaderMaterial.new()
+ paving_material.shader = preload("res://shaders/neighbourhood_paving.gdshader")
+ paving_material.set_shader_parameter("paving_color", paving)
+ (ground.get_child(0) as MeshInstance3D).material_override = paving_material
  # Solid boundaries and a 12m gateway back to the existing city.
  for x: float in [-35.0,35.0]: _box(Vector3(x,2,35),Vector3(0.3,4,70),dark,true)
  if operation_id == "the_harbour":
