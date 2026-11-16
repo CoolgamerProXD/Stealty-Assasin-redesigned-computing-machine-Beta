@@ -34,6 +34,7 @@ var intro_time: float = 0.0
 var intro_active: bool = true
 var extraction_active: bool = false
 var extraction_camera: Camera3D
+var pause_menu: CanvasLayer
 var extraction_time: float = 0.0
 var extraction_next: String = ""
 var target_complete: bool = false
@@ -279,9 +280,9 @@ func _end_intro() -> void:
  player.set_process_unhandled_input(true)
  player.camera.make_current()
  intro_camera.queue_free()
- var pause := preload("res://scripts/ui/pause_menu.gd").new()
- pause.world = self
- add_child(pause)
+ pause_menu = preload("res://scripts/ui/pause_menu.gd").new()
+ pause_menu.set("world", self)
+ add_child(pause_menu)
  message = str(config["clue"])
 
 func _skip_cinematic() -> void:
@@ -426,6 +427,9 @@ func _begin_extraction(next: String) -> void:
  extraction_active = true
  extraction_time = 0.0
  extraction_next = next
+ # PauseMenu processes input before its parent; it must not intercept the
+ # cinematic's Escape skip or pause a completed operation.
+ if pause_menu: pause_menu.set_process_input(false)
  player.set_physics_process(false)
  player.set_process_unhandled_input(false)
  player.velocity = Vector3.ZERO

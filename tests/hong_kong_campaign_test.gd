@@ -367,7 +367,7 @@ func run() -> void:
    var extraction_skip := InputEventAction.new()
    extraction_skip.action = "release_mouse"
    extraction_skip.pressed = true
-   world.call("_input", extraction_skip)
+   Input.parse_input_event(extraction_skip)
    await process_frame
    await process_frame
    check(service.progress.completed.has(id), "skipping extraction preserves final operation completion")
