@@ -73,10 +73,45 @@ func _environment() -> void:
  add_child(sun)
  var nav := NavigationRegion3D.new()
  var mesh := NavigationMesh.new()
- mesh.vertices = PackedVector3Array([Vector3(-21,0,-13), Vector3(21,0,-13), Vector3(21,0,13), Vector3(-21,0,13)])
- mesh.add_polygon(PackedInt32Array([0,3,2,1]))
+ if get_script().resource_path == "res://scripts/world/tung_chung_preview.gd":
+  mesh = _station_navigation_mesh()
+ else:
+  # Landscape studies have different geometry and keep their own local routes.
+  mesh.vertices = PackedVector3Array([Vector3(-21,0,-13), Vector3(21,0,-13), Vector3(21,0,13), Vector3(-21,0,13)])
+  mesh.add_polygon(PackedInt32Array([0,3,2,1]))
  nav.navigation_mesh = mesh
  add_child(nav)
+
+# Authored navigation holes expand the solid columns and information island by
+# the NPC capsule's radius. The polygons share vertices; routes can turn around
+# the obstacles rather than walking through a broad, unbaked rectangle.
+func _station_navigation_mesh() -> NavigationMesh:
+ var xs: Array[float] = [-21.0,-3.9,1.9,21.0]
+ var zs: Array[float] = [-13.0,-6.7,-5.3,-1.4,1.4,5.3,6.7,11.1]
+ var obstacles: Array[Rect2] = [Rect2(-3.9,-1.4,5.8,2.8)]
+ for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
+  xs.append(x-0.7)
+  xs.append(x+0.7)
+  for z: float in [-6.0,6.0]: obstacles.append(Rect2(x-0.7,z-0.7,1.4,1.4))
+ xs.sort()
+ zs.sort()
+ var vertices := PackedVector3Array()
+ for z: float in zs:
+  for x: float in xs: vertices.append(Vector3(x,0,z))
+ var mesh := NavigationMesh.new()
+ mesh.vertices = vertices
+ for row: int in range(zs.size()-1):
+  for column: int in range(xs.size()-1):
+   var middle := Vector2((xs[column]+xs[column+1])*0.5,(zs[row]+zs[row+1])*0.5)
+   var blocked := false
+   for obstacle: Rect2 in obstacles:
+    if obstacle.has_point(middle):
+     blocked = true
+     break
+   if not blocked:
+    var a: int = row*xs.size()+column
+    mesh.add_polygon(PackedInt32Array([a,a+xs.size(),a+xs.size()+1,a+1]))
+ return mesh
 
 func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = false) -> void:
  var holder: Node3D = StaticBody3D.new() if solid else Node3D.new()
