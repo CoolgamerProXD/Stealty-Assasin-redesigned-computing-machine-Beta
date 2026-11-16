@@ -367,9 +367,11 @@ func run() -> void:
    var extraction_skip := InputEventAction.new()
    extraction_skip.action = "release_mouse"
    extraction_skip.pressed = true
-   Input.parse_input_event(extraction_skip)
+   await process_frame
+   root.push_input(extraction_skip)
    await process_frame
    await process_frame
+   print("HK EXTRACTION DIAG: active=", world.get("extraction_active"), " paused=", paused, " scene=", current_scene.scene_file_path if current_scene else "none")
    check(service.progress.completed.has(id), "skipping extraction preserves final operation completion")
    check(current_scene != null and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn" and not service.progress.usb_decryption_seen, "five keys trigger the secure-channel story event")
    if current_scene and current_scene.scene_file_path == "res://scenes/usb_decryption.tscn":
