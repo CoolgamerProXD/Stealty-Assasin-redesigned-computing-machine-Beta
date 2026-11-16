@@ -58,9 +58,9 @@ func footstep_surface(_point: Vector3) -> String:
  return "stone"
 
 func _environment() -> void:
- var station_scene := get_script().resource_path == "res://scripts/world/tung_chung_preview.gd"
+ var station_scene: bool = get_script().resource_path == "res://scripts/world/tung_chung_preview.gd"
  var operation := str(get_meta("operation_id", ""))
- var station_mood := station_scene or operation == "tung_chung"
+ var station_mood: bool = station_scene or operation == "tung_chung"
  var env := WorldEnvironment.new()
  var data := Environment.new()
  data.background_mode = Environment.BG_COLOR
