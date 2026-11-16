@@ -560,6 +560,10 @@ func _build_departure_exterior() -> void:
  _part(story_set,Vector3(0,2.75,0),Vector3(4.4,0.55,27),Color(0.30,0.43,0.46),"painted_metal")
  _part(story_set,Vector3(0,3.12,0),Vector3(4.55,0.16,27.2),Color(0.38,0.48,0.49),"brushed_metal")
  for side: float in [-1.0,1.0]:
+  # This camera stays on the positive-X exterior side. Leave the opposite
+  # facade open so the fictional skyline reads through the window bays instead
+  # of a second opaque wall hiding the city.
+  if side < 0.0: continue
   _part(story_set,Vector3(side*2.12,1.88,0),Vector3(0.14,0.30,27),Color(0.36,0.48,0.49),"painted_metal")
   for z: float in [-11.5,-8.1,-4.7,-1.3,2.1,5.5,8.9,11.5]:
    _part(story_set,Vector3(side*2.13,1.86,z),Vector3(0.12,1.66,0.16),Color(0.38,0.49,0.48),"brushed_metal")
@@ -585,12 +589,12 @@ func _build_departure_exterior() -> void:
   var z := -17.0 + float(i)*4.1
   var height := 5.5 + float((i*7)%5)*1.25
   var width := 2.4 + float(i%3)*0.7
-  _part(story_set,Vector3(4.8,height*0.5,z),Vector3(width,height,3.8),Color(0.08+float(i%2)*0.02,0.15,0.18),"emissive")
+  _part(story_set,Vector3(-7.6,height*0.5,z),Vector3(width,height,3.8),Color(0.065+float(i%2)*0.018,0.12,0.15),"emissive")
   for row: int in range(1,4):
    var wy := 0.9 + float(row)*1.05
    if wy > height-0.4: continue
    for col: int in range(2):
-    _part(story_set,Vector3(6.78,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.95,0.67,0.37,0.92) if (i+row+col)%3==0 else Color(0.35,0.78,0.86,0.88),"emissive")
+    _part(story_set,Vector3(-5.55,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.95,0.67,0.37,0.92) if (i+row+col)%3==0 else Color(0.35,0.78,0.86,0.88),"emissive")
  # Passing environmental light bars create lateral motion while the camera
  # tracks the carriage; all are non-colliding cinematic dressing.
  for i: int in range(14):
