@@ -27,6 +27,9 @@ var warning_cooldown: float = 0.0
 var alert_pulse_clock: float = 0.0
 var alert_audio: AudioStreamPlayer3D
 var exit_hint: Vector3 = Vector3.ZERO
+var help_target: HotelNpc
+var help_incident: Vector3 = Vector3.ZERO
+var help_reported: bool = false
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -124,6 +127,7 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
  if not still_restricted:
   warning_remaining = 0.0
   alert_remaining = 0.0
+  help_target = null
   warning_cooldown = 3.0
   suspicion = maxf(0.0, suspicion - 20.0)
   set_state("returning")
@@ -152,14 +156,38 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
 
 func _seek_help(incident: Vector3) -> void:
  if not agent: return
- # Local, bounded retreat to an authored route point (or a short step away);
- # there is no invented global alert or perpetual pursuit.
- if not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+ help_incident = incident
+ help_reported = false
+ help_target = null
+ var best := 14.0
+ # Local witnesses look for an available guard in the same scene, not a
+ # global radio broadcast. If none is nearby they return to a safe route.
+ for candidate: Node in get_parent().get_children():
+  if candidate is HotelNpc and candidate != self:
+   var officer := candidate as HotelNpc
+   var distance := global_position.distance_to(officer.global_position)
+   if officer.profile.occupation == "security" and not officer.objective_completed and officer.stunned_time <= 0.0 and distance < best:
+    best = distance
+    help_target = officer
+ if help_target:
+  agent.target_position = help_target.global_position
+ elif not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
  else:
   var away := global_position - incident
   away.y = 0.0
   if away.length_squared() < 0.01: away = Vector3.FORWARD
   agent.target_position = global_position + away.normalized() * 3.0
+
+func _try_deliver_report() -> bool:
+ if state != "seeking_help" or help_reported or not is_instance_valid(help_target): return false
+ if help_target.objective_completed or help_target.stunned_time > 0.0 or global_position.distance_to(help_target.global_position) > 2.5: return false
+ var ray := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP, help_target.global_position + Vector3.UP)
+ ray.exclude = [get_rid(), help_target.get_rid()]
+ if not get_world_3d().direct_space_state.intersect_ray(ray).is_empty(): return false
+ help_target.observe_disturbance(help_incident)
+ help_reported = true
+ trespass_notice.emit(self, profile.identity + ": Security, please check that area.", exit_hint)
+ return true
 
 # A fictional short-range assessment pulse. Solid geometry blocks it; there is
 # no health, graphic harm, permanent damage or open-ended pursuit.
@@ -219,7 +247,7 @@ func can_see(target: Vector3, unobstructed: bool = true) -> bool:
  return unobstructed and facing.normalized().dot(offset.normalized()) >= 0.5
 
 func observe_disturbance(point: Vector3) -> void:
- if objective_completed or stunned_time > 0.0 or state in ["suspicious", "investigating", "disabled"]: return
+ if objective_completed or stunned_time > 0.0 or state in ["suspicious", "investigating", "disabled", "warning", "alerted", "seeking_help"]: return
  memory.observe("disturbance", point, 1.0)
  investigation_target = point
  suspicion = minf(100.0, suspicion + 35.0)
@@ -244,6 +272,7 @@ func _physics_process(delta: float) -> void:
  if person: person.rotation.z = move_toward(person.rotation.z, 0.0, delta * 3.0)
  if player: tick_trespass(delta, not AccessRules.can_enter(player.role, _player_access_area()))
  advance_simulation(delta)
+ if state == "seeking_help": _try_deliver_report()
  # Perception is throttled by the physics clock, not checked every frame.
  perception_clock += delta
  if perception_clock >= 0.4:

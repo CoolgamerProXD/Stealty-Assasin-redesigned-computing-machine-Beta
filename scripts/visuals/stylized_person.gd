@@ -23,6 +23,7 @@ var quiet_tool_draw: float = 0.0
 var quiet_tool_action: float = 0.0
 var weapon_recoil: float = 0.0
 var hit_reaction: float = 0.0
+var interaction_action: float = 0.0
 var weapon_aiming: bool = false
 var weapon_equipped: bool = false
 var weapon_draw: float = 0.0
@@ -141,6 +142,9 @@ func use_quiet_tool() -> void:
 func fire_weapon() -> void:
  weapon_recoil = 1.0
 
+func interact() -> void:
+ interaction_action = 1.0
+
 func _role_color() -> Color:
  match role:
   "security": return Color(0.17, 0.25, 0.34)
@@ -173,13 +177,12 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
  var moving_weight := clampf(gait_speed / 2.5, 0.0, 1.0)
  var sway := sin(phase) * 0.025 * moving_weight + sin(idle_phase * 0.38) * 0.012 * (1.0 - moving_weight)
  upper_body.rotation.z = lerpf(upper_body.rotation.z, sway - clampf(turning_rate, -2.0, 2.0) * 0.035, blend)
- upper_body.rotation.x = lerpf(upper_body.rotation.x, -minf(gait_speed, 4.7) * 0.025 + hit_reaction * 0.16, blend)
  hit_reaction = maxf(0.0, hit_reaction - delta * 3.0)
  upper_body.position.x = lerpf(upper_body.position.x, sin(idle_phase * 0.38) * 0.014 * (1.0 - moving_weight), blend)
  # Independent knees bend during swing and crouch. Torso descends without
  # squashing the head or changing the model's horizontal proportions.
  upper_body.position.y = lerpf(upper_body.position.y, -0.70 * crouch_amount + ground_adjust, blend)
- var lean := -0.055 * clampf((gait_speed - 2.7) / 2.0, 0.0, 1.0) - 0.08 * crouch_amount
+ var lean := -0.055 * clampf((gait_speed - 2.7) / 2.0, 0.0, 1.0) - 0.08 * crouch_amount + hit_reaction * 0.16
  upper_body.rotation.x = lerp_angle(upper_body.rotation.x, lean, blend)
  left_leg.position.y = lerpf(left_leg.position.y, 0.88 - 0.52 * crouch_amount + ground_adjust, blend)
  right_leg.position.y = left_leg.position.y
@@ -205,6 +208,7 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
  elif speed < 0.1 and idle_activity == "conversing": left_pose = 0.30 + sin(idle_phase * 0.6) * 0.16
  elif speed < 0.1 and idle_activity == "working": left_pose = 0.40 + sin(idle_phase * 0.5) * 0.06
  left_pose = lerpf(left_pose, 0.40 + quiet_tool_action * 0.35, quiet_tool_draw)
+ left_pose = lerpf(left_pose, 0.75, interaction_action * (1.0 - weapon_aim_blend))
  left_arm.rotation.x = lerp_angle(left_arm.rotation.x, lerpf(left_pose, 1.05, weapon_aim_blend), blend)
  left_arm.rotation.z = lerp_angle(left_arm.rotation.z, -0.20 * weapon_aim_blend, blend)
  var ready_pose := lerpf(0.35, 1.35, weapon_aim_blend)
@@ -216,6 +220,7 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
  right_elbow.rotation.x = lerp_angle(right_elbow.rotation.x, lerpf(-0.15 - absf(swing) * 0.20, -0.12, weapon_draw), blend)
  if quiet_tool: quiet_tool.visible = quiet_tool_draw > 0.03
  quiet_tool_action = maxf(0.0, quiet_tool_action - delta * 3.0)
+ interaction_action = maxf(0.0, interaction_action - delta * 2.8)
  if weapon:
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72

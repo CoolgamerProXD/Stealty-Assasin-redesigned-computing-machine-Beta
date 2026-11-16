@@ -87,6 +87,7 @@ func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_released("aim"): aiming = false
  if event.is_action_pressed("fire") and aiming and mouse_ready: fire_requested.emit()
  if event.is_action_pressed("interact"):
+  if body_mesh: body_mesh.interact()
   interaction_requested.emit()
  if event.is_action_pressed("equip_primary"): equipment_selected.emit(0)
  if event.is_action_pressed("equip_secondary"): equipment_selected.emit(1)

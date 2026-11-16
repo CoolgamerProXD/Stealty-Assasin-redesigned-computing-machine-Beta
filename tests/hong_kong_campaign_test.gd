@@ -94,6 +94,24 @@ func run() -> void:
  staff.warn_trespass(Vector3.ZERO, Vector3.LEFT, "secure")
  check(staff.state == "seeking_help", "staff without secure-area permission seek help")
  staff.queue_free()
+ var officer := HotelNpc.new()
+ officer.profile = NpcProfile.new()
+ officer.profile.occupation = "security"
+ officer.position = Vector3(40,0,40)
+ root.add_child(officer)
+ officer.set_physics_process(false)
+ var witness := HotelNpc.new()
+ witness.profile = NpcProfile.new()
+ witness.profile.occupation = "civilian"
+ witness.position = Vector3(41.5,0,40)
+ root.add_child(witness)
+ witness.set_physics_process(false)
+ witness.warn_trespass(Vector3(43,0,40), Vector3(35,0,40), "staff")
+ await physics_frame
+ check(witness.help_target == officer and witness._try_deliver_report(), "visitor gives a local in-person report to nearby security")
+ check(officer.state == "suspicious" and officer.memory.observations.size() == 1 and not witness._try_deliver_report(), "guard investigates one report without immediate hostility or duplicate reports")
+ officer.queue_free()
+ witness.queue_free()
  check(service.progress.mark_complete("initiation"), "Initiation unlocks Hong Kong without mandatory Meridian")
  var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
  var intro_paths: Dictionary = {}
