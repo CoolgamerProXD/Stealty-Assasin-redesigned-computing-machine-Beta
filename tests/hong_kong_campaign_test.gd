@@ -15,6 +15,13 @@ func move_near(world: Node3D, point: Vector3) -> void:
  player.global_position = point + Vector3(0,0,1.2)
  player.velocity = Vector3.ZERO
  await physics_frame
+func walk_steps(steps: Array) -> void:
+ for step: Array in steps:
+  Input.action_press(str(step[0]))
+  await create_timer(float(step[1])).timeout
+  Input.action_release(str(step[0]))
+  await physics_frame
+
 func run() -> void:
  var service := root.get_node("Campaign")
  var old_path: String = service.campaign_path
@@ -22,6 +29,8 @@ func run() -> void:
  var old_progress: Dictionary = service.progress.snapshot()
  var temp := "user://assassin_hk_test_%d" % Time.get_ticks_usec()
  service.campaign_path = temp + "_campaign.json"
+ service.progress.restore({"completed": ["initiation"], "recovered_keys": ["key_05"]})
+ check(not service.progress.recovered_keys.has("key_05") and not service.progress.usb_ready(), "restore rejects a future mission's key before that mission unlocks")
  service.progress.restore({})
  check(not service.acknowledge_usb_decryption(), "USB story event remains locked before the five keys and final operation")
  var test_guard := HotelNpc.new()
@@ -83,6 +92,25 @@ func run() -> void:
   check(world.get("intro_active") and not player.is_physics_processing(), id + " intro starts before gameplay")
   world.call("_end_intro")
   check(not world.get("intro_active") and player.is_physics_processing(), id + " skip initializes gameplay")
+  # Walk from the actual deployment point to each target with fixed inputs.
+  # Background agents are frozen/temporarily non-colliding to isolate world
+  # geometry; this does not claim crowd navigation or a human playthrough.
+  target.collision_layer = 0
+  guard.collision_layer = 0
+  player.rotation.y = 0.0
+  player.velocity = Vector3.ZERO
+  Engine.time_scale = 3.0
+  match id:
+   "tung_chung": await walk_steps([["move_right",2.55],["move_forward",2.85]])
+   "the_streets": await walk_steps([["move_forward",1.5],["move_left",5.9]])
+   "the_district": await walk_steps([["move_forward",1.5],["move_right",5.9]])
+   "the_harbour": await walk_steps([["move_forward",20.6],["move_right",5.9],["move_back",2.0]])
+   "ngong_ping": await walk_steps([["move_forward",5.8],["move_left",1.1]])
+  Engine.time_scale = 1.0
+  print("HK DEPLOYMENT DIAG: ", id, " player=", player.global_position, " target=", target.global_position)
+  check(player.global_position.distance_to(target.global_position) < 2.5, id + " has a physical route from deployment to its target")
+  target.collision_layer = 1
+  guard.collision_layer = 1
   if id == "tung_chung":
    player.global_position = Vector3(14.5,0.05,4.0)
    player.rotation.y = 0.0
@@ -196,7 +224,9 @@ func run() -> void:
  check(restored.usb_ready() and restored.completed.has("ngong_ping") and restored.usb_decryption_seen, "all keys, final completion and decryption event survive campaign restore")
  var paths: Array[String] = []
  for id: String in ids: paths.append(service.checkpoint_path(id))
- check(paths.size() == 5 and not paths.has(service.checkpoint_path("meridian")) and not paths.has(service.checkpoint_path("initiation")), "Hong Kong checkpoints do not overwrite legacy missions")
+ var unique_paths: Dictionary = {}
+ for path: String in paths: unique_paths[path] = true
+ check(unique_paths.size() == 5 and not paths.has(service.checkpoint_path("meridian")) and not paths.has(service.checkpoint_path("initiation")), "Hong Kong checkpoints do not overwrite legacy missions")
  service.campaign_path = old_path
  service.active_mission = old_active
  service.progress.restore(old_progress)

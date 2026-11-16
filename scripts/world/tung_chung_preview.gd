@@ -147,10 +147,10 @@ func _station() -> void:
  _box(Vector3(17,3.125,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true)
  _station_stair_collision()
  _box(Vector3(17,3.9,-3.95), Vector3(8,1.1,0.12), Color(0.31,0.47,0.49))
- for i: int in range(11):
-  _box(Vector3(14.5, float(i)*0.29+0.1, 1.0-float(i)*0.44), Vector3(2.4,0.18,0.46), Color(0.34,0.39,0.38))
-  _box(Vector3(13.25,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
-  _box(Vector3(15.75,float(i)*0.29+0.7,1.0-float(i)*0.44), Vector3(0.08,0.12,0.47), dark)
+ for i: int in range(16):
+  _box(Vector3(14.5, float(i)*0.22+0.04, 3.5-float(i)*0.47), Vector3(2.4,0.12,0.48), Color(0.34,0.39,0.38))
+  _box(Vector3(13.25,float(i)*0.22+0.7,3.5-float(i)*0.47), Vector3(0.08,0.12,0.48), dark)
+  _box(Vector3(15.75,float(i)*0.22+0.7,3.5-float(i)*0.47), Vector3(0.08,0.12,0.48), dark)
  _sign("CONCOURSE  /  UPPER WALKWAY", Vector3(17,4.65,-3.85), 28)
  # The information island is solid; seating remains decorative.
  _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38), true)

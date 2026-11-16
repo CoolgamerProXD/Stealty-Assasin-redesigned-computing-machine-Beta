@@ -509,7 +509,7 @@ func _buddha_approach() -> void:
  collider.shape = shape
  ramp.add_child(collider)
  for i: int in range(10):
-  _box(Vector3(0, float(i)*0.24+0.03, -15.5-float(i)*0.5), Vector3(6.0,0.06,0.48), Color(0.61,0.57,0.48))
+  _box(Vector3(0, float(i)*0.24+0.03, -14.95-float(i)*0.5), Vector3(6.0,0.06,0.48), Color(0.61,0.57,0.48))
  for side: float in [-1.0,1.0]:
   _box(Vector3(side*3.15,0.65,-17.8),Vector3(0.15,1.3,5.4),Color(0.44,0.41,0.35))
 

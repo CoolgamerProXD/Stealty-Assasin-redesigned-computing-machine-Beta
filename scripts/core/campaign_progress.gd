@@ -88,17 +88,17 @@ func restore(data: Dictionary) -> void:
  recovered_keys.clear()
  usb_decryption_seen = false
  var raw_keys: Variant = data.get("recovered_keys", [])
- if raw_keys is Array:
-  for entry: Dictionary in missions:
-   var key_id := str(entry.get("key_id", ""))
-   if not key_id.is_empty() and key_id in raw_keys and not recovered_keys.has(key_id): recovered_keys.append(key_id)
  var raw: Variant = data.get("completed", [])
- if raw is Array:
-  for entry: Dictionary in missions:
-   var id := str(entry["id"])
-   if id in raw and is_unlocked(id):
-    var key_id := str(entry.get("key_id", ""))
-    if key_id.is_empty() or recovered_keys.has(key_id): completed.append(id)
+ if not raw_keys is Array: raw_keys = []
+ if not raw is Array: raw = []
+ # Restore in chronological order. A malformed future key cannot satisfy a
+ # mission that had not yet been unlocked in the persisted campaign.
+ for entry: Dictionary in missions:
+  var id := str(entry["id"])
+  if not is_unlocked(id): continue
+  var key_id := str(entry.get("key_id", ""))
+  if not key_id.is_empty() and key_id in raw_keys and not recovered_keys.has(key_id): recovered_keys.append(key_id)
+  if id in raw and (key_id.is_empty() or recovered_keys.has(key_id)): completed.append(id)
  usb_decryption_seen = data.get("usb_decryption_seen", false) == true and usb_ready() and completed.has("ngong_ping")
  var desired: Variant = data.get("selected", "training_sidearm")
  selected = "training_sidearm"

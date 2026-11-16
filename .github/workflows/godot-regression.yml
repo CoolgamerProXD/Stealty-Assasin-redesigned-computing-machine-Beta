@@ -116,7 +116,7 @@ jobs:
                   continue
               lines = path.read_text(errors="replace").splitlines()
               if name in ("tests", "hk", "soak", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+                  selected = [line for line in lines if re.search(r"^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:

@@ -30,6 +30,9 @@ var train_car: Node3D
 var message: String = ""
 var npc_list: Array[HotelNpc] = []
 var red_overlay: StandardMaterial3D
+var yellow_overlay: StandardMaterial3D
+var shot_audio: AudioStreamPlayer
+var gadget_audio: AudioStreamPlayer
 
 func _vec(value: Array) -> Vector3:
  return Vector3(float(value[0]), float(value[1]), float(value[2]))
@@ -156,6 +159,16 @@ func _build_ui() -> void:
  red_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  red_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
  red_overlay.no_depth_test = true
+ yellow_overlay = StandardMaterial3D.new()
+ yellow_overlay.albedo_color = Color(1.0,0.82,0.05,0.8)
+ yellow_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+ yellow_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+ shot_audio = AudioStreamPlayer.new()
+ shot_audio.stream = ProceduralSound.tone(180.0,0.12,0.14)
+ add_child(shot_audio)
+ gadget_audio = AudioStreamPlayer.new()
+ gadget_audio.stream = ProceduralSound.tone(260.0,0.12,0.035)
+ add_child(gadget_audio)
 
 func _begin_intro() -> void:
  player.set_physics_process(false)
@@ -233,6 +246,15 @@ func _process(delta: float) -> void:
  hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s\n%s\nE INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", message]
  reticle.visible = player.aiming and not intro_active
  _overlay(target.person, red_overlay if player.instinct_active and not target_complete else null)
+ var key_pos := key_marker.global_position
+ var key_visible := false
+ if player.instinct_active and not key_secured and player.global_position.distance_to(key_pos) < 4.0 and not player.camera.is_position_behind(key_pos):
+  var ray := PhysicsRayQueryParameters3D.create(player.global_position + Vector3.UP, key_pos)
+  var excluded: Array[RID] = [player.get_rid()]
+  if key_marker.get_parent() is HotelNpc: excluded.append((key_marker.get_parent() as HotelNpc).get_rid())
+  ray.exclude = excluded
+  key_visible = get_world_3d().direct_space_state.intersect_ray(ray).is_empty()
+ _overlay(key_marker, yellow_overlay if key_visible else null)
 
 func _overlay(node: Node, material: Material) -> void:
  if node is MeshInstance3D: (node as MeshInstance3D).material_overlay = material
@@ -364,6 +386,7 @@ func _use_equipment() -> void:
   if npc.stunned_time <= 0 and not npc.objective_completed and _reachable(npc.global_position, npc.get_rid()):
    npc.incapacitate(12.0)
    player.body_mesh.use_quiet_tool()
+   gadget_audio.play()
    message = "Quiet Line temporarily incapacitated " + npc.profile.identity + "."
    return
  message = "Quiet Line requires a nearby unobstructed person."
@@ -383,6 +406,7 @@ func _fire() -> void:
  var hit := get_world_3d().direct_space_state.intersect_ray(query)
  player.equipment.charges -= 1
  player.shot_feedback()
+ shot_audio.play()
  if not hit.is_empty() and hit["collider"] is HotelNpc:
   var npc := hit["collider"] as HotelNpc
   if npc == train_contact and not train_contact_complete:
