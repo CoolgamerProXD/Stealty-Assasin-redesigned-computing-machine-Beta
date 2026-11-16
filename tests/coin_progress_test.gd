@@ -17,6 +17,7 @@ func run() -> void:
  var temp := "user://coin_regression_%d.json" % Time.get_ticks_usec()
  service.campaign_path = temp
  service.progress.restore({})
+ check(service.progress.set_equipped_coins(0) and not service.progress.set_equipped_coins(1), "zero lessons permit no equipped coins")
  service.active_mission = "initiation"
  var world: Node3D = load("res://scenes/initiation.tscn").instantiate()
  root.add_child(world)
@@ -27,6 +28,9 @@ func run() -> void:
   var item: Interactable = records[i]
   world.call("_on_interaction", item)
   check(service.progress.completed_lessons.size() == i + 1, "lesson %d awards one permanent coin" % (i + 1))
+  check(service.progress.award_lesson(item.identifier) and service.progress.completed_lessons.size() == i + 1, "lesson %d reward itself is idempotent" % (i + 1))
+  check(service.progress.set_equipped_coins(i+1) and not service.progress.set_equipped_coins(i+2), "%d earned coins are the loadout cap" % (i + 1))
+  service.progress.set_equipped_coins(0)
   world.call("_on_interaction", item)
   check(service.progress.completed_lessons.size() == i + 1, "replaying lesson %d cannot duplicate its coin" % (i + 1))
   var restarted := CampaignProgress.new()
