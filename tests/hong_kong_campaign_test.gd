@@ -99,6 +99,12 @@ func run() -> void:
   skip_event.pressed = true
   world.call("_input", skip_event)
   check(not world.get("intro_active") and player.is_physics_processing(), id + " Escape skips the introduction and initializes gameplay")
+  if id == "tung_chung":
+   var old_fps: bool = service.settings["show_fps"]
+   service.settings["show_fps"] = true
+   world.call("_process", 0.0)
+   check((world.get("fps_label") as Label).visible, "FPS setting appears in Hong Kong HUD")
+   service.settings["show_fps"] = old_fps
   # Walk from the actual deployment point to each target with fixed inputs.
   # Background agents are frozen/temporarily non-colliding to isolate world
   # geometry; this does not claim crowd navigation or a human playthrough.

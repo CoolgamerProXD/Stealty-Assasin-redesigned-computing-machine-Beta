@@ -11,6 +11,7 @@ var guard: HotelNpc
 var key_marker: Node3D
 var exit_marker: Node3D
 var hud: Label
+var fps_label: Label
 var briefing: Label
 var skip_button: Button
 var intro_start: Vector3
@@ -138,6 +139,13 @@ func _build_ui() -> void:
  hud.add_theme_constant_override("shadow_offset_x", 2)
  hud.add_theme_constant_override("shadow_offset_y", 2)
  canvas.add_child(hud)
+ fps_label = Label.new()
+ fps_label.position = Vector2(1120,20)
+ fps_label.add_theme_font_size_override("font_size", 15)
+ fps_label.add_theme_color_override("font_shadow_color", Color.BLACK)
+ fps_label.add_theme_constant_override("shadow_offset_x", 2)
+ fps_label.add_theme_constant_override("shadow_offset_y", 2)
+ canvas.add_child(fps_label)
  briefing = Label.new()
  briefing.position = Vector2(110,545)
  briefing.size = Vector2(1060,150)
@@ -254,6 +262,8 @@ func _process(delta: float) -> void:
  else: equipment_text += "  /  Q USE"
  hud.text = "%s   /   USB [%s]\nTARGET: %s   %s\n%s: %s   /   %s\n%s\nE INTERACT   ·   F5 SAVE   ·   F9 LOAD   ·   ESC PAUSE" % [entry.get("name", operation_id), " ".join(keys), config["target"], "COMPLETE" if target_complete else "ACTIVE", key_id.to_upper().replace("_", " "), "SECURED" if key_secured else "NOT SECURED", equipment_text, message]
  reticle.visible = player.aiming and not intro_active
+ fps_label.visible = bool(Campaign.settings["show_fps"])
+ if fps_label.visible: fps_label.text = "%d FPS" % Engine.get_frames_per_second()
  _overlay(target.person, red_overlay if player.instinct_active and not target_complete else null)
  var key_pos := key_marker.global_position
  var key_visible := false

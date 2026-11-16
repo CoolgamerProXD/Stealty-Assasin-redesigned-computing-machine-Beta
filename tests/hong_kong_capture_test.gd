@@ -19,11 +19,31 @@ func capture(name: String) -> void:
  var thumb := image.duplicate() as Image
  thumb.resize(320,180)
  thumb.save_jpg(output.path_join(name + "_thumb.jpg"), 0.48)
+# Short fixed-view software-renderer samples, not target-device benchmarks.
+func sample_quality(service: Node, location: String, quality: String) -> void:
+ service.settings["graphics"] = quality
+ service.apply_settings()
+ for frame: int in range(10): await process_frame
+ var samples: Array[float] = []
+ var previous := Time.get_ticks_usec()
+ for frame: int in range(30):
+  await process_frame
+  var now := Time.get_ticks_usec()
+  samples.append(float(now-previous)/1000.0)
+  previous = now
+ samples.sort()
+ var total := 0.0
+ for value: float in samples: total += value
+ var mean := total/float(samples.size())
+ print("HKPERF: %s %s frames=30 mean_ms=%.3f p95_ms=%.3f fps=%.2f" % [location,quality,mean,samples[28],1000.0/maxf(mean,0.001)])
+
 func run() -> void:
  output = OS.get_environment("TEST_SCREENSHOT_DIR")
  if output.is_empty(): output = "user://captures"
  DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output))
  root.size = Vector2i(1280,720)
+ var service := root.get_node("Campaign")
+ var old_settings: Dictionary = service.settings.duplicate(true)
  var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
  for id: String in ids:
   var world: Node3D = load("res://scenes/mission_" + id + ".tscn").instantiate()
@@ -36,6 +56,24 @@ func run() -> void:
   world.call("_end_intro")
   var player: HotelPlayer = world.get("player")
   check(player.camera.current and player.is_physics_processing(), id + " gameplay camera resumes")
+  if id == "tung_chung":
+   var target: HotelNpc = world.get("target")
+   var people: Array[HotelNpc] = world.get("npc_list")
+   for npc: HotelNpc in people:
+    npc.set_physics_process(false)
+    if npc != target: npc.collision_layer = 0
+   player.global_position = target.global_position + Vector3(0,0,4)
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   player.aiming = true
+   player.equipment.selected = "training_sidearm"
+   player.equipment.charges = 5
+   for frame: int in range(3): await physics_frame
+   player.camera.look_at(target.global_position + Vector3.UP,Vector3.UP)
+   world.call("_fire")
+   check(world.get("target_complete") and not world.get("key_secured") and player.equipment.charges == 4, "Hong Kong center-ray shot completes the target but does not collect its key")
+   check(float((world.get("reticle") as Control).get("hit_timer")) > 0.0, "Hong Kong shot displays hit confirmation")
+   player.aiming = false
   # A staged interior/landmark view, not an end-to-end human route.
   var shot := Camera3D.new()
   world.add_child(shot)
@@ -52,7 +90,12 @@ func run() -> void:
    shot.look_at(focus,Vector3.UP)
   shot.make_current()
   await capture("hk_play_" + id)
+  if id in ["tung_chung", "the_district", "ngong_ping"]:
+   await sample_quality(service,id,"LOW")
+   await sample_quality(service,id,"MEDIUM")
   world.queue_free()
   await process_frame
+ service.settings = old_settings
+ service.apply_settings()
  print("HKVIS RESULT: %d checks, %d failures" % [checks,failures])
  quit(0 if failures == 0 else 1)
