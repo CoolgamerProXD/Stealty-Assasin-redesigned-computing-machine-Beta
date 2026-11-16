@@ -585,12 +585,12 @@ func _build_departure_exterior() -> void:
   var z := -17.0 + float(i)*4.1
   var height := 5.5 + float((i*7)%5)*1.25
   var width := 2.4 + float(i%3)*0.7
-  _part(story_set,Vector3(6.4,height*0.5,z),Vector3(width,height,3.8),Color(0.20+float(i%2)*0.025,0.28,0.31),"concrete")
+  _part(story_set,Vector3(4.8,height*0.5,z),Vector3(width,height,3.8),Color(0.08+float(i%2)*0.02,0.15,0.18),"emissive")
   for row: int in range(1,4):
    var wy := 0.9 + float(row)*1.05
    if wy > height-0.4: continue
    for col: int in range(2):
-    _part(story_set,Vector3(7.95,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.95,0.67,0.37,0.92) if (i+row+col)%3==0 else Color(0.35,0.78,0.86,0.88),"emissive")
+    _part(story_set,Vector3(6.78,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.95,0.67,0.37,0.92) if (i+row+col)%3==0 else Color(0.35,0.78,0.86,0.88),"emissive")
  # Passing environmental light bars create lateral motion while the camera
  # tracks the carriage; all are non-colliding cinematic dressing.
  for i: int in range(14):
@@ -745,7 +745,7 @@ func _build_train() -> void:
  train_ambience.stream = ProceduralSound.ambience("train")
  add_child(train_ambience)
  for car_offset: float in [0.0,16.0]:
-  _train_solid(Vector3(0,-0.15,car_offset),Vector3(4.5,0.3,16.1),Color(0.52,0.57,0.55),"rubber")
+  _train_solid(Vector3(0,-0.15,car_offset),Vector3(4.5,0.3,16.1),Color(0.43,0.50,0.49),"train_floor")
   _train_solid(Vector3(0,3.04,car_offset),Vector3(4.5,0.12,16.1),Color(0.42,0.49,0.48),"painted_metal")
   for side: float in [-1.0,1.0]:
    # Invisible continuous collision preserves the window openings visually but

@@ -55,6 +55,13 @@ static func material(color: Color, finish: String = "plain") -> StandardMaterial
    result.albedo_texture = RUBBER
    result.roughness = 0.94
    result.uv1_scale = Vector3(4.0, 4.0, 1.0)
+  "train_floor":
+   result.albedo_texture = RUBBER
+   result.roughness = 0.90
+   result.uv1_scale = Vector3(4.0, 4.0, 1.0)
+   result.emission_enabled = true
+   result.emission = color
+   result.emission_energy_multiplier = 0.28
   "fabric":
    result.albedo_texture = FABRIC
    result.roughness = 0.96
