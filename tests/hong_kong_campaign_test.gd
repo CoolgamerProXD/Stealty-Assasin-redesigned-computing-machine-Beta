@@ -435,7 +435,14 @@ func run() -> void:
    check((world.get("train_contact") as HotelNpc).collision_layer == 0, "completed contact no longer blocks the carriage aisle")
    world.set("witness_found", false)
    world.set("intel_found", false)
-   await move_near(world, (world.get("exit_marker") as Node3D).global_position)
+   player.rotation.y = 0.0
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   await walk_steps([["move_back",2.6]])
+   Engine.time_scale = 1.0
+   print("HK TRAIN EXIT DIAG: ", player.global_position)
+   check(player.global_position.distance_to((world.get("exit_marker") as Node3D).global_position) < 2.0, "resolved contact leaves a walkable route to extraction")
    world.call("_interact")
    check(world.get("extraction_active") and service.progress.completed.has(id), "Tung Chung extracts without optional witness or intel")
    world.call("_finish_extraction")
