@@ -4,7 +4,7 @@
   "records": [
     {
       "id": "evaluation",
-      "label": "Read evaluation sheet",
+      "label": "Lesson 1 / Observation: read evaluation sheet",
       "position": [
         -10,
         0,
@@ -14,7 +14,7 @@
     },
     {
       "id": "sensor_log",
-      "label": "Copy sensor log",
+      "label": "Lesson 2 / Awareness: copy sensor log",
       "position": [
         4.5,
         0,
@@ -24,7 +24,7 @@
     },
     {
       "id": "dispatch",
-      "label": "Retrieve dispatch record",
+      "label": "Lesson 3 / Evidence: retrieve dispatch record",
       "position": [
         10,
         0,

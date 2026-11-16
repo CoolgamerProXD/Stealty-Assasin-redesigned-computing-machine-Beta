@@ -146,8 +146,9 @@ func _loadout() -> void:
  var lessons: Array[String] = Campaign.progress.completed_lessons
  var labels: Array[String] = []
  for i: int in range(3):
-  labels.append("L%d %s" % [i + 1, "✓" if lessons.has(CampaignProgress.LESSON_RECORDS[i]) else "—"])
+  labels.append("%s %s" % [["1 OBSERVE", "2 AWARENESS", "3 EVIDENCE"][i], "✓" if lessons.has(CampaignProgress.LESSON_RECORDS[i]) else "—"])
  _text("COINS  /  EARNED %d   ·   EQUIPPED %d   ·   AVAILABLE %d\n%s" % [lessons.size(), Campaign.progress.equipped_coins, lessons.size() - Campaign.progress.equipped_coins, "    ".join(labels)], 16)
+ _text("G tosses a coin in later missions; stock resets each deployment.", 15)
  _button("COINS: %d   /   CHANGE (0–%d)" % [Campaign.progress.equipped_coins, lessons.size()], _cycle_coins, lessons.is_empty())
  _button("BACK", _home).grab_focus()
 

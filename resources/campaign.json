@@ -7,7 +7,7 @@
       "name": "01  /  INITIATION",
       "description": "A controlled assessment at the fictional Civic Evaluation Annex.",
       "scene": "res://scenes/initiation.tscn",
-      "briefing": "Ruby: Your primary target is the moving assessment unit in the chamber. Disable it, recover three records, and leave through the marked exit. The two guards are part of the evaluation.",
+      "briefing": "Ruby: Your primary target is the moving assessment unit in the chamber. Disable it, complete the three record lessons, and leave through the marked exit. Each lesson earns one permanent coin. The two guards are part of the evaluation.",
       "debrief": "Ruby: You kept your head. Blackline can use that. The next file is already on your desk.",
       "unlock": "quiet_line"
     },
@@ -24,7 +24,7 @@
     {
       "id": "tung_chung",
       "name": "02  /  TUNG CHUNG",
-      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_tung_chung.tscn",
       "briefing": "Ruby: A Covenant courier is moving a train manifest through Tung Chung. Confront the courier, retrieve the key from the courier and reach the platform exit.",
       "debrief": "Ruby: The manifest points to a handoff in the streets. The train has not revealed who commissioned it.",
@@ -34,7 +34,7 @@
     {
       "id": "the_streets",
       "name": "03  /  THE STREETS",
-      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_the_streets.tscn",
       "briefing": "Ruby: A market intermediary is arranging the next transfer. Confront the intermediary; their bodyguard carries the second key.",
       "debrief": "Ruby: The handoff leads to a commercial office. Keep the key separate from the manifest.",
@@ -44,7 +44,7 @@
     {
       "id": "the_district",
       "name": "04  /  THE DISTRICT",
-      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_the_district.tscn",
       "briefing": "Ruby: A district broker has the office route. Confront the broker and find the key in the nearby records safe.",
       "debrief": "Ruby: The broker points to a waterfront meeting. We still do not know who is behind the Covenant transfer.",
@@ -54,7 +54,7 @@
     {
       "id": "the_harbour",
       "name": "05  /  THE HARBOUR",
-      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_the_harbour.tscn",
       "briefing": "Ruby: A waterfront liaison is managing the transfer. Confront the liaison; their bodyguard holds the fourth key.",
       "debrief": "Ruby: The trail ends in the mountains. Do not confuse the public landmark with the operation.",
@@ -64,7 +64,7 @@
     {
       "id": "ngong_ping",
       "name": "06  /  NGONG PING",
-      "description": "Hong Kong operation \u2014 early playable campaign build.",
+      "description": "Hong Kong operation — early playable campaign build.",
       "scene": "res://scenes/mission_ngong_ping.tscn",
       "briefing": "Ruby: The final coordinator is in the surrounding mountain district. Confront them and recover the fifth key from the field safe, away from the landmark.",
       "debrief": "Ruby: All five keys are secure. The USB can be decrypted on the secure channel; the contents still need analysis.",
