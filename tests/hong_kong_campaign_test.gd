@@ -37,6 +37,11 @@ func run() -> void:
  check(test_guard.state == "alerted", "security escalates after the grace period")
  test_guard.tick_trespass(0.1, false)
  check(test_guard.state == "returning", "leaving the restricted area de-escalates security")
+ var old_phase := test_guard.person.phase
+ for frame: int in range(30): test_guard.person.animate_motion(1.0 / 60.0, 3.0, 1.0)
+ check(test_guard.person.phase > old_phase and test_guard.person.gait_speed > 2.5 and absf(test_guard.person.upper_body.rotation.z) > 0.005, "security animation responds to motion and turning")
+ for frame: int in range(90): test_guard.person.animate_motion(1.0 / 60.0, 0.0, 0.0)
+ check(test_guard.person.gait_speed < 0.05 and absf(test_guard.person.upper_body.rotation.x) < 0.01, "animation blends back to idle after stopping")
  test_guard.queue_free()
  var visitor := HotelNpc.new()
  visitor.profile = NpcProfile.new()

@@ -480,7 +480,9 @@ func _mountain() -> void:
 func _buddha_approach() -> void:
  var ramp := StaticBody3D.new()
  ramp.name = "BuddhaViewingApproach"
- ramp.position = Vector3(0,1.17,-18.0)
+ # Shift the high end just beyond the leading edge of the plinth so the
+ # capsule meets the terrace at floor height rather than hitting a vertical lip.
+ ramp.position = Vector3(0,1.17,-17.45)
  ramp.rotation.x = atan(2.4 / 5.0)
  add_child(ramp)
  var shape := BoxShape3D.new()

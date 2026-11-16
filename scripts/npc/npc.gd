@@ -246,6 +246,8 @@ func _physics_process(delta: float) -> void:
   if profile.occupation == "security":
    person.weapon_equipped = state == "alerted"
    person.weapon_aiming = state == "alerted"
-  person.animate_motion(delta, Vector2(velocity.x, velocity.z).length())
+  var previous_heading := person.rotation.y
   if velocity.length_squared() > 0.1:
    person.rotation.y = lerp_angle(person.rotation.y, atan2(-velocity.x, -velocity.z), 1.0 - exp(-delta * 8.0))
+  var turn_rate := angle_difference(previous_heading, person.rotation.y) / maxf(delta, 0.001)
+  person.animate_motion(delta, Vector2(velocity.x, velocity.z).length(), turn_rate)

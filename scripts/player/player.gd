@@ -128,12 +128,14 @@ func _physics_process(delta: float) -> void:
  else: velocity.y = -0.1
  move_and_slide()
  var moving_speed := Vector2(velocity.x, velocity.z).length()
+ var previous_visual_heading := body_mesh.rotation.y
  if moving_speed > 0.2 and not aiming:
   var local_motion := global_basis.inverse() * Vector3(velocity.x, 0, velocity.z)
   body_mesh.rotation.y = lerp_angle(body_mesh.rotation.y, atan2(-local_motion.x, -local_motion.z), 1.0 - exp(-delta * 10.0))
  elif aiming:
   body_mesh.rotation.y = lerp_angle(body_mesh.rotation.y, 0.0, 1.0 - exp(-delta * 12.0))
- body_mesh.animate_motion(delta, moving_speed)
+ var turn_rate := angle_difference(previous_visual_heading, body_mesh.rotation.y) / maxf(delta, 0.001)
+ body_mesh.animate_motion(delta, moving_speed, turn_rate)
  # Trigger steps from the same phase driving the legs, not a separate timer.
  var step_index := floori(body_mesh.phase / PI)
  if is_on_floor() and moving_speed > 0.5 and step_index != last_footstep_index:

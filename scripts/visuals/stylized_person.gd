@@ -153,11 +153,13 @@ func set_role(value: String) -> void:
  role = value
  if clothing: clothing.albedo_color = _role_color()
 
-func animate_motion(delta: float, speed: float) -> void:
+func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> void:
  if not left_leg: return
  var blend := 1.0 - exp(-delta * 10.0)
  gait_speed = lerpf(gait_speed, speed, 1.0 - exp(-delta * 8.0))
- phase += delta * minf(gait_speed, 5.0) * 2.6
+ # Cadence follows actual speed, with restrained role-specific variation.
+ var cadence := 2.45 if role == "security" else (2.75 if role == "civilian" else 2.6)
+ phase += delta * minf(gait_speed, 5.0) * cadence
  idle_phase += delta * 2.0
  var swing := sin(phase) * minf(gait_speed * 0.16, 0.6)
  weapon_draw = move_toward(weapon_draw, 1.0 if weapon_equipped else 0.0, delta * 3.0)
@@ -165,6 +167,13 @@ func animate_motion(delta: float, speed: float) -> void:
  weapon_aim_blend = move_toward(weapon_aim_blend, 1.0 if weapon_aiming and weapon_equipped else 0.0, delta * 4.0)
  torso.rotation.z = sin(idle_phase * 0.5) * 0.008
  torso.rotation.x = sin(idle_phase * 0.5) * 0.008
+ # Weight shift and turn lean follow the animated body's real movement,
+ # instead of adding a separate decorative walk cycle.
+ var moving_weight := clampf(gait_speed / 2.5, 0.0, 1.0)
+ var sway := sin(phase) * 0.025 * moving_weight + sin(idle_phase * 0.38) * 0.012 * (1.0 - moving_weight)
+ upper_body.rotation.z = lerpf(upper_body.rotation.z, sway - clampf(turning_rate, -2.0, 2.0) * 0.035, blend)
+ upper_body.rotation.x = lerpf(upper_body.rotation.x, -minf(gait_speed, 4.7) * 0.025, blend)
+ upper_body.position.x = lerpf(upper_body.position.x, sin(idle_phase * 0.38) * 0.014 * (1.0 - moving_weight), blend)
  # Independent knees bend during swing and crouch. Torso descends without
  # squashing the head or changing the model's horizontal proportions.
  upper_body.position.y = lerpf(upper_body.position.y, -0.70 * crouch_amount + ground_adjust, blend)
