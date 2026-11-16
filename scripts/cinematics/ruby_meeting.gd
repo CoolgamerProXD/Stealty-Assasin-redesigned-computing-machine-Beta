@@ -16,10 +16,12 @@ var last_step: int = -1
 func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  ambience = AudioStreamPlayer.new()
+ ambience.bus = "Ambient"
  ambience.stream = ProceduralSound.tone(55.0, 1.0, 0.06, true)
  add_child(ambience)
  ambience.play()
  effects = AudioStreamPlayer.new()
+ effects.bus = "SFX"
  add_child(effects)
  var environment := WorldEnvironment.new()
  var atmosphere := Environment.new()

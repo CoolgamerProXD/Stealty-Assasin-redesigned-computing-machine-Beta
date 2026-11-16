@@ -9,7 +9,7 @@ var active_mission: String = ""
 var load_checkpoint: bool = false
 var return_to_maps: bool = false
 var ending: Dictionary = {}
-var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "graphics": "MEDIUM", "show_fps": false, "shadows": true, "practicals": true, "long_view": true}
+var settings: Dictionary = {"resolution": "1280x720", "fullscreen": false, "sensitivity": 0.0025, "volume": 0.8, "music_volume": 1.0, "sfx_volume": 1.0, "ambient_volume": 1.0, "dialogue_volume": 1.0, "graphics": "MEDIUM", "show_fps": false, "shadows": true, "practicals": true, "long_view": true}
 
 func _ready() -> void:
  var data: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json"))
@@ -101,6 +101,9 @@ func _load_settings() -> void:
  if (sensitivity is int or sensitivity is float) and is_finite(float(sensitivity)): settings["sensitivity"] = clampf(float(sensitivity), 0.001, 0.006)
  var volume: Variant = data.get("volume", 0.8)
  if (volume is int or volume is float) and is_finite(float(volume)): settings["volume"] = clampf(float(volume), 0.0, 1.0)
+ for option: String in ["music_volume", "sfx_volume", "ambient_volume", "dialogue_volume"]:
+  var level: Variant = data.get(option, 1.0)
+  settings[option] = clampf(float(level), 0.0, 1.0) if (level is int or level is float) and is_finite(float(level)) else 1.0
  var graphics: Variant = data.get("graphics", "MEDIUM")
  if graphics is String and graphics in ["LOW", "MEDIUM", "HIGH"]: settings["graphics"] = graphics
  for option: String in ["shadows", "practicals", "long_view"]:
@@ -133,11 +136,18 @@ func apply_settings() -> void:
   (detail as Node3D).visible = quality == "HIGH"
  for probe: Node in get_tree().get_nodes_in_group("quality_reflections"):
   (probe as ReflectionProbe).visible = quality == "HIGH"
- var master := AudioServer.get_bus_index("Master")
- if master >= 0:
-  var volume := clampf(float(settings["volume"]), 0.0, 1.0)
-  AudioServer.set_bus_mute(master, volume <= 0.0)
-  AudioServer.set_bus_volume_db(master, linear_to_db(maxf(0.001, volume)))
+ # Ensure buses exist even with legacy installs that have no bus layout.
+ for item: Array in [["Master", "volume"], ["Music", "music_volume"], ["SFX", "sfx_volume"], ["Ambient", "ambient_volume"], ["Dialogue", "dialogue_volume"]]:
+  var bus_name: String = item[0]
+  var bus := AudioServer.get_bus_index(bus_name)
+  if bus < 0:
+   AudioServer.add_bus()
+   bus = AudioServer.bus_count - 1
+   AudioServer.set_bus_name(bus, bus_name)
+  if bus_name != "Master": AudioServer.set_bus_send(bus, "Master")
+  var level := clampf(float(settings.get(item[1], 1.0)), 0.0, 1.0)
+  AudioServer.set_bus_mute(bus, level <= 0.0)
+  AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(0.001, level)))
  if DisplayServer.get_name() != "headless":
   DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if settings["fullscreen"] else DisplayServer.WINDOW_MODE_WINDOWED)
   var size := Vector2i(1600, 900) if settings["resolution"] == "1600x900" else Vector2i(1280, 720)

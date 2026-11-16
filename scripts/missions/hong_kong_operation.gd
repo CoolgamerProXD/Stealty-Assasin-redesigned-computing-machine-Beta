@@ -227,9 +227,11 @@ func _build_ui() -> void:
  yellow_overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
  yellow_overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
  shot_audio = AudioStreamPlayer.new()
+ shot_audio.bus = "SFX"
  shot_audio.stream = ProceduralSound.tone(180.0,0.12,0.14)
  add_child(shot_audio)
  gadget_audio = AudioStreamPlayer.new()
+ gadget_audio.bus = "SFX"
  gadget_audio.stream = ProceduralSound.tone(260.0,0.12,0.035)
  add_child(gadget_audio)
 

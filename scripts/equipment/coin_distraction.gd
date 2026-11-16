@@ -30,6 +30,7 @@ static func use(player: HotelPlayer, npcs: Array[HotelNpc], world: Node3D) -> St
  world.add_child(marker)
  marker.global_position = end
  var chime := AudioStreamPlayer3D.new()
+ chime.bus = "SFX"
  chime.stream = ProceduralSound.tone(740.0, 0.12, 0.07)
  chime.max_distance = 8.0
  marker.add_child(chime)

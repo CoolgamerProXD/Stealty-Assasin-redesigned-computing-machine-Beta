@@ -72,15 +72,36 @@ func _ready() -> void:
   Campaign.settings["sensitivity"] = value
   _save())
  _add_row("MOUSE SENSITIVITY", sensitivity)
- var volume := HSlider.new()
- volume.min_value = 0.0
- volume.max_value = 1.0
- volume.step = 0.05
- volume.value = Campaign.settings["volume"]
- volume.value_changed.connect(func(value: float) -> void:
-  Campaign.settings["volume"] = value
-  _save())
- _add_row("MASTER VOLUME", volume)
+ var audio_heading := Label.new()
+ audio_heading.text = "AUDIO  /  LIVE MIX"
+ audio_heading.add_theme_font_size_override("font_size", 15)
+ add_child(audio_heading)
+ var audio := HBoxContainer.new()
+ audio.add_theme_constant_override("separation", 8)
+ for spec: Array in [["MASTER", "volume"], ["MUSIC", "music_volume"], ["SFX", "sfx_volume"], ["AMBIENT", "ambient_volume"], ["DIALOGUE", "dialogue_volume"]]:
+  var column := VBoxContainer.new()
+  column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  column.add_theme_constant_override("separation", 0)
+  var name_label := Label.new()
+  name_label.add_theme_font_size_override("font_size", 12)
+  column.add_child(name_label)
+  var slider := HSlider.new()
+  slider.name = str(spec[1])
+  slider.min_value = 0.0
+  slider.max_value = 1.0
+  slider.step = 0.05
+  slider.custom_minimum_size.x = 78
+  slider.value = float(Campaign.settings[spec[1]])
+  name_label.text = "%s %d%%" % [spec[0], roundi(slider.value * 100.0)]
+  var key: String = spec[1]
+  var title: String = spec[0]
+  slider.value_changed.connect(func(value: float) -> void:
+   name_label.text = "%s %d%%" % [title, roundi(value * 100.0)]
+   Campaign.settings[key] = value
+   _save())
+  column.add_child(slider)
+  audio.add_child(column)
+ add_child(audio)
  status = Label.new()
  status.text = "Changes apply immediately."
  add_child(status)

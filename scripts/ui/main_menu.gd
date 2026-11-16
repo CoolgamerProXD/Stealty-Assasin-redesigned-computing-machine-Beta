@@ -7,6 +7,7 @@ func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
  theme = BlacklineTheme.create()
  ui_audio = AudioStreamPlayer.new()
+ ui_audio.bus = "SFX"
  ui_audio.stream = ProceduralSound.tone(520.0, 0.06, 0.025)
  add_child(ui_audio)
  _build_shell()

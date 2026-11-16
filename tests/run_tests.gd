@@ -44,6 +44,19 @@ func run() -> void:
  settings_service.settings["volume"] = 0.5
  settings_service.apply_settings()
  check(master_bus >= 0 and not AudioServer.is_bus_mute(master_bus), "raising volume unmutes the master bus")
+ for entry: Array in [["Music", "music_volume", 0.25], ["SFX", "sfx_volume", 0.5], ["Ambient", "ambient_volume", 0.75], ["Dialogue", "dialogue_volume", 0.0]]:
+  settings_service.settings[entry[1]] = entry[2]
+ check(settings_service.save_settings(), "independent audio levels save")
+ for entry: Array in [["Music", "music_volume", 0.25], ["SFX", "sfx_volume", 0.5], ["Ambient", "ambient_volume", 0.75], ["Dialogue", "dialogue_volume", 0.0]]:
+  var bus := AudioServer.get_bus_index(entry[0])
+  check(bus >= 0 and AudioServer.get_bus_send(bus) == "Master" and is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(bus)), maxf(0.001, float(entry[2]))) and AudioServer.is_bus_mute(bus) == (entry[2] == 0.0), str(entry[0]) + " bus routes to Master with independent live level")
+  settings_service.settings[entry[1]] = 1.0
+ settings_service._load_settings()
+ check(is_equal_approx(settings_service.settings["music_volume"], 0.25) and is_equal_approx(settings_service.settings["sfx_volume"], 0.5) and is_equal_approx(settings_service.settings["ambient_volume"], 0.75) and is_equal_approx(settings_service.settings["dialogue_volume"], 0.0), "all audio levels persist")
+ # Legacy files contain only master volume; the category defaults are neutral.
+ SaveStore.write(isolated_settings, {"volume": 0.4})
+ settings_service._load_settings()
+ check(is_equal_approx(settings_service.settings["volume"], 0.4) and is_equal_approx(settings_service.settings["music_volume"], 1.0) and is_equal_approx(settings_service.settings["dialogue_volume"], 1.0), "legacy master-only settings migrate without reducing categories")
  settings_service.settings = settings_backup
  settings_service.settings_path = settings_path_backup
  settings_service.apply_settings()
@@ -982,6 +995,13 @@ func run() -> void:
  await process_frame
  await process_frame
  var settings_panel: Control = settings_menu.get("panel").get_child(0)
+ var sfx_slider := settings_panel.find_child("sfx_volume", true, false) as HSlider
+ check(sfx_slider != null, "settings exposes an SFX volume control")
+ if sfx_slider:
+  var saved_sfx: float = settings_service.settings["sfx_volume"]
+  sfx_slider.value = 0.35
+  check(is_equal_approx(settings_service.settings["sfx_volume"], 0.35) and is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX"))), 0.35), "settings slider applies SFX volume live")
+  sfx_slider.value = saved_sfx
  var settings_fit := true
  for child: Node in settings_panel.get_children():
   if child is Control and not root.get_visible_rect().encloses(child.get_global_rect()):

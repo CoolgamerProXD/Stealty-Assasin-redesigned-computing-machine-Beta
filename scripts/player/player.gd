@@ -60,6 +60,7 @@ func _ready() -> void:
  camera.current = true
  camera.fov = 68.0
  footsteps = AudioStreamPlayer3D.new()
+ footsteps.bus = "SFX"
  step_streams["stone"] = ProceduralSound.footstep("stone")
  step_streams["wood"] = ProceduralSound.footstep("wood")
  step_streams["carpet"] = ProceduralSound.footstep("carpet")

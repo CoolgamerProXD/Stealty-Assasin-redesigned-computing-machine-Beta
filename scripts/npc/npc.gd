@@ -48,6 +48,7 @@ func _ready() -> void:
  if profile.occupation == "security":
   person.add_sidearm()
   alert_audio = AudioStreamPlayer3D.new()
+  alert_audio.bus = "SFX"
   alert_audio.stream = ProceduralSound.tone(165.0, 0.10, 0.10)
   alert_audio.max_distance = 9.0
   add_child(alert_audio)

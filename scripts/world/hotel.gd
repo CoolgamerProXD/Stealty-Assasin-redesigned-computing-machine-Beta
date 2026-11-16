@@ -649,16 +649,20 @@ func _build_ui() -> void:
  fps_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
  overlay.add_child(fps_label)
  shot_audio = AudioStreamPlayer.new()
+ shot_audio.bus = "SFX"
  shot_audio.stream = ProceduralSound.tone(180.0, 0.12, 0.14)
  add_child(shot_audio)
  objective_audio = AudioStreamPlayer.new()
+ objective_audio.bus = "SFX"
  objective_audio.stream = ProceduralSound.tone(440.0, 0.20, 0.05)
  add_child(objective_audio)
  mission.changed.connect(objective_audio.play)
  gadget_audio = AudioStreamPlayer.new()
+ gadget_audio.bus = "SFX"
  gadget_audio.stream = ProceduralSound.tone(260.0, 0.12, 0.035)
  add_child(gadget_audio)
  ambience_audio = AudioStreamPlayer.new()
+ ambience_audio.bus = "Ambient"
  ambience_audio.stream = ProceduralSound.ambience("initiation" if mission_id() == "initiation" else "hotel")
  add_child(ambience_audio)
  ambience_audio.play()

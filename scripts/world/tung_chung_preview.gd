@@ -31,6 +31,7 @@ func _ready() -> void:
 
 func _start_ambience(kind: String) -> void:
  var ambience := AudioStreamPlayer.new()
+ ambience.bus = "Ambient"
  ambience.name = "LocationAmbience"
  ambience.stream = ProceduralSound.ambience(kind)
  add_child(ambience)
