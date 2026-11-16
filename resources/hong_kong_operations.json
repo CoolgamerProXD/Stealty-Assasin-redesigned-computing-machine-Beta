@@ -28,7 +28,8 @@
       19,
       0.05,
       9
-    ]
+    ],
+    "target_line": "The manifest is on the train. The market intermediary arranged the next handoff."
   },
   "the_streets": {
     "map": "city",
@@ -59,7 +60,8 @@
       -23,
       0.05,
       0
-    ]
+    ],
+    "target_line": "The broker in the district records office made the arrangements."
   },
   "the_district": {
     "map": "city",
@@ -90,7 +92,8 @@
       19,
       0.05,
       0
-    ]
+    ],
+    "target_line": "The next meeting is at a harbour liaison office. I never met the buyer."
   },
   "the_harbour": {
     "map": "city",
@@ -121,7 +124,8 @@
       0,
       0.05,
       -35
-    ]
+    ],
+    "target_line": "The final coordinator took the archive route toward the mountains."
   },
   "ngong_ping": {
     "map": "mountain",
@@ -152,6 +156,7 @@
       0,
       0.05,
       30
-    ]
+    ],
+    "target_line": "The field safe contains the last key. I cannot tell you what is on the USB."
   }
 }

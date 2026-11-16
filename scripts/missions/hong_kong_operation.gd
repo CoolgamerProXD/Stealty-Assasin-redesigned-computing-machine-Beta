@@ -27,6 +27,7 @@ var train_stage: String = "station"
 var train_contact: HotelNpc
 var train_contact_complete: bool = false
 var train_car: Node3D
+var train_streaks: Array[Node3D] = []
 var message: String = ""
 var npc_list: Array[HotelNpc] = []
 var red_overlay: StandardMaterial3D
@@ -237,6 +238,9 @@ func _process(delta: float) -> void:
   intro_camera.global_position = intro_start.lerp(intro_end, t)
   intro_camera.look_at(intro_look_start.lerp(intro_look_end, t), Vector3.UP)
   if intro_time >= 6.0: _end_intro()
+ if train_stage == "aboard":
+  for streak: Node3D in train_streaks: streak.position.z = fposmod(streak.position.z + delta * 7.0 + 8.0, 16.0) - 8.0
+  if train_contact and not train_contact_complete: train_contact.person.animate_motion(delta, 0.0)
  var entry := Campaign.progress.mission(operation_id)
  var key_id := str(entry.get("key_id", ""))
  var keys: Array[String] = []
@@ -278,7 +282,7 @@ func _interact() -> void:
     return
    target_complete = true
    target.complete_objective(false)
-   message = "Ruby: Target confronted. " + str(config["clue"])
+   message = str(config["target"]) + ": " + str(config["target_line"]) + "  /  Ruby: " + str(config["clue"])
    return
   if placement == "target" and not key_secured:
    _secure_key()
@@ -335,6 +339,15 @@ func _build_train() -> void:
    _part(train_car, Vector3(side*2.12,1.9,z), Vector3(0.04,0.9,1.9), Color(0.25,0.43,0.46))
    _train_solid(Vector3(side*1.65,0.42,z), Vector3(0.9,0.75,1.2), Color(0.24,0.31,0.34))
    _part(train_car, Vector3(side*1.93,1.05,z), Vector3(0.35,1.1,1.2), Color(0.24,0.31,0.34))
+ # Moving light bands give a restrained impression of travel through the
+ # carriage windows; no real railway layout is simulated.
+ for side: float in [-1.0,1.0]:
+  for i: int in range(6):
+   var streak := Node3D.new()
+   streak.position = Vector3(side*2.07,1.85,-7.5+float(i)*2.5)
+   train_car.add_child(streak)
+   _part(streak,Vector3.ZERO,Vector3(0.025,0.05,1.1),Color(0.52,0.69,0.65))
+   train_streaks.append(streak)
  var title := Label3D.new()
  title.text = "BLACKLINE  /  TRAIN CONTACT"
  title.position = Vector3(0,2.4,-7.8)
@@ -441,6 +454,7 @@ func load_game() -> void:
   train_contact_complete = false
   if train_contact: train_contact.queue_free()
   if train_car: train_car.queue_free()
+  train_streaks.clear()
   train_contact = null
   train_car = null
  target_complete = data.get("target_complete", false) == true

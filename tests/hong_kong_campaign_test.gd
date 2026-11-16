@@ -71,6 +71,7 @@ func run() -> void:
  staff.queue_free()
  check(service.progress.mark_complete("initiation"), "Initiation unlocks Hong Kong without mandatory Meridian")
  var ids := ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
+ var intro_paths: Dictionary = {}
  for i: int in range(ids.size()):
   var id: String = ids[i]
   var key_id := "key_%02d" % (i+1)
@@ -90,8 +91,14 @@ func run() -> void:
    if npc != target and npc != guard: npc.collision_layer = 0
   world.set("save_path", temp + "_" + id + ".json")
   check(world.get("intro_active") and not player.is_physics_processing(), id + " intro starts before gameplay")
-  world.call("_end_intro")
-  check(not world.get("intro_active") and player.is_physics_processing(), id + " skip initializes gameplay")
+  var intro_start: Vector3 = world.get("intro_start")
+  var intro_end: Vector3 = world.get("intro_end")
+  intro_paths[str(intro_start - target.global_position) + "/" + str(intro_end - target.global_position)] = true
+  var skip_event := InputEventAction.new()
+  skip_event.action = "release_mouse"
+  skip_event.pressed = true
+  world.call("_input", skip_event)
+  check(not world.get("intro_active") and player.is_physics_processing(), id + " Escape skips the introduction and initializes gameplay")
   # Walk from the actual deployment point to each target with fixed inputs.
   # Background agents are frozen/temporarily non-colliding to isolate world
   # geometry; this does not claim crowd navigation or a human playthrough.
@@ -216,6 +223,7 @@ func run() -> void:
   if i < 4: check(service.progress.is_unlocked(ids[i+1]), id + " unlocks next operation")
   world.queue_free()
   await process_frame
+ check(intro_paths.size() == 5, "five operations use distinct entry camera paths")
  check(service.progress.usb_ready() and service.progress.recovered_keys.size() == 5, "all five distinct keys unlock USB decryption")
  var snapshot: Dictionary = service.progress.snapshot()
  var restored := CampaignProgress.new()
