@@ -17,12 +17,22 @@ func _ready() -> void:
   Campaign.settings["resolution"] = "1600x900" if index == 1 else "1280x720"
   _save())
  _add_row("WINDOW SIZE", resolution)
- var fullscreen := CheckButton.new()
+ var display := HBoxContainer.new()
+ var fullscreen := CheckBox.new()
+ fullscreen.text = "Fullscreen"
  fullscreen.button_pressed = Campaign.settings["fullscreen"]
  fullscreen.toggled.connect(func(value: bool) -> void:
   Campaign.settings["fullscreen"] = value
   _save())
- _add_row("FULLSCREEN", fullscreen)
+ display.add_child(fullscreen)
+ var fps := CheckBox.new()
+ fps.text = "FPS"
+ fps.button_pressed = Campaign.settings["show_fps"]
+ fps.toggled.connect(func(value: bool) -> void:
+  Campaign.settings["show_fps"] = value
+  _save())
+ display.add_child(fps)
+ _add_row("DISPLAY", display)
  var quality := OptionButton.new()
  for label: String in ["LOW", "MEDIUM", "HIGH"]: quality.add_item(label)
  quality.select(["LOW", "MEDIUM", "HIGH"].find(Campaign.settings["graphics"]))
@@ -46,12 +56,6 @@ func _ready() -> void:
   _save())
  lighting.add_child(practicals)
  _add_row("LIGHTING (LOW OFF)", lighting)
- var fps := CheckButton.new()
- fps.button_pressed = Campaign.settings["show_fps"]
- fps.toggled.connect(func(value: bool) -> void:
-  Campaign.settings["show_fps"] = value
-  _save())
- _add_row("SHOW FPS", fps)
  var sensitivity := HSlider.new()
  sensitivity.min_value = 0.001
  sensitivity.max_value = 0.006
