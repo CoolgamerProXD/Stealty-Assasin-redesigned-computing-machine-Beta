@@ -377,6 +377,7 @@ func _mountain() -> void:
  var stone := Color(0.61,0.60,0.53)
  _terrain_patch(-43,-38,33,36,2.6)
  _terrain_patch(10,-38,33,36,2.9)
+ if str(get_meta("operation_id", "")) == "ngong_ping": _mountain_field_office()
  var dark := Color(0.22,0.24,0.20)
  # Broad public approach. The statue is a non-destructible landmark.
  _box(Vector3(0,0.03,0),Vector3(11,0.06,80),stone)
@@ -474,6 +475,23 @@ func _mountain() -> void:
   _box(Vector3(x,6.3,30),Vector3(2.0,2.3,1.8),Color(0.66,0.26,0.18))
   _box(Vector3(x,6.6,29.08),Vector3(1.6,1.1,0.05),Color(0.30,0.46,0.48))
   _box(Vector3(x,7.8,30),Vector3(0.12,0.7,0.12),dark)
+
+# A small fictional field office for the final operation, physically separate
+# from the public monument and its viewing terrace.
+func _mountain_field_office() -> void:
+ var marker := Node3D.new()
+ marker.name = "MountainFieldOffice"
+ add_child(marker)
+ var wall := Color(0.51,0.52,0.45)
+ var trim := Color(0.26,0.31,0.27)
+ _box(Vector3(11.5,1.6,5),Vector3(0.2,3.2,5),wall,true)
+ for side: float in [-1.0,1.0]:
+  _box(Vector3(9,1.6,5+side*2.5),Vector3(5,3.2,0.2),wall,true)
+  _box(Vector3(6.5,1.6,5+side*1.75),Vector3(0.2,3.2,1.5),wall,true)
+ _box(Vector3(9,3.25,5),Vector3(5.2,0.16,5.2),trim,true)
+ _box(Vector3(9,0.018,5),Vector3(4.9,0.036,4.9),Color(0.45,0.43,0.36))
+ _box(Vector3(11.2,1.2,6.5),Vector3(0.12,1.8,1.3),Color(0.34,0.27,0.20))
+ _sign("FIELD ARCHIVE", Vector3(9,2.7,7.35), 28)
 
 # A broad physical approach to the public viewing terrace. The sloped
 # collider backs the visible shallow steps and overlaps the existing plinth.

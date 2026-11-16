@@ -104,6 +104,7 @@ func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staf
  if profile.occupation == "civilian" or not AccessRules.can_enter(permission_role, area):
   alert_remaining = 4.0
   set_state("seeking_help")
+  _seek_help(point)
   trespass_notice.emit(self, profile.identity + ": Someone is in a restricted area. I should find staff.", exit_hint)
  else:
   warning_remaining = 3.0
@@ -132,13 +133,25 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
     trespass_notice.emit(self, profile.identity + ": Security alert. Leave the restricted area.", exit_hint)
    else:
     set_state("seeking_help")
-    trespass_notice.emit(self, profile.identity + ": I am calling security.", exit_hint)
+    _seek_help(player.global_position if player else investigation_target)
+    trespass_notice.emit(self, profile.identity + ": I am seeking security.", exit_hint)
  else:
   alert_remaining -= delta
   if alert_remaining <= 0.0:
    warning_cooldown = 5.0
    set_state("returning")
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+
+func _seek_help(incident: Vector3) -> void:
+ if not agent: return
+ # Local, bounded retreat to an authored route point (or a short step away);
+ # there is no invented global alert or perpetual pursuit.
+ if not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
+ else:
+  var away := global_position - incident
+  away.y = 0.0
+  if away.length_squared() < 0.01: away = Vector3.FORWARD
+  agent.target_position = global_position + away.normalized() * 3.0
 
 func _player_access_area() -> String:
  if not player: return "public"
@@ -221,7 +234,7 @@ func _physics_process(delta: float) -> void:
    query.exclude = [get_rid(), player.get_rid()]
    var clear := get_world_3d().direct_space_state.intersect_ray(query).is_empty()
    if can_see(player.global_position, clear): warn_trespass(player.global_position, _permitted_exit(), _player_access_area())
- if agent and state in ["walking", "returning", "investigating"]:
+ if agent and state in ["walking", "returning", "investigating", "seeking_help"]:
   if agent.is_navigation_finished():
    if state == "walking" and not profile.schedule.is_empty():
     activity_time = 0.0

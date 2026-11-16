@@ -111,6 +111,21 @@ func run() -> void:
    check(player.global_position.y > 2.2 and player.global_position.z < -20.0, "public Buddha viewing approach reaches the terrace")
    target.collision_layer = 1
    guard.collision_layer = 1
+   check((world.get("scene") as Node).find_child("MountainFieldOffice", true, false) != null, "final mission has a field office separate from the monument")
+   target.collision_layer = 0
+   guard.collision_layer = 0
+   player.global_position = Vector3(5,0.05,5)
+   player.velocity = Vector3.ZERO
+   await physics_frame
+   Engine.time_scale = 3.0
+   Input.action_press("move_right")
+   await create_timer(2.0).timeout
+   Input.action_release("move_right")
+   Engine.time_scale = 1.0
+   print("HK FIELD DIAG: ", player.global_position)
+   check(player.global_position.x > 7.5 and player.global_position.x < 11.5, "mountain field office has a traversable entrance")
+   target.collision_layer = 1
+   guard.collision_layer = 1
   if id in ["the_streets", "the_district", "the_harbour"]:
    var city: Node = world.get("scene")
    check(city.find_child("InteriorLocalNavigation", true, false) != null, id + " has a walk-in mission interior")
