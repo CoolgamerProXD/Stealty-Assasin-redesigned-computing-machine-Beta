@@ -21,6 +21,7 @@ var crouching: bool = false
 var collision_shape: CollisionShape3D
 var stance_height: float = 1.8
 var camera_kick: float = 0.0
+var stagger_remaining: float = 0.0
 var last_footstep_index: int = 0
 var footsteps: AudioStreamPlayer3D
 var step_streams: Dictionary = {}
@@ -99,7 +100,15 @@ func shot_feedback() -> void:
  camera_kick = 1.0
  body_mesh.fire_weapon()
 
+# Stylised alert pulses cause only a short movement stagger; no injury,
+# health or permanent failure is implied by this prototype response.
+func receive_alert_pulse() -> void:
+ stagger_remaining = maxf(stagger_remaining, 0.65)
+ camera_kick = maxf(camera_kick, 0.55)
+ if body_mesh: body_mesh.hit_reaction = 1.0
+
 func _physics_process(delta: float) -> void:
+ stagger_remaining = maxf(0.0, stagger_remaining - delta)
  var blend := 1.0 - exp(-delta * 9.0)
  camera.fov = lerpf(camera.fov, (58.0 if aiming else 68.0) + camera_kick * 1.2, 1.0 - exp(-delta * 8.0))
  camera_kick = move_toward(camera_kick, 0.0, delta * 5.0)
@@ -121,6 +130,7 @@ func _physics_process(delta: float) -> void:
  body_mesh.weapon_aiming = aiming and body_mesh.weapon_equipped
  pivot.position.y = 1.5 * stance_height / 1.8
  var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)
+ if stagger_remaining > 0.0: speed *= 0.35
  var acceleration := 14.0 if direction.length_squared() > 0.01 else 18.0
  velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)
  velocity.z = move_toward(velocity.z, direction.z * speed, acceleration * delta)

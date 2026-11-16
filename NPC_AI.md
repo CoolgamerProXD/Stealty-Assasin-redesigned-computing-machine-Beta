@@ -1,6 +1,6 @@
 # Current trespass behavior
 
-Visible restricted-area trespass creates a local memory. Authorized staff/security issue a warning with an exit direction and a three-second grace period that does not restart on each sighting. Leaving de-escalates; security otherwise raises a stylized alert pose, while other roles seek help on a bounded local route. Visitors do not immediately become hostile. This does not implement player damage, coordinated backup, pursuit combat or comprehensive obstacle avoidance. Station navigation now excludes the information island and pillars; other navigation remains partial.
+Visible restricted-area trespass creates a local memory. Authorized staff/security issue a warning with an exit direction and a three-second grace period that does not restart on each sighting. Leaving de-escalates; security otherwise raises a stylized alert pose, while other roles seek help on a bounded local route. Visitors do not immediately become hostile. Alerted security can fire a non-graphic, cover-blocked pulse that briefly staggers the player. There is no player health, coordinated backup, full pursuit combat or comprehensive obstacle avoidance. Station navigation now excludes the information island and pillars; other navigation remains partial.
 
 # Historical second-pass local routes
 

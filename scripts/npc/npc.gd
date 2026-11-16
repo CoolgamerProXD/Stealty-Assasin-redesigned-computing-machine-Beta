@@ -24,6 +24,8 @@ var completed_incapacitated: bool = false
 var warning_remaining: float = 0.0
 var alert_remaining: float = 0.0
 var warning_cooldown: float = 0.0
+var alert_pulse_clock: float = 0.0
+var alert_audio: AudioStreamPlayer3D
 var exit_hint: Vector3 = Vector3.ZERO
 
 func _ready() -> void:
@@ -39,7 +41,12 @@ func _ready() -> void:
  person.role = profile.occupation
  person.appearance_seed = profile.identity.hash()
  add_child(person)
- if profile.occupation == "security": person.add_sidearm()
+ if profile.occupation == "security":
+  person.add_sidearm()
+  alert_audio = AudioStreamPlayer3D.new()
+  alert_audio.stream = ProceduralSound.tone(165.0, 0.10, 0.10)
+  alert_audio.max_distance = 9.0
+  add_child(alert_audio)
  agent = NavigationAgent3D.new()
  agent.path_desired_distance = 0.35
  agent.target_desired_distance = 0.45
@@ -130,6 +137,7 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
    if profile.occupation == "security":
     suspicion = maxf(suspicion, 80.0)
     set_state("alerted")
+    alert_pulse_clock = 1.2
     trespass_notice.emit(self, profile.identity + ": Security alert. Leave the restricted area.", exit_hint)
    else:
     set_state("seeking_help")
@@ -152,6 +160,21 @@ func _seek_help(incident: Vector3) -> void:
   away.y = 0.0
   if away.length_squared() < 0.01: away = Vector3.FORWARD
   agent.target_position = global_position + away.normalized() * 3.0
+
+# A fictional short-range assessment pulse. Solid geometry blocks it; there is
+# no health, graphic harm, permanent damage or open-ended pursuit.
+func _fire_alert_pulse() -> bool:
+ if state != "alerted" or not player or global_position.distance_to(player.global_position) > 7.0: return false
+ var start_point := global_position + Vector3.UP * 1.3
+ var end_point := player.global_position + Vector3.UP * (player.stance_height * 0.65)
+ var ray := PhysicsRayQueryParameters3D.create(start_point, end_point)
+ ray.exclude = [get_rid(), player.get_rid()]
+ if not get_world_3d().direct_space_state.intersect_ray(ray).is_empty(): return false
+ player.receive_alert_pulse()
+ if person: person.fire_weapon()
+ if alert_audio: alert_audio.play()
+ trespass_notice.emit(self, profile.identity + ": Security pulse. Leave the restricted area.", exit_hint)
+ return true
 
 func _player_access_area() -> String:
  if not player: return "public"
@@ -254,6 +277,14 @@ func _physics_process(delta: float) -> void:
  if not is_on_floor(): velocity.y -= 9.8 * delta
  else: velocity.y = -0.1
  move_and_slide()
+ if state == "alerted" and player:
+  var to_player := player.global_position - global_position
+  to_player.y = 0.0
+  if to_player.length_squared() > 0.01: facing = to_player.normalized()
+  alert_pulse_clock -= delta
+  if alert_pulse_clock <= 0.0:
+   alert_pulse_clock = 1.4
+   _fire_alert_pulse()
  if person:
   person.idle_activity = state
   if profile.occupation == "security":
@@ -262,5 +293,7 @@ func _physics_process(delta: float) -> void:
   var previous_heading := person.rotation.y
   if velocity.length_squared() > 0.1:
    person.rotation.y = lerp_angle(person.rotation.y, atan2(-velocity.x, -velocity.z), 1.0 - exp(-delta * 8.0))
+  elif state == "alerted" and facing.length_squared() > 0.01:
+   person.rotation.y = lerp_angle(person.rotation.y, atan2(-facing.x, -facing.z), 1.0 - exp(-delta * 8.0))
   var turn_rate := angle_difference(previous_heading, person.rotation.y) / maxf(delta, 0.001)
   person.animate_motion(delta, Vector2(velocity.x, velocity.z).length(), turn_rate)

@@ -52,6 +52,31 @@ func run() -> void:
  check(test_guard.person.phase > old_phase and test_guard.person.gait_speed > 2.5 and absf(test_guard.person.upper_body.rotation.z) > 0.005, "security animation responds to motion and turning")
  for frame: int in range(90): test_guard.person.animate_motion(1.0 / 60.0, 0.0, 0.0)
  check(test_guard.person.gait_speed < 0.05 and absf(test_guard.person.upper_body.rotation.x) < 0.01, "animation blends back to idle after stopping")
+ var test_player := HotelPlayer.new()
+ test_player.position = Vector3(0,0,-3)
+ root.add_child(test_player)
+ test_player.set_physics_process(false)
+ test_player.set_process_unhandled_input(false)
+ test_guard.player = test_player
+ test_guard.warning_cooldown = 0.0
+ test_guard.warn_trespass(test_player.global_position, Vector3.LEFT, "staff")
+ await physics_frame
+ check(not test_guard._fire_alert_pulse() and test_player.stagger_remaining == 0.0, "security cannot fire during the warning grace period")
+ test_guard.tick_trespass(3.1, true)
+ check(test_guard._fire_alert_pulse() and test_player.stagger_remaining > 0.0, "alerted security can briefly stagger an exposed player")
+ var wall := StaticBody3D.new()
+ wall.position = Vector3(0,1,-1.5)
+ var wall_collision := CollisionShape3D.new()
+ var wall_shape := BoxShape3D.new()
+ wall_shape.size = Vector3(2,2,0.2)
+ wall_collision.shape = wall_shape
+ wall.add_child(wall_collision)
+ root.add_child(wall)
+ await physics_frame
+ test_player.stagger_remaining = 0.0
+ check(not test_guard._fire_alert_pulse() and test_player.stagger_remaining == 0.0, "solid cover blocks the fictional security pulse")
+ wall.queue_free()
+ test_player.queue_free()
  test_guard.queue_free()
  var visitor := HotelNpc.new()
  visitor.profile = NpcProfile.new()

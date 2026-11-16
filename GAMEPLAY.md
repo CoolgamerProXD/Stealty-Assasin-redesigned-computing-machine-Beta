@@ -2,7 +2,7 @@
 
 After Initiation, the five operations unlock in order. Press E to confront the named target, then separately collect that mission's key from the indicated target, bodyguard or safe. Reach the marked extraction after both objectives. In Tung Chung the platform transition leads to a fictional carriage, where the train contact must be questioned before the exit. The USB HUD displays all five persistent keys; the final extraction opens a skippable secure-channel event without a fabricated revelation. F5/F9 save/load that operation only. Escape skips an entry camera or opens pause after the camera. Loadout, aim/fire and Instinct remain available.
 
-Staff and security may warn a visible trespasser and point toward a permitted area. Security enters a stylized alert after about three seconds; leaving de-escalates. Visitors and staff who lack access seek help locally. This is not a complete combat, pursuit, injury or backup system. The historical preview notes below refer to the separately selectable exploration scenes, not the new campaign operations.
+Staff and security may warn a visible trespasser and point toward a permitted area. Security enters a stylized alert after about three seconds; leaving de-escalates. Visitors and staff who lack access seek help locally. Security can fire a fictional pulse that briefly staggers an exposed player; cover blocks it. There is no health, injury, coordinated backup or full pursuit combat. The historical preview notes below refer to the separately selectable exploration scenes, not the new campaign operations.
 
 # Second-pass gameplay notes
 

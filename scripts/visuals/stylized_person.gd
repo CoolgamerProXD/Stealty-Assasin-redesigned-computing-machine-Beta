@@ -22,6 +22,7 @@ var quiet_tool_equipped: bool = false
 var quiet_tool_draw: float = 0.0
 var quiet_tool_action: float = 0.0
 var weapon_recoil: float = 0.0
+var hit_reaction: float = 0.0
 var weapon_aiming: bool = false
 var weapon_equipped: bool = false
 var weapon_draw: float = 0.0
@@ -172,7 +173,8 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
  var moving_weight := clampf(gait_speed / 2.5, 0.0, 1.0)
  var sway := sin(phase) * 0.025 * moving_weight + sin(idle_phase * 0.38) * 0.012 * (1.0 - moving_weight)
  upper_body.rotation.z = lerpf(upper_body.rotation.z, sway - clampf(turning_rate, -2.0, 2.0) * 0.035, blend)
- upper_body.rotation.x = lerpf(upper_body.rotation.x, -minf(gait_speed, 4.7) * 0.025, blend)
+ upper_body.rotation.x = lerpf(upper_body.rotation.x, -minf(gait_speed, 4.7) * 0.025 + hit_reaction * 0.16, blend)
+ hit_reaction = maxf(0.0, hit_reaction - delta * 3.0)
  upper_body.position.x = lerpf(upper_body.position.x, sin(idle_phase * 0.38) * 0.014 * (1.0 - moving_weight), blend)
  # Independent knees bend during swing and crouch. Torso descends without
  # squashing the head or changing the model's horizontal proportions.
