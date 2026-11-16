@@ -553,18 +553,18 @@ func _build_departure_exterior() -> void:
  story_set.name = "FictionalDepartureCutaway"
  story_set.position = Vector3(220,0,0)
  add_child(story_set)
- _part(story_set,Vector3(0,-0.4,0),Vector3(42,0.5,38),Color(0.045,0.075,0.085),"rubber")
+ _part(story_set,Vector3(0,-0.4,0),Vector3(42,0.5,38),Color(0.10,0.14,0.17),"plain")
  # Exterior body: repeated windows are actual gaps between the lower/upper
  # panels and posts, with tinted glass planes and a restrained amber waist line.
- _part(story_set,Vector3(0,0.5,0),Vector3(4.4,0.75,27),Color(0.12,0.22,0.25),"painted_metal")
- _part(story_set,Vector3(0,2.75,0),Vector3(4.4,0.55,27),Color(0.10,0.19,0.22),"painted_metal")
- _part(story_set,Vector3(0,3.12,0),Vector3(4.55,0.16,27.2),Color(0.17,0.25,0.27),"brushed_metal")
+ _part(story_set,Vector3(0,0.5,0),Vector3(4.4,0.75,27),Color(0.36,0.49,0.52),"painted_metal")
+ _part(story_set,Vector3(0,2.75,0),Vector3(4.4,0.55,27),Color(0.30,0.43,0.46),"painted_metal")
+ _part(story_set,Vector3(0,3.12,0),Vector3(4.55,0.16,27.2),Color(0.38,0.48,0.49),"brushed_metal")
  for side: float in [-1.0,1.0]:
-  _part(story_set,Vector3(side*2.12,1.88,0),Vector3(0.14,0.30,27),Color(0.13,0.22,0.24),"painted_metal")
+  _part(story_set,Vector3(side*2.12,1.88,0),Vector3(0.14,0.30,27),Color(0.36,0.48,0.49),"painted_metal")
   for z: float in [-11.5,-8.1,-4.7,-1.3,2.1,5.5,8.9,11.5]:
-   _part(story_set,Vector3(side*2.13,1.86,z),Vector3(0.12,1.66,0.16),Color(0.24,0.32,0.33),"brushed_metal")
+   _part(story_set,Vector3(side*2.13,1.86,z),Vector3(0.12,1.66,0.16),Color(0.38,0.49,0.48),"brushed_metal")
   for z: float in [-9.8,-6.4,-3.0,0.4,3.8,7.2,10.6]:
-   _part(story_set,Vector3(side*2.16,1.9,z),Vector3(0.035,1.34,2.7),Color(0.31,0.56,0.62,0.52),"glass")
+   _part(story_set,Vector3(side*2.16,1.9,z),Vector3(0.035,1.34,2.7),Color(0.38,0.66,0.70,0.68),"glass")
   _part(story_set,Vector3(side*2.17,0.98,0),Vector3(0.05,0.12,26),Color(0.85,0.43,0.28),"emissive")
   _part(story_set,Vector3(side*2.18,0.34,0),Vector3(0.06,0.28,26),Color(0.055,0.09,0.10),"rubber")
  # Mid-carriage seam and flexible connector make the paired-car composition
@@ -585,12 +585,12 @@ func _build_departure_exterior() -> void:
   var z := -17.0 + float(i)*4.1
   var height := 5.5 + float((i*7)%5)*1.25
   var width := 2.4 + float(i%3)*0.7
-  _part(story_set,Vector3(-7.6,height*0.5,z),Vector3(width,height,3.8),Color(0.055+float(i%2)*0.018,0.09,0.105),"concrete")
+  _part(story_set,Vector3(6.4,height*0.5,z),Vector3(width,height,3.8),Color(0.20+float(i%2)*0.025,0.28,0.31),"concrete")
   for row: int in range(1,4):
    var wy := 0.9 + float(row)*1.05
    if wy > height-0.4: continue
    for col: int in range(2):
-    _part(story_set,Vector3(-6.25,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.82,0.52,0.29,0.76) if (i+row+col)%3==0 else Color(0.25,0.58,0.64,0.65),"emissive")
+    _part(story_set,Vector3(7.95,wy,z-0.52+float(col)*1.04),Vector3(0.035,0.32,0.42),Color(0.95,0.67,0.37,0.92) if (i+row+col)%3==0 else Color(0.35,0.78,0.86,0.88),"emissive")
  # Passing environmental light bars create lateral motion while the camera
  # tracks the carriage; all are non-colliding cinematic dressing.
  for i: int in range(14):
