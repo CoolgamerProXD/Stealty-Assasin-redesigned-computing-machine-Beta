@@ -92,6 +92,8 @@ func run() -> void:
 	check(player_in_sandbox.outfit_id == "market_vendor" and AccessRules.can_enter(player_in_sandbox.role,"market_staff"),"field wardrobe selection changes role-based area access")
 	var campaign_save: Dictionary = campaign.progress.snapshot()
 	check(campaign_save["acquired_outfits"].has("market_vendor") and campaign_save["equipped_outfit"] == "market_vendor","wardrobe ownership and equip choice persist in campaign save data")
+	sandbox.queue_free()
+	await process_frame
 
 	# Final-operation geometry and the concealed interior are checked in the
 	# actual campaign scene. The entry is physically inside the rear Buddha base.
