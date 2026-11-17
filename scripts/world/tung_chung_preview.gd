@@ -48,8 +48,9 @@ func player_access_area(point: Vector3) -> String:
   var floor_max := float(zone.get("floor_max", 100.0))
   if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= floor_min and point.y <= floor_max:
    return str(zone.get("area","staff"))
- var area: Variant = get_meta("restricted_rect", null)
- if area is Rect2 and area.has_point(Vector2(point.x, point.z)): return "staff"
+ if has_meta("restricted_rect"):
+  var area: Variant = get_meta("restricted_rect")
+  if area is Rect2 and area.has_point(Vector2(point.x, point.z)): return "staff"
  return "public"
 
 func permitted_exit(point: Vector3) -> Vector3:
@@ -58,7 +59,8 @@ func permitted_exit(point: Vector3) -> Vector3:
   if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= float(zone.get("floor_min",-100.0)) and point.y <= float(zone.get("floor_max",100.0)):
    var center: Vector2 = rect.get_center()
    return Vector3(center.x,point.y,center.y)
- var area: Variant = get_meta("restricted_rect", null)
+ if not has_meta("restricted_rect"): return point
+ var area: Variant = get_meta("restricted_rect")
  if not area is Rect2: return point
  var options: Array[Vector3] = [Vector3(area.position.x - 0.8,point.y,point.z), Vector3(area.end.x + 0.8,point.y,point.z), Vector3(point.x,point.y,area.position.y - 0.8), Vector3(point.x,point.y,area.end.y + 0.8)]
  var best := options[0]

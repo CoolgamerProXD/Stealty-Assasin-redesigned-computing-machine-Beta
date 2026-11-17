@@ -126,10 +126,12 @@ func run() -> void:
 	Input.action_press("move_forward")
 	for _frame: int in range(180): await physics_frame
 	Input.action_release("move_forward")
+	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
 	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
 	Input.action_press("move_back")
 	for _frame: int in range(390): await physics_frame
 	Input.action_release("move_back")
+	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position))
 	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
 	check(final_world.find_child("DisguiseInventory",true,false) != null,"mission builds the playable disguise inventory UI")
 

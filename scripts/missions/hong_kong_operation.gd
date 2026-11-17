@@ -397,6 +397,7 @@ func _build_ui() -> void:
  gadget_audio.stream = ProceduralSound.tone(260.0,0.12,0.035)
  add_child(gadget_audio)
  disguise_inventory_ui = preload("res://scripts/ui/disguise_inventory.gd").new()
+ disguise_inventory_ui.name = "DisguiseInventory"
  disguise_inventory_ui.outfit_selected.connect(_equip_disguise)
  add_child(disguise_inventory_ui)
 
