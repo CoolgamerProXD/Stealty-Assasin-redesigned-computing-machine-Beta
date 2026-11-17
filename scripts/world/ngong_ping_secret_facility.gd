@@ -121,8 +121,8 @@ func _build_hidden_entry() -> void:
 
 func _build_underground_levels() -> void:
 	for floor_index: int in range(FLOORS_UNDER.size()):
-		var y := FLOORS_UNDER[floor_index]
-		var palette := [Color(0.30,0.34,0.34),Color(0.23,0.31,0.34),Color(0.27,0.30,0.32)][floor_index]
+		var y: float = FLOORS_UNDER[floor_index]
+		var palette: Color = [Color(0.30,0.34,0.34),Color(0.23,0.31,0.34),Color(0.27,0.30,0.32)][floor_index]
 		_box("FacilitySlab_Sublevel_%d" % (floor_index+1),Vector3(0,y-0.18,-57),Vector3(60,0.36,50),palette,true)
 		_build_level_shell(y,-57,60,50,5.0,palette)
 		_add_navigation("SublevelNavigation_%d" % (floor_index+1),y+0.04,-80.0,-34.0,-28.0,28.0)
@@ -229,9 +229,9 @@ func _build_sublevel_connectors() -> void:
 	# Two broad switchback ramps provide walkable access to all three buried
 	# levels; the framed shafts beside them are visual lift infrastructure.
 	for floor_index: int in range(2):
-		var upper_y := FLOORS_UNDER[floor_index]
-		var lower_y := FLOORS_UNDER[floor_index+1]
-		var center_y := (upper_y+lower_y)*0.5
+		var upper_y: float = FLOORS_UNDER[floor_index]
+		var lower_y: float = FLOORS_UNDER[floor_index+1]
+		var center_y: float = (upper_y+lower_y)*0.5
 		var angle := atan(absf(upper_y-lower_y)/8.0)
 		var forward := floor_index % 2 == 0
 		var center_z := -55.0
@@ -266,9 +266,9 @@ func _build_sublevel_connectors() -> void:
 	corridor_roof.rotation.x = -core_angle
 	# Physical ramps climb through five chamber floors inside the statue shell.
 	for i: int in range(FLOORS_INSIDE.size()-1):
-		var low_y := FLOORS_INSIDE[i]
-		var high_y := FLOORS_INSIDE[i+1]
-		var center_y := (low_y+high_y)*0.5
+		var low_y: float = FLOORS_INSIDE[i]
+		var high_y: float = FLOORS_INSIDE[i+1]
+		var center_y: float = (low_y+high_y)*0.5
 		var center_x := 2.0
 		var center_z := -29.0
 		var stair := _box("BuddhaInteriorSwitchback_%d" % (i+1),Vector3(center_x,center_y,center_z),Vector3(2.0,0.24,8.0),Color(0.46,0.39,0.29),true)
@@ -277,14 +277,14 @@ func _build_sublevel_connectors() -> void:
 			var rail := _box("InteriorStairRail",Vector3(center_x+side*1.08,center_y+0.55,center_z),Vector3(0.10,1.1,8.0),Color(0.25,0.32,0.31),true)
 			rail.rotation.x = stair.rotation.x
 	for i: int in range(FLOORS_INSIDE.size()):
-		var floor_y := FLOORS_INSIDE[i]
-		var width := [16.0,16.0,14.0,12.0,8.0][i]
-		var depth := [14.0,14.0,12.0,10.5,7.5][i]
+		var floor_y: float = FLOORS_INSIDE[i]
+		var width: float = [16.0,16.0,14.0,12.0,8.0][i]
+		var depth: float = [14.0,14.0,12.0,10.5,7.5][i]
 		var tint := Color(0.44,0.36,0.26).lerp(Color(0.20,0.36,0.41),float(i)/4.0)
 		if i == 0:
 			# Keep a 3.2 m by 10 m shaft open above the rising core ramp;
 			# adjacent slabs leave the public interior floor continuous.
-			var side_width := (width-3.2)*0.5
+			var side_width: float = (width-3.2)*0.5
 			for side: float in [-1.0,1.0]:
 				_box("ConcealedBuddhaInteriorFloor_1_Side",Vector3(side*(1.6+side_width*0.5),floor_y-0.18,-29),Vector3(side_width,0.36,depth),tint,true)
 			_box("ConcealedBuddhaInteriorFloor_1_Front",Vector3(0,floor_y-0.18,-24.5),Vector3(3.2,0.36,5.0),tint,true)
@@ -293,16 +293,16 @@ func _build_sublevel_connectors() -> void:
 		for side: float in [-1.0,1.0]:
 			_box("BuddhaInteriorWall",Vector3(side*width*0.5,floor_y+1.78,-29),Vector3(0.22,3.55,depth),tint.darkened(0.25),true)
 		for front_back: float in [-1.0,1.0]:
-			var wall_z := -29+front_back*depth*0.5
+			var wall_z: float = -29+front_back*depth*0.5
 			if i == 0 and front_back < 0.0:
-				var wall_side_width := (width-3.4)*0.5
+				var wall_side_width: float = (width-3.4)*0.5
 				for side: float in [-1.0,1.0]:
 					_box("BuddhaInteriorEntryWall",Vector3(side*(1.7+wall_side_width*0.5),floor_y+1.78,wall_z),Vector3(wall_side_width,3.55,0.22),tint.darkened(0.25),true)
 			else:
 				_box("BuddhaInteriorWall",Vector3(0,floor_y+1.78,wall_z),Vector3(width,3.55,0.22),tint.darkened(0.25),true)
 		for rib_x: float in [-width*0.35,width*0.35]:
 			_box("BronzeInnerRib",Vector3(rib_x,floor_y+1.55,-29),Vector3(0.18,3.1,depth-0.6),Color(0.63,0.49,0.30),true)
-		var title := ["PEDESTAL  /  INNER ACCESS", "ROBE SHELL  /  SERVICE GALLERY", "HIDDEN RIB CORRIDOR", "UPPER ROBE  /  ARCHIVE", "CROWN CHAMBER  /  INNER VAULT"][i]
+		var title: String = ["PEDESTAL  /  INNER ACCESS", "ROBE SHELL  /  SERVICE GALLERY", "HIDDEN RIB CORRIDOR", "UPPER ROBE  /  ARCHIVE", "CROWN CHAMBER  /  INNER VAULT"][i]
 		var sign := Label3D.new()
 		sign.text = title
 		sign.position = Vector3(0,floor_y+3.05,-29-depth*0.5+0.16)
@@ -312,8 +312,8 @@ func _build_sublevel_connectors() -> void:
 		add_child(sign)
 		_add_navigation("BuddhaInteriorNavigation_%d" % (i+1),floor_y+0.04,-29-depth*0.5+0.7,-29+depth*0.5-0.7,-width*0.5+0.8,width*0.5-0.8)
 		_add_facility_zone(Rect2(-width*0.5,-29-depth*0.5,width,depth),floor_y-0.2,floor_y+0.9,"buddha_interior")
-		var console_width := minf(width*0.28,3.0)
-		var console_x := width*0.5-console_width*0.5-0.5
+		var console_width: float = minf(width*0.28,3.0)
+		var console_x: float = width*0.5-console_width*0.5-0.5
 		_box("ConcealedCentralArchiveConsole",Vector3(console_x,floor_y+0.58,-29),Vector3(console_width,1.1,1.0),Color(0.17,0.25,0.28),true)
 		_box("InnerArchiveConsoleLight",Vector3(console_x,floor_y+1.17,-29.25),Vector3(console_width*0.8,0.05,0.06),Color(0.24,0.70,0.72))
 	# This hidden passage opens into the upper operations galleries and shows the
