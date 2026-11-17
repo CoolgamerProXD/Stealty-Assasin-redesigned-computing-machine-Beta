@@ -128,32 +128,19 @@ func run() -> void:
 	facility_player.velocity = Vector3.ZERO
 	facility_player.set_physics_process(true)
 	for _frame: int in range(6): await physics_frame
-	print("DISGUISE MOVE STATE: paused=",paused," physics=",facility_player.is_physics_processing()," floor=",facility_player.is_on_floor()," position=",facility_player.global_position)
 	Input.action_press("move_forward")
-	print("DISGUISE INPUT: pressed=",Input.is_action_pressed("move_forward")," vector=",Input.get_vector("move_left","move_right","move_forward","move_back"))
 	await create_timer(3.8).timeout
 	Input.action_release("move_forward")
-	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," basis_forward=",-facility_player.global_basis.z," slides=",facility_player.get_slide_collision_count())
-	for slide_index: int in range(facility_player.get_slide_collision_count()):
-		var slide := facility_player.get_slide_collision(slide_index)
-		var collider_node: Node3D = slide.get_collider() as Node3D
-		var collider_size := Vector3.ZERO
-		for collider_child: Node in collider_node.get_children():
-			if collider_child is CollisionShape3D and collider_child.shape is BoxShape3D:
-				collider_size = (collider_child.shape as BoxShape3D).size
-		print("DISGUISE ROUTE COLLISION: ",collider_node.get_path()," at=",collider_node.global_position," size=",collider_size," normal=",slide.get_normal())
+	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
 	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
 	Input.action_press("move_back")
 	await create_timer(7.8).timeout
 	Input.action_release("move_back")
-	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position)," back_pressed=",Input.is_action_pressed("move_back")," slides=",facility_player.get_slide_collision_count())
-	for slide_index: int in range(facility_player.get_slide_collision_count()):
-		var slide := facility_player.get_slide_collision(slide_index)
-		print("DISGUISE CORE COLLISION: ",slide.get_collider().name," normal=",slide.get_normal())
+	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position))
 	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
 	check(final_world.find_child("DisguiseInventory",true,false) != null,"mission builds the playable disguise inventory UI")
 
-	for node: Node in [final_world,sandbox,subdued,player]:
+	for node: Node in [final_world,subdued,player]:
 		if is_instance_valid(node): node.queue_free()
 	await process_frame
 	campaign.campaign_path = old_path
