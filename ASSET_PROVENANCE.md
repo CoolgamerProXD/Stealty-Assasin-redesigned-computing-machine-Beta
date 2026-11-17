@@ -1,0 +1,57 @@
+# Asset provenance and licensing ledger
+
+**Purpose:** source-of-truth ledger for visual-overhaul content. Asset provenance is tracked per item, not inferred from a website's typical policy. This file records verified existing inventory and rules for new content; it does not imply that new external assets have been acquired.
+
+## Asset acceptance policy
+
+1. Prefer original project-authored geometry/materials or verified CC0/openly licensed resources. Do not rip, extract or republish assets from commercial games, films, maps, photos, or reference images. High-level art-direction research does not license copying.
+2. Before importing, record exact asset/item name and version, creator, original source URL, download/source-repository URL and immutable commit or archive/hash, license URL and the license applying to that exact file, required attribution, acquisition date, modifications, destination paths, project use, and reviewer. Save the license text or archived proof alongside the asset when redistribution terms allow; otherwise link the authoritative terms and preserve a dated record.
+3. Verify derivatives, embedded textures, fonts, logos, sound and source-model dependencies individually. A pack license does not automatically cover unrelated previews, site branding, third-party dependencies or all content in a mirror.
+4. Record generated assets as generated: authoring script/tool/version, inputs, deterministic regeneration command, output dimensions/format, and whether any external input was used. No third-party image may be used as a procedural texture source without its own license entry.
+5. Review privacy, cultural representation and trademark/signage concerns independently of copyright. Do not claim the fictional Ngong Ping facility is real.
+6. An empty/new ledger entry is a blocking gate, not permission to ship. Re-run asset/license audit after every import and before Windows distribution.
+
+## Existing verified inventory
+
+| Asset set | Creator/source and license | Modification/use | Evidence |
+|---|---|---|---|
+| Kenney Furniture Kit 2.0 — `bedDouble.glb`, `books.glb`, `chairCushion.glb`, `lampRoundFloor.glb`, `laptop.glb`, `loungeChair.glb`, `loungeSofaLong.glb`, `pottedPlant.glb`, `tableCoffeeGlass.glb` | Kenney, [Furniture Kit 2.0](https://kenney.nl/assets/furniture-kit), CC0 1.0: [license](https://creativecommons.org/publicdomain/zero/1.0/). Files mirror source: `RetroDECK/RetroQUEST`, commit `dfa19a5602a31f64bd890d15279a61f43b127328`, `assets/kenney_furniture-kit/Models/GLTF format/`. Attribution not required; credit is retained. | GLBs unchanged. Project-authored material overrides, placements/scales and separate collisions. | `assets/kenney_furniture/LICENSE.txt`, `assets/kenney_furniture/PROVENANCE.md`, `THIRD_PARTY_ASSETS.md`; the bed GLB Git blob is `1b0efacc4dda050a6abc34974cb692010d29b81c`. |
+| Seven Tung Chung procedural 256×256 albedo maps: `tung_chung_tile.png`, `tung_chung_terrazzo.png`, `tung_chung_brushed_metal.png`, `tung_chung_concrete.png`, `tung_chung_rubber.png`, `tung_chung_train_fabric.png`, `tung_chung_warm_wood.png` | Project-authored deterministic patterns, part of PROJECT ASSASSIN. No third-party photos, scans, logos or game assets. | Generated with Python standard-library script `tools/generate_tung_chung_textures.py`; consumed by `scripts/visuals/station_materials.gd`. Albedo patterns, not normal scans/full PBR scan sets. Regenerate with `python3 tools/generate_tung_chung_textures.py`. | `assets/procedural/PROVENANCE.md`, generator source, project repo. |
+| Procedural people, outfits, UI, scenery, ambient/effects, campaign environments | Project-authored scripts/primitive geometry, colors and synthesized/project-authored sound; fictional world content. No imported character models or environment texture libraries were found in the inspected inventory. | Runtime-authored materials/geometries and placements; check per-source file for exact implementation. | `ASSETS.md`, `THIRD_PARTY_ASSETS.md`, asset-local provenance files and project scripts. |
+| Godot 4.4.1 engine/runtime/export templates | Separate engine dependency, not project artwork. | Windows CI obtains official release and templates and verifies against official SHA-512 list. | `.github/workflows/godot-regression.yml`; [Godot license](https://godotengine.org/license/). |
+
+The existing Kenney and project-authored assets are not evidence that a visual overhaul has passed review. Refer to `ASSETS.md` for campaign additions and caveats.
+
+## Research-only sources (not imported assets)
+
+- [Poly Haven licensing](https://polyhaven.com/license): the site states its downloadable HDRIs, textures and 3D models are CC0, with attribution appreciated but not required. This is not blanket proof for a future file: verify the exact item and keep its item identity/source.
+- [ambientCG license](https://docs.ambientcg.com/license/): the site states downloadable assets are CC0 1.0. Verify item provenance and exact downloaded content before use.
+- [HITMAN: Codename 47](https://www.ioi.dk/): high-level discussion reference only. No extracted, copied, or derivative game content is authorized or present in this pipeline.
+- [Adobe Substance 3D Sampler](https://www.adobe.com/products/substance3d/apps/sampler.html) and Blender/Godot docs informed process research only. Their example images/materials are not game assets.
+
+## New visual-overhaul asset ledger
+
+**No new external assets have been selected, downloaded, or imported for this overhaul as of the current research checkpoint.** Add one complete row per acquired item before it is used:
+
+| Exact item/file(s) | Creator | Item/source URL | Immutable source/version/hash | Item-specific license + URL | Attribution text/location | Changes/derivatives | In-project path/use | Acquired/reviewed | Notes/dependencies |
+|---|---|---|---|---|---|---|---|---|---|
+| — | — | — | — | — | — | — | — | — | No new assets yet |
+
+For any new asset pack, also add asset-by-asset entries for embedded textures, materials, models and fonts if license or creator differs. Do not use a placeholder row as a completed review.
+
+## New original/generated assets record
+
+| Asset/output | Authoring source/tool/version | Inputs/provenance | License/ownership | Regeneration | Validation/use |
+|---|---|---|---|---|---|
+| Procedural face/hair silhouette additions in `scripts/visuals/stylized_person.gd`; Instinct grade in `scripts/visuals/instinct_focus.gd` and `.gdshader` | Project-authored GDScript and shader source; no external tool or asset input. | Existing procedural mesh/material primitives only; no new external images/models/textures. | Project-authored source; distributed with the project. | Source files are the regeneration/implementation record; characters are built at runtime. | Imported/rendered validation and visual review are pending; no before/after capture yet. |
+
+## Audit checklist before merge/release
+
+- [ ] `git status` and asset inventory identify every newly added binary and generated file.
+- [ ] Every third-party item has a complete per-item ledger entry and license proof; no “CC0 by site reputation” assumption.
+- [ ] `THIRD_PARTY_ASSETS.md` and `ASSETS.md` are synchronized with this ledger.
+- [ ] All source/model/texture/font license restrictions permit intended project use, redistribution and modification.
+- [ ] No proprietary game/film/reference assets, watermarks, logos or unlicensed real-world maps are present.
+- [ ] Imported models/animations/materials pass clean Godot import, Windows export and texture/scale/rig checks.
+- [ ] Generated source is deterministic/reproducible or documented as a non-reproducible commissioned deliverable with its rights.
+- [ ] Asset provenance is included in the released package or linked in a maintainable, versioned location.

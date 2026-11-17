@@ -83,12 +83,30 @@ func _ready() -> void:
  head.position = Vector3(0, 1.73, 0)
  head.material_override = skin
  upper_body.add_child(head)
+ skin.roughness = 0.78
+ dark.roughness = 0.92
  _ellipsoid(upper_body, Vector3(0, 1.87, 0.015), Vector3(0.29, 0.11, 0.27), dark)
+ # Small face planes and seeded hair silhouettes add readable variation at
+ # gameplay distance while keeping the procedural model lightweight.
+ for side: float in [-1.0, 1.0]:
+  _ellipsoid(upper_body, Vector3(side * 0.145, 1.73, -0.005), Vector3(0.055, 0.085, 0.065), skin)
+ var style := absi(appearance_seed) % 4
+ match style:
+  1:
+   _ellipsoid(upper_body, Vector3(-0.075, 1.90, -0.035), Vector3(0.20, 0.075, 0.20), dark)
+   _ellipsoid(upper_body, Vector3(0.11, 1.85, 0.035), Vector3(0.08, 0.16, 0.21), dark)
+  2:
+   _ellipsoid(upper_body, Vector3(0, 1.79, 0.12), Vector3(0.24, 0.21, 0.16), dark)
+   _ellipsoid(upper_body, Vector3(0, 1.91, 0.015), Vector3(0.19, 0.07, 0.19), dark)
+  3:
+   _ellipsoid(upper_body, Vector3(0, 1.84, -0.105), Vector3(0.22, 0.11, 0.12), dark)
  var eye := _material(Color(0.08, 0.09, 0.10))
- _box(upper_body, Vector3(-0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
- _box(upper_body, Vector3(0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
- _box(upper_body, Vector3(0, 1.72, -0.158), Vector3(0.035, 0.045, 0.04), skin)
- _box(upper_body, Vector3(0, 1.66, -0.143), Vector3(0.07, 0.012, 0.015), dark)
+ var brow := _material(Color(0.20, 0.16, 0.14))
+ for side: float in [-1.0, 1.0]:
+  _box(upper_body, Vector3(side * 0.055, 1.79, -0.143), Vector3(0.043, 0.012, 0.012), brow)
+  _box(upper_body, Vector3(side * 0.055, 1.76, -0.151), Vector3(0.025, 0.018, 0.012), eye)
+ _ellipsoid(upper_body, Vector3(0, 1.72, -0.158), Vector3(0.040, 0.060, 0.035), skin)
+ _box(upper_body, Vector3(0, 1.66, -0.143), Vector3(0.055, 0.009, 0.012), _material(Color(0.34, 0.18, 0.16)))
  # Lapels, collar and belt establish clothed silhouettes instead of a capsule.
  upperwear_details.append(_box(upper_body, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70))))
  upperwear_details.append(_box(upper_body, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark))

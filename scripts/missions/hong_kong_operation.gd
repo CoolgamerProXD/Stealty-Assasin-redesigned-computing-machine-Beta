@@ -75,6 +75,7 @@ var facility_discovered: bool = false
 var red_overlay: StandardMaterial3D
 var yellow_overlay: StandardMaterial3D
 var intel_overlay: StandardMaterial3D
+var instinct_focus: InstinctFocus
 var shot_audio: AudioStreamPlayer
 var gadget_audio: AudioStreamPlayer
 var train_departure_seen: bool = false
@@ -101,6 +102,10 @@ func _ready() -> void:
  (scene.get("hud") as Label).visible = false
  player = scene.get("player") as HotelPlayer
  player.position = _vec(config["spawn"])
+ instinct_focus = InstinctFocus.new()
+ instinct_focus.name = "InstinctFocus"
+ instinct_focus.player = player
+ add_child(instinct_focus)
  player.mouse_sensitivity = float(Campaign.settings["sensitivity"])
  if operation_id == "ngong_ping":
   ngong_facility = scene.find_child("NgongPingSecretFacility",true,false) as NgongPingSecretFacility

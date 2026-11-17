@@ -27,6 +27,7 @@ var fps_label: Label
 var instinct_strength: float = 0.0
 var instinct_red: StandardMaterial3D
 var instinct_yellow: StandardMaterial3D
+var instinct_focus: InstinctFocus
 @export var instinct_item_range: float = 4.0
 @export var instinct_target_range: float = 16.0
 @export var instinct_target_color: Color = Color(1.0, 0.08, 0.05)
@@ -809,6 +810,10 @@ func _clear_reach(point: Vector3, maximum: float, excluded: RID = RID()) -> bool
  return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 func _setup_instinct() -> void:
+ instinct_focus = InstinctFocus.new()
+ instinct_focus.name = "InstinctFocus"
+ instinct_focus.player = player
+ add_child(instinct_focus)
  instinct_red = _highlight_material(instinct_target_color)
  # The primary identity is provided by the briefing. Draw its actual mesh even
  # behind opaque walls; ordinary NPCs and unknown items never use this pass.
