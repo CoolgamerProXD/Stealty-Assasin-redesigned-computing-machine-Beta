@@ -28,6 +28,9 @@ static func restore(data: Dictionary, player: HotelPlayer, mission: Mission, obj
  var role: Variant = data.get("role", "visitor")
  if data.get("outfits") is Dictionary:
   player.restore_outfits(data["outfits"])
+  # Session files created by the old two-role system used "staff" even when
+  # the compatible procedural replacement outfit is now office_employee.
+  if role == "staff" and player.outfit_id == "office_employee": player.set_disguise("staff")
  else:
   player.set_disguise(role if role is String and role in KNOWN_ROLES else "visitor")
  var clues: Array[String] = []
