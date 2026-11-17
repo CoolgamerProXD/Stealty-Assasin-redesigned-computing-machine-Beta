@@ -149,13 +149,13 @@ func _build_level_shell(floor_y: float, center_z: float, width: float, depth: fl
 	_box("SublevelWestRetainingWall",Vector3(-width*0.5,floor_y+height*0.5,center_z),Vector3(0.36,height,depth),wall_color,true)
 	_box("SublevelEastRetainingWall",Vector3(width*0.5,floor_y+height*0.5,center_z),Vector3(0.36,height,depth),wall_color,true)
 	if is_equal_approx(floor_y,FLOORS_UNDER[0]):
-		# Keep an overhead shaft clear above the descending exterior ramp; the
-		# ordinary full-width ceiling would overlap the player capsule at the
-		# concealed entrance and prevent entry into the first sublevel.
+		# Keep an overhead shaft clear above the descending exterior ramp and
+		# the rising statue-core connector; a full-width ceiling would overlap
+		# the player capsule and seal both ends of the concealed route.
 		_box("SublevelCeiling",Vector3(-16.25,floor_y+height,center_z),Vector3(27.5,0.22,depth),tint.darkened(0.12),true)
 		_box("SublevelCeiling",Vector3(16.25,floor_y+height,center_z),Vector3(27.5,0.22,depth),tint.darkened(0.12),true)
 		_box("SublevelCeiling",Vector3(0,floor_y+height,-67.0),Vector3(width,0.22,30.0),tint.darkened(0.12),true)
-		_box("SublevelCeiling",Vector3(0,floor_y+height,-33.0),Vector3(width,0.22,2.0),tint.darkened(0.12),true)
+		_box("SublevelCeiling",Vector3(0,floor_y+height,-30.5),Vector3(width,0.22,1.0),tint.darkened(0.12),true)
 	else:
 		_box("SublevelCeiling",Vector3(0,floor_y+height,center_z),Vector3(width,0.22,depth),tint.darkened(0.12),true)
 	for x: float in [-width*0.5+0.5,width*0.5-0.5]:
