@@ -613,7 +613,7 @@ func _buddha_plinth() -> void:
  for x: float in [-3.35,3.35]:
   _box(Vector3(x,2.42,-29),Vector3(0.2,0.15,17.5),cap)
  _box(Vector3(0,0.05,-20.0),Vector3(34,0.12,0.18),Color(0.39,0.34,0.28))
- _box(Vector3(0,0.05,-38.0),Vector3(3.8,0.12,0.18),Color(0.39,0.34,0.28))
+ _box(Vector3(0,0.05,-38.0),Vector3(3.8,0.12,0.18),Color(0.39,0.34,0.28),false)
 
 # A broad physical approach to the public viewing terrace. The sloped
 # collider backs the visible shallow steps and overlaps the existing plinth.
