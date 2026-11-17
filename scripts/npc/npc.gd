@@ -31,6 +31,7 @@ var help_target: HotelNpc
 var help_incident: Vector3 = Vector3.ZERO
 var help_reported: bool = false
 var incident_help: bool = false
+var outfit_taken: bool = false
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -43,6 +44,7 @@ func _ready() -> void:
  add_child(collision)
  person = StylizedPerson.new()
  person.role = profile.occupation
+ person.outfit_id = profile.outfit_id if DisguiseSystem.has_outfit(profile.outfit_id) else DisguiseSystem.default_for_occupation(profile.occupation)
  person.appearance_seed = profile.identity.hash()
  add_child(person)
  if profile.occupation == "security":
@@ -322,8 +324,10 @@ func _physics_process(delta: float) -> void:
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
  elif player:
   var illegal_item_visible := player.aiming and player.equipment.selected == "training_sidearm"
-  var restricted := not AccessRules.can_enter(player.role, _player_access_area())
-  tick_trespass(delta, restricted or illegal_item_visible)
+  var access_area := _player_access_area()
+  var restricted := not AccessRules.can_enter(player.role, access_area)
+  var suspicious_action := player.sprinting and access_area != "public"
+  tick_trespass(delta, restricted or illegal_item_visible or suspicious_action)
  advance_simulation(delta)
  if state == "seeking_help": _try_deliver_report()
  # Perception is throttled by the physics clock, not checked every frame.
@@ -331,8 +335,10 @@ func _physics_process(delta: float) -> void:
  if perception_clock >= 0.4:
   perception_clock = 0.0
   var illegal_item_visible := player and player.aiming and player.equipment.selected == "training_sidearm"
-  var restricted := player and not AccessRules.can_enter(player.role, _player_access_area())
-  if player and (restricted or (illegal_item_visible and profile.occupation == "security")) and can_see(player.global_position):
+  var access_area := _player_access_area()
+  var restricted := player and not AccessRules.can_enter(player.role, access_area)
+  var suspicious_action := player and player.sprinting and access_area != "public"
+  if player and (restricted or suspicious_action or (illegal_item_visible and profile.occupation == "security")) and can_see(player.global_position):
    var ray_start := global_position + Vector3.UP * 1.3
    # Target the actual stance, so cover geometry, not a magic crouch bonus,
    # determines whether the player is visible.

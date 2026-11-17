@@ -12,6 +12,8 @@ var recovered_keys: Array[String] = []
 var usb_decryption_seen: bool = false
 var selected: String = "training_sidearm"
 var last_mission: String = ""
+var acquired_outfits: Array[String] = ["civilian"]
+var equipped_outfit: String = "civilian"
 
 func configure(data: Variant) -> bool:
  missions.clear()
@@ -98,6 +100,16 @@ func secure_key(mission_id: String, key_id: String) -> bool:
  if not recovered_keys.has(key_id): recovered_keys.append(key_id)
  return true
 
+func acquire_outfit(id: String) -> bool:
+ if not DisguiseSystem.has_outfit(id) or acquired_outfits.has(id): return false
+ acquired_outfits.append(id)
+ return true
+
+func equip_outfit(id: String) -> bool:
+ if not DisguiseSystem.has_outfit(id) or not acquired_outfits.has(id): return false
+ equipped_outfit = id
+ return true
+
 func usb_ready() -> bool:
  var expected: Array[String] = []
  for entry: Dictionary in missions:
@@ -112,6 +124,8 @@ func restore(data: Dictionary) -> void:
  completed.clear()
  recovered_keys.clear()
  completed_lessons.clear()
+ acquired_outfits.assign(["civilian"])
+ equipped_outfit = "civilian"
  equipped_coins = 0
  usb_decryption_seen = false
  var raw_keys: Variant = data.get("recovered_keys", [])
@@ -151,6 +165,13 @@ func restore(data: Dictionary) -> void:
  if desired is String: select_item(desired)
  var last: Variant = data.get("last_mission", "")
  last_mission = last if last is String and is_unlocked(last) else ""
+ var raw_outfits: Variant = data.get("acquired_outfits", [])
+ if raw_outfits is Array:
+  for outfit_variant: Variant in raw_outfits:
+   var outfit_id := str(outfit_variant)
+   if DisguiseSystem.has_outfit(outfit_id) and not acquired_outfits.has(outfit_id): acquired_outfits.append(outfit_id)
+ var desired_outfit: Variant = data.get("equipped_outfit", "civilian")
+ if desired_outfit is String: equip_outfit(desired_outfit)
 
 func snapshot() -> Dictionary:
- return {"completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission}
+ return {"completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission, "acquired_outfits": acquired_outfits.duplicate(), "equipped_outfit": equipped_outfit}

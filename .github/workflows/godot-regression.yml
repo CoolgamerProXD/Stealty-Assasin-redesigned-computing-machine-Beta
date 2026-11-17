@@ -60,6 +60,13 @@ jobs:
           timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/hong_kong_campaign_test.gd 2>&1 | tee "$RUNNER_TEMP/hk.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^HK FAIL:' "$RUNNER_TEMP/hk.log"; then exit 1; fi
           grep -E '^HK RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hk.log"
+      - name: Outfit acquisition and concealed Ngong Ping facility
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 150 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/disguise_facility_test.gd 2>&1 | tee "$RUNNER_TEMP/disguise-facility.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^DISGUISE FAIL:' "$RUNNER_TEMP/disguise-facility.log"; then exit 1; fi
+          grep -E '^DISGUISE RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/disguise-facility.log"
       - name: Permanent lesson coin progression
         shell: bash
         run: |

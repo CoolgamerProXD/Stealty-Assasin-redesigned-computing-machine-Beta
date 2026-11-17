@@ -5,7 +5,10 @@ signal equipment_use_requested
 signal coin_requested
 signal equipment_selected(slot: int)
 signal fire_requested
+signal disguise_requested
 var role: String = "visitor"
+var outfit_id: String = "civilian"
+var outfit_inventory: Array[String] = ["civilian"]
 var inventory: Inventory = Inventory.new()
 var equipment: MissionEquipment = MissionEquipment.new()
 var walk_speed: float = 2.7
@@ -19,6 +22,7 @@ var aiming: bool = false
 var instinct_active: bool = false
 var body_mesh: StylizedPerson
 var crouching: bool = false
+var sprinting: bool = false
 var collision_shape: CollisionShape3D
 var stance_height: float = 1.8
 var camera_kick: float = 0.0
@@ -39,7 +43,16 @@ func _ready() -> void:
  body_mesh = StylizedPerson.new()
  body_mesh.role = "visitor"
  add_child(body_mesh)
- set_disguise("visitor")
+ var wardrobe_campaign_service := get_node_or_null("/root/Campaign")
+ if wardrobe_campaign_service and wardrobe_campaign_service.get("progress"):
+  var progress: CampaignProgress = wardrobe_campaign_service.get("progress")
+  outfit_inventory.assign(["civilian"])
+  for outfit_variant: Variant in progress.acquired_outfits:
+   var outfit_name := str(outfit_variant)
+   if DisguiseSystem.has_outfit(outfit_name) and not outfit_inventory.has(outfit_name): outfit_inventory.append(outfit_name)
+  equip_outfit(progress.equipped_outfit)
+ else:
+  equip_outfit("civilian")
  body_mesh.add_sidearm()
  body_mesh.add_quiet_tool()
  pivot = Node3D.new()
@@ -72,8 +85,43 @@ func _ready() -> void:
  Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func set_disguise(new_role: String) -> void:
- role = new_role
- if body_mesh: body_mesh.set_role(role)
+ # Legacy checkpoint roles are migrated to the closest known outfit.
+ var mapped := "civilian"
+ if new_role in ["staff", "employee"]: mapped = "office_employee"
+ elif new_role == "security": mapped = "private_security"
+ elif new_role == "manager": mapped = "executive"
+ if not outfit_inventory.has(mapped): outfit_inventory.append(mapped)
+ outfit_id = mapped
+ role = DisguiseSystem.role_for_outfit(outfit_id)
+ if body_mesh: body_mesh.set_outfit(outfit_id)
+
+func acquire_outfit(id: String) -> bool:
+ if not DisguiseSystem.has_outfit(id) or outfit_inventory.has(id): return false
+ outfit_inventory.append(id)
+ return true
+
+func equip_outfit(id: String) -> bool:
+ if not DisguiseSystem.has_outfit(id) or not outfit_inventory.has(id): return false
+ outfit_id = id
+ role = DisguiseSystem.role_for_outfit(id)
+ if body_mesh: body_mesh.set_outfit(id)
+ return true
+
+func outfit_snapshot() -> Dictionary:
+ return {"owned": outfit_inventory.duplicate(), "equipped": outfit_id}
+
+func restore_outfits(data: Variant) -> void:
+ outfit_inventory.assign(["civilian"])
+ var chosen := "civilian"
+ if data is Dictionary:
+  var owned: Variant = data.get("owned", [])
+  if owned is Array:
+   for item: Variant in owned:
+    var id := str(item)
+    if DisguiseSystem.has_outfit(id) and not outfit_inventory.has(id): outfit_inventory.append(id)
+  var equipped: Variant = data.get("equipped", "civilian")
+  if equipped is String and outfit_inventory.has(equipped): chosen = equipped
+ equip_outfit(chosen)
 
 func _unhandled_input(event: InputEvent) -> void:
  if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -99,6 +147,7 @@ func _unhandled_input(event: InputEvent) -> void:
  if event.is_action_pressed("equip_secondary"): equipment_selected.emit(1)
  if event.is_action_pressed("use_equipment"): equipment_use_requested.emit()
  if event.is_action_pressed("throw_coin"): coin_requested.emit()
+ if event.is_action_pressed("disguise_inventory"): disguise_requested.emit()
 
 func _notification(what: int) -> void:
  if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT:
@@ -138,7 +187,8 @@ func _physics_process(delta: float) -> void:
  body_mesh.quiet_tool_equipped = equipment.selected == "quiet_line"
  body_mesh.weapon_aiming = aiming and body_mesh.weapon_equipped
  pivot.position.y = 1.5 * stance_height / 1.8
- var speed := crouch_speed if crouching else (run_speed if Input.is_action_pressed("sprint") else walk_speed)
+ sprinting = Input.is_action_pressed("sprint") and input.length_squared() > 0.05 and not crouching
+ var speed := crouch_speed if crouching else (run_speed if sprinting else walk_speed)
  if stagger_remaining > 0.0: speed *= 0.35
  var acceleration := 14.0 if direction.length_squared() > 0.01 else 18.0
  velocity.x = move_toward(velocity.x, direction.x * speed, acceleration * delta)

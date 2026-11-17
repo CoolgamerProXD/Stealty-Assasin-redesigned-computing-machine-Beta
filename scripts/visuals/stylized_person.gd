@@ -35,6 +35,15 @@ var seated: bool = false
 var seated_blend: float = 0.0
 var ground_adjust: float = 0.0
 var clothing: StandardMaterial3D
+var trousers_material: StandardMaterial3D
+var outfit_id: String = "civilian"
+var underwear_top: MeshInstance3D
+var boxer_shorts: MeshInstance3D
+var vendor_apron: MeshInstance3D
+var role_hat: MeshInstance3D
+var role_badge: MeshInstance3D
+var upperwear_details: Array[MeshInstance3D] = []
+var underwear_mode: bool = false
 # Identical immutable primitive meshes are reused across the population. Each
 # person retains independent materials, transforms and animated joints.
 static var primitive_meshes: Dictionary = {}
@@ -49,9 +58,19 @@ func _ready() -> void:
  var skin := _material(skin_variants[absi(appearance_seed) % skin_variants.size()])
  var dark := _material(hair_variants[absi(appearance_seed) % hair_variants.size()])
  clothing = _material(_role_color())
- var trousers := _material(Color(0.16, 0.18, 0.20))
+ trousers_material = _material(Color(0.16, 0.18, 0.20))
+ var trousers := trousers_material
  torso = _box(upper_body, Vector3(0, 1.22, 0), Vector3(0.48, 0.60, 0.24), clothing)
  torso.mesh = _jacket_mesh()
+ var underwear_mat := _material(Color(0.78,0.75,0.66))
+ underwear_top = _box(upper_body, Vector3(0,1.22,-0.012), Vector3(0.42,0.58,0.25), underwear_mat)
+ underwear_top.visible = false
+ boxer_shorts = _box(upper_body, Vector3(0,0.75,-0.015), Vector3(0.48,0.43,0.27), _material(Color(0.24,0.31,0.36)))
+ boxer_shorts.visible = false
+ for strap_x: float in [-0.15,0.15]:
+  var strap := _box(upper_body,Vector3(strap_x,1.49,-0.148),Vector3(0.065,0.30,0.025),underwear_mat)
+  strap.visible = false
+  upperwear_details.append(strap)
  _box(upper_body, Vector3(0, 0.91, 0), Vector3(0.42, 0.16, 0.23), trousers)
  _box(upper_body, Vector3(0, 1.56, 0), Vector3(0.14, 0.12, 0.14), skin)
  var head := MeshInstance3D.new()
@@ -71,13 +90,19 @@ func _ready() -> void:
  _box(upper_body, Vector3(0, 1.72, -0.158), Vector3(0.035, 0.045, 0.04), skin)
  _box(upper_body, Vector3(0, 1.66, -0.143), Vector3(0.07, 0.012, 0.015), dark)
  # Lapels, collar and belt establish clothed silhouettes instead of a capsule.
- _box(upper_body, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70)))
- _box(upper_body, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark)
+ upperwear_details.append(_box(upper_body, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70))))
+ upperwear_details.append(_box(upper_body, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark))
  # Visible jacket seams, collar and a small lapel accent give the silhouette
  # structure without introducing any imported assets.
  for x: float in [-0.17, 0.17]:
-  _box(upper_body, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark)
- _box(upper_body, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin)
+  upperwear_details.append(_box(upper_body, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark))
+ upperwear_details.append(_box(upper_body, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin))
+ vendor_apron = _box(upper_body,Vector3(0,1.12,-0.15),Vector3(0.38,0.56,0.035),_material(Color(0.52,0.23,0.12)))
+ vendor_apron.visible = false
+ role_hat = _ellipsoid(upper_body,Vector3(0,1.98,0),Vector3(0.35,0.13,0.33),_material(Color(0.18,0.24,0.28)))
+ role_hat.visible = false
+ role_badge = _box(upper_body,Vector3(0.14,1.42,-0.15),Vector3(0.09,0.12,0.025),_material(Color(0.80,0.66,0.31)))
+ role_badge.visible = false
  left_leg = _leg(Vector3(-0.12, 0.88, 0), trousers, dark)
  right_leg = _leg(Vector3(0.12, 0.88, 0), trousers, dark)
  left_knee = left_leg.get_node("Knee")
@@ -86,16 +111,17 @@ func _ready() -> void:
  right_arm = _arm(Vector3(0.29, 1.47, 0), clothing, skin)
  left_elbow = left_arm.get_node("Elbow")
  right_elbow = right_arm.get_node("Elbow")
- if role == "security":
-  _box(upper_body, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65)))
-  _box(upper_body, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
+ if role in ["security", "facility_security", "corporate_security"]:
+  upperwear_details.append(_box(upper_body, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65))))
+  upperwear_details.append(_box(upper_body, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark))
  if role == "ruby":
   _box(upper_body, Vector3(0, 1.61, 0.12), Vector3(0.29, 0.48, 0.09), dark)
   _box(upper_body, Vector3(0, 1.03, 0.02), Vector3(0.48, 0.40, 0.25), clothing)
   _box(upper_body, Vector3(0, 1.40, -0.15), Vector3(0.06, 0.24, 0.02), _material(Color(0.68, 0.41, 0.32)))
- if role == "manager":
-  _box(upper_body, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20)))
-  _box(upper_body, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31)))
+ if role in ["manager", "executive", "facility_director"]:
+  upperwear_details.append(_box(upper_body, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20))))
+  upperwear_details.append(_box(upper_body, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31))))
+ set_outfit(outfit_id)
 
 # Original stylized assessment sidearm, attached to the animated hand joint.
 func add_sidearm() -> void:
@@ -158,7 +184,40 @@ func _role_color() -> Color:
 
 func set_role(value: String) -> void:
  role = value
- if clothing: clothing.albedo_color = _role_color()
+ set_outfit(DisguiseSystem.default_for_occupation(value))
+
+func set_outfit(value: String) -> void:
+ outfit_id = value
+ underwear_mode = value == "underwear"
+ var definition := DisguiseSystem.outfit("civilian" if underwear_mode else value)
+ role = "underwear" if underwear_mode else str(definition.get("role", "visitor"))
+ if clothing == null: return
+ if underwear_mode:
+  var skin := _skin_color()
+  clothing.albedo_color = skin
+  trousers_material.albedo_color = skin
+  torso.visible = false
+  underwear_top.visible = true
+  boxer_shorts.visible = true
+  for detail: MeshInstance3D in upperwear_details: detail.visible = false
+  vendor_apron.visible = false
+  role_hat.visible = false
+  role_badge.visible = false
+ else:
+  clothing.albedo_color = definition.get("color",Color(0.20,0.21,0.25))
+  trousers_material.albedo_color = Color(0.18,0.21,0.24) if value not in ["market_vendor","hospitality"] else Color(0.28,0.23,0.18)
+  torso.visible = true
+  torso.mesh = _jacket_mesh()
+  underwear_top.visible = false
+  boxer_shorts.visible = false
+  for detail: MeshInstance3D in upperwear_details: detail.visible = true
+  vendor_apron.visible = value in ["market_vendor","hospitality"]
+  role_hat.visible = value in ["market_vendor","private_security","corporate_security","facility_security"]
+  role_badge.visible = value in ["office_employee","private_security","corporate_security","executive","facility_technician","facility_security","facility_research","facility_director"]
+
+func _skin_color() -> Color:
+ var variants: Array[Color] = [Color(0.68,0.46,0.34),Color(0.46,0.29,0.23),Color(0.76,0.57,0.46),Color(0.56,0.39,0.30)]
+ return variants[absi(appearance_seed)%variants.size()]
 
 func set_seated(value: bool) -> void:
  seated = value

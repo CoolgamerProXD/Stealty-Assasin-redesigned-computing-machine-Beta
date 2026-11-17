@@ -48,10 +48,10 @@
     {
       "id": "ngong_ping",
       "name": "OPERATION 03  /  NGONG PING",
-      "description": "Hong Kong operation — early playable campaign build.",
+      "description": "The final operation reveals a vast, interconnected installation beneath and inside the Tian Tan Big Buddha.",
       "scene": "res://scenes/mission_ngong_ping.tscn",
-      "briefing": "Ruby: The final coordinator is in the surrounding mountain district. Confront them and recover the fifth key from the field safe, away from the landmark.",
-      "debrief": "Ruby: All five keys are secure. The USB can be decrypted on the secure channel; the contents still need analysis.",
+      "briefing": "Ruby: The field archive was a screen. A huge installation lies beneath the Big Buddha and continues into concealed chambers within the statue. Find the hidden rear access, recover Key 05 from the separate field archive, locate Sora Cheng in the operations chamber, and reach the control-room extraction. The public monument must remain intact.",
+      "debrief": "Ruby: The installation was hidden beneath the statue and threaded into its interior. Key 05 is physically secured; all five keys can now open the encrypted destination file.",
       "unlock": "",
       "key_id": "key_05"
     }

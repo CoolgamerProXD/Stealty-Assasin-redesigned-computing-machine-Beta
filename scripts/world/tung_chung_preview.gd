@@ -5,6 +5,7 @@ var npcs: Array[HotelNpc] = []
 var robber: HotelNpc
 var operative: HotelNpc
 var hud: Label
+var access_zones: Array[Dictionary] = []
 var message: String = "SCOUTING PREVIEW  /  Approach the two distinctive people. Escape returns to the menu."
 var materials: Dictionary = {}
 var meshes: Dictionary = {}
@@ -41,11 +42,22 @@ func _start_ambience(kind: String) -> void:
 # Campaign instances may designate a small authored restricted zone. The
 # independent exploration previews remain public and keep their old behavior.
 func player_access_area(point: Vector3) -> String:
+ for zone: Dictionary in access_zones:
+  var rect: Variant = zone.get("rect")
+  var floor_min := float(zone.get("floor_min", -100.0))
+  var floor_max := float(zone.get("floor_max", 100.0))
+  if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= floor_min and point.y <= floor_max:
+   return str(zone.get("area","staff"))
  var area: Variant = get_meta("restricted_rect", null)
  if area is Rect2 and area.has_point(Vector2(point.x, point.z)): return "staff"
  return "public"
 
 func permitted_exit(point: Vector3) -> Vector3:
+ for zone: Dictionary in access_zones:
+  var rect: Variant = zone.get("rect")
+  if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= float(zone.get("floor_min",-100.0)) and point.y <= float(zone.get("floor_max",100.0)):
+   var center := rect.get_center()
+   return Vector3(center.x,point.y,center.y)
  var area: Variant = get_meta("restricted_rect", null)
  if not area is Rect2: return point
  var options: Array[Vector3] = [Vector3(area.position.x - 0.8,point.y,point.z), Vector3(area.end.x + 0.8,point.y,point.z), Vector3(point.x,point.y,area.position.y - 0.8), Vector3(point.x,point.y,area.end.y + 0.8)]

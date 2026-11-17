@@ -57,6 +57,22 @@ func award_initiation_lesson(record_id: String) -> bool:
   return false
  return true
 
+func acquire_outfit(id: String) -> bool:
+ var previous := progress.acquired_outfits.duplicate()
+ if not progress.acquire_outfit(id): return false
+ if not persist():
+  progress.acquired_outfits.assign(previous)
+  return false
+ return true
+
+func equip_outfit(id: String) -> bool:
+ var previous := progress.equipped_outfit
+ if not progress.equip_outfit(id): return false
+ if not persist():
+  progress.equipped_outfit = previous
+  return false
+ return true
+
 func secure_mission_key(id: String, key_id: String) -> bool:
  if active_mission != id: return false
  var previous := progress.recovered_keys.duplicate()

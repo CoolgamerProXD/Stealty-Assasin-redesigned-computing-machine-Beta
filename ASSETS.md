@@ -34,3 +34,17 @@ The city and organization are fictional; this content is not a licensed
 photogrammetry/map asset or a literal real-world building. `ASSETS.md` records
 provenance, not a claim of visual sign-off; the new district/tower views still
 need review from executed Godot captures.
+
+## Assignment 004 wardrobe and Ngong Ping interiors
+
+The outfit catalogue, role badges, hats, apron, fully covering singlet/shorts,
+Ngong Ping staff uniforms, landmark-interior furnishings, access-panel, ramps,
+rooms, lights, signs, and NPC routes are project-authored procedural content in
+`scripts/disguise/disguise_system.gd`, `scripts/visuals/stylized_person.gd`, and
+`scripts/world/ngong_ping_secret_facility.gd`. They use only primitive meshes,
+project-authored colors, and synthesized/project-authored effects; no new
+third-party or extracted real-world Buddha asset was introduced. The outer
+Tian Tan-style landmark remains a procedural, stylized, non-destructible scenic
+figure. The concealed facility is fictional and is not a claim about the real
+monument or its construction. This provenance statement does not substitute
+for cultural review or an interactive visual/playability review.
