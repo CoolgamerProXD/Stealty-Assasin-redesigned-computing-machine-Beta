@@ -146,7 +146,10 @@ func run() -> void:
 	Input.action_press("move_back")
 	await create_timer(7.8).timeout
 	Input.action_release("move_back")
-	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position))
+	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position)," back_pressed=",Input.is_action_pressed("move_back")," slides=",facility_player.get_slide_collision_count())
+	for slide_index: int in range(facility_player.get_slide_collision_count()):
+		var slide := facility_player.get_slide_collision(slide_index)
+		print("DISGUISE CORE COLLISION: ",slide.get_collider().name," normal=",slide.get_normal())
 	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
 	check(final_world.find_child("DisguiseInventory",true,false) != null,"mission builds the playable disguise inventory UI")
 
