@@ -464,7 +464,12 @@ func _mountain() -> void:
  if str(get_meta("operation_id", "")) == "ngong_ping": _mountain_field_office()
  var dark := Color(0.22,0.24,0.20)
  # Broad public approach. The statue is a non-destructible landmark.
- _box(Vector3(0,0.03,0),Vector3(11,0.06,80),stone)
+ if str(get_meta("operation_id", "")) == "ngong_ping":
+  # Leave the concealed service shaft and descending ramp uncovered behind
+  # the pedestal; the public approach terminates at the statue's front edge.
+  _box(Vector3(0,0.03,11),Vector3(11,0.06,58),stone)
+ else:
+  _box(Vector3(0,0.03,0),Vector3(11,0.06,80),stone)
  _box(Vector3(0,0.06,-22),Vector3(26,0.12,18),stone.lightened(0.08))
  for x: float in [-22.0,-14.0,14.0,22.0]:
   _box(Vector3(x,1.5,13),Vector3(7,3,7),Color(0.65,0.53,0.39),true)
