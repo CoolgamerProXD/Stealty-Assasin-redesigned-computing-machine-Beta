@@ -4,7 +4,7 @@
   "missions": [
     {
       "id": "initiation",
-      "name": "01  /  INITIATION",
+      "name": "TRAINING  /  INITIATION",
       "description": "A controlled assessment at the fictional Civic Evaluation Annex.",
       "scene": "res://scenes/initiation.tscn",
       "briefing": "Ruby: Your primary target is the moving assessment unit in the chamber. Disable it, complete the three record lessons, and leave through the marked exit. Each lesson earns one permanent coin. The two guards are part of the evaluation.",
@@ -13,7 +13,7 @@
     },
     {
       "id": "meridian",
-      "name": "LEGACY  /  THE MERIDIAN",
+      "name": "OPTIONAL  /  THE MERIDIAN",
       "description": "Trace a missing archive through a luxury hotel.",
       "scene": "res://scenes/hotel.tscn",
       "briefing": "Ruby: Your primary target is Adrian Locke, the Meridian's operations director. Confront him or tag him for Blackline about the archive transfer. Ivo Chen is a records witness: question him and recover two records. The Covenant is interested too; we don't know why yet.",
@@ -23,8 +23,8 @@
     },
     {
       "id": "tung_chung",
-      "name": "02  /  TUNG CHUNG",
-      "description": "Hong Kong operation — early playable campaign build.",
+      "name": "OPERATION 01  /  TUNG CHUNG",
+      "description": "A moving courier, the first physical key, and a train-line pursuit.",
       "scene": "res://scenes/mission_tung_chung.tscn",
       "briefing": "Ruby: A Covenant courier is moving a train manifest through Tung Chung. Confront the courier, retrieve the key from the courier and reach the platform exit.",
       "debrief": "Ruby: The manifest points to a handoff in the streets. The train has not revealed who commissioned it.",
@@ -32,42 +32,26 @@
       "key_id": "key_01"
     },
     {
-      "id": "the_streets",
-      "name": "03  /  THE STREETS",
-      "description": "Hong Kong operation — early playable campaign build.",
-      "scene": "res://scenes/mission_the_streets.tscn",
-      "briefing": "Ruby: A market intermediary arranged the transfer. Speak to the vendor for context, confront the intermediary, and recover the second key from their bodyguard. The nearby market lanes have a lookout and a service room.",
-      "debrief": "Ruby: The handoff leads to a commercial office. Keep the key separate from the manifest.",
+      "id": "hong_kong_sandbox",
+      "name": "OPERATION 02  /  HONG KONG: THE SANDBOX",
+      "description": "Three connected districts. Three mandatory targets. Three physical keys. Choose your route.",
+      "scene": "res://scenes/mission_hong_kong_sandbox.tscn",
+      "briefing": "Ruby: The transfer touches three parts of the city: a market lender, a commercial fixer, and the businessman in the harbour tower. All three are mandatory. Find and permanently complete each target, then physically secure Keys 02, 03, and 04. The districts are connected; choose your order. Conversation and intelligence do not complete targets or grant keys.",
+      "debrief": "Ruby: Three targets, three keys, and one city-wide network. The documents tie the market debts to the fixer and the executive suite. The mountain archive is the next lead.",
       "unlock": "",
-      "key_id": "key_02"
-    },
-    {
-      "id": "the_district",
-      "name": "04  /  THE DISTRICT",
-      "description": "Hong Kong operation — early playable campaign build.",
-      "scene": "res://scenes/mission_the_district.tscn",
-      "briefing": "Ruby: A district broker knows the office route. Speak to the records clerk, confront the broker and find the third key in the records safe. The commercial quarter has a lookout and an upper service room.",
-      "debrief": "Ruby: The broker points to a waterfront meeting. We still do not know who is behind the Covenant transfer.",
-      "unlock": "",
-      "key_id": "key_03"
-    },
-    {
-      "id": "the_harbour",
-      "name": "05  /  THE HARBOUR",
-      "description": "Hong Kong operation — early playable campaign build.",
-      "scene": "res://scenes/mission_the_harbour.tscn",
-      "briefing": "Ruby: A waterfront liaison is managing the transfer. Speak to the quay attendant, confront the liaison and recover the fourth key from their bodyguard. Explore the promenade and service room for alternatives.",
-      "debrief": "Ruby: The trail ends in the mountains. Do not confuse the public landmark with the operation.",
-      "unlock": "",
-      "key_id": "key_04"
+      "key_ids": [
+        "key_02",
+        "key_03",
+        "key_04"
+      ]
     },
     {
       "id": "ngong_ping",
-      "name": "06  /  NGONG PING",
-      "description": "Hong Kong operation — early playable campaign build.",
+      "name": "OPERATION 03  /  NGONG PING",
+      "description": "The final operation reveals a vast, interconnected installation beneath and inside the Tian Tan Big Buddha.",
       "scene": "res://scenes/mission_ngong_ping.tscn",
-      "briefing": "Ruby: The final coordinator is in the surrounding mountain district. Confront them and recover the fifth key from the field safe, away from the landmark.",
-      "debrief": "Ruby: All five keys are secure. The USB can be decrypted on the secure channel; the contents still need analysis.",
+      "briefing": "Ruby: The field archive was a screen. A huge installation lies beneath the Big Buddha and continues into concealed chambers within the statue. Find the hidden rear access, recover Key 05 from the separate field archive, locate Sora Cheng in the operations chamber, and reach the control-room extraction. The public monument must remain intact.",
+      "debrief": "Ruby: The installation was hidden beneath the statue and threaded into its interior. Key 05 is physically secured; all five keys can now open the encrypted destination file.",
       "unlock": "",
       "key_id": "key_05"
     }
@@ -82,9 +66,7 @@
         "initiation",
         "meridian",
         "tung_chung",
-        "the_streets",
-        "the_district",
-        "the_harbour",
+        "hong_kong_sandbox",
         "ngong_ping"
       ],
       "charges": 5
@@ -97,9 +79,7 @@
       "missions": [
         "meridian",
         "tung_chung",
-        "the_streets",
-        "the_district",
-        "the_harbour",
+        "hong_kong_sandbox",
         "ngong_ping"
       ],
       "charges": 0

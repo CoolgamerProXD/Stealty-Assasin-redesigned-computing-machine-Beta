@@ -13,7 +13,10 @@ var required_action: String = ""
 var action_complete: bool = false
 var primary_target: Dictionary = {}
 var target_complete: bool = false
+# `target_incapacitated` records the permanent completion method for legacy UI/save
+# compatibility. Temporary status is independent and can never satisfy extraction.
 var target_incapacitated: bool = false
+var target_temporarily_incapacitated: bool = false
 var target_discovered: bool = false
 
 func configure(data: Variant) -> bool:
@@ -27,6 +30,7 @@ func configure(data: Variant) -> bool:
  primary_target = {}
  target_complete = false
  target_incapacitated = false
+ target_temporarily_incapacitated = false
  target_discovered = false
  if not data is Dictionary: return false
  var raw_records: Variant = data.get("records")
@@ -91,9 +95,19 @@ func mark_action(id: String) -> bool:
  changed.emit()
  return true
 
+func set_target_temporary_incapacitation(id: String, incapacitated: bool) -> bool:
+ if not configured or id != primary_target.get("id", "") or id.is_empty() or target_complete: return false
+ if target_temporarily_incapacitated == incapacitated: return false
+ target_temporarily_incapacitated = incapacitated
+ changed.emit()
+ return true
+
 func mark_target(id: String, incapacitated: bool = false) -> bool:
+ # Permanent objective completion is a one-way, idempotent transition.
+ # Temporary incapacitation is deliberately not considered here.
  if not configured or id != primary_target.get("id", "") or id.is_empty() or target_complete: return false
  target_complete = true
+ target_temporarily_incapacitated = false
  target_incapacitated = incapacitated
  target_discovered = true
  changed.emit()
@@ -119,6 +133,8 @@ func objective_text() -> String:
  if not configured: return "Mission unavailable: invalid record configuration."
  if extracted: return "Investigation complete."
  if can_extract(): return "Evidence secured. Return to the exit."
+ if target_temporarily_incapacitated:
+  return "Primary target temporarily incapacitated. This is not complete; allow recovery or tag them permanently."
  if primary_target.get("id") == "adrian_locke" and not target_complete:
   return "Confront or tag Adrian Locke about the transfer."
  if not required_action.is_empty() and not action_complete:

@@ -195,16 +195,30 @@ func _process(_delta: float) -> void:
  hud.text = title + "  —  EXPLORATION PREVIEW\nWASD MOVE   ·   MOUSE LOOK   ·   ESC MAP SELECTION"
 
 func _ground(color: Color) -> void:
- _box(Vector3(0,-0.2,0), Vector3(90,0.4,90), color, true)
- var op := str(get_meta("operation_id", "")) if preview_kind == "city" else ""
+ var op := str(get_meta("operation_id", ""))
+ if op == "ngong_ping" or preview_kind == "mountain":
+  # The narrow void in the public plaza is entirely behind the Buddha plinth
+  # and roofed by the hidden access corridor; the surface does not seal it.
+  _box(Vector3(-24.25,-0.2,-5),Vector3(41.5,0.4,100),color,true)
+  _box(Vector3(24.25,-0.2,-5),Vector3(41.5,0.4,100),color,true)
+  # A narrow, buried corridor continues under the plinth to the concealed
+  # statue-interior stair. Both openings remain covered by the stone shell.
+  _box(Vector3(0,-0.2,-31.0),Vector3(7,0.4,14),color,true)
+  _box(Vector3(0,-0.2,13.5),Vector3(7,0.4,75),color,true)
+ else:
+  _box(Vector3(0,-0.2,0), Vector3(90,0.4,90), color, true)
  for x: float in [-45.0,45.0]:
-  if (x < 0.0 and op == "the_streets") or (x > 0.0 and op == "the_district"):
+  var open_gateway := op == "hong_kong_sandbox" or (x < 0.0 and op == "the_streets") or (x > 0.0 and op == "the_district")
+  if open_gateway:
    for z: float in [-25.5,25.5]: _box(Vector3(x,2,z),Vector3(0.3,4,39),color.darkened(0.2),true)
-  else: _box(Vector3(x,2,0),Vector3(0.3,4,90),color.darkened(0.2),true)
+  else: _box(Vector3(x,2,-5 if op == "ngong_ping" else 0),Vector3(0.3,4,100 if op == "ngong_ping" else 90),color.darkened(0.2),true)
  for z: float in [-45.0,45.0]:
-  if z < 0.0 and op == "the_harbour":
-   for x: float in [-25.5,25.5]: _box(Vector3(x,2,z),Vector3(39,4,0.3),color.darkened(0.2),true)
-  else: _box(Vector3(0,2,z),Vector3(90,4,0.3),color.darkened(0.2),true)
+  var boundary_z := -55.0 if op == "ngong_ping" and z < 0.0 else z
+  if z < 0.0 and op == "ngong_ping":
+   for x: float in [-25.5,25.5]: _box(Vector3(x,2,boundary_z),Vector3(39,4,0.3),color.darkened(0.2),true)
+  elif z < 0.0 and (op == "the_harbour" or op == "hong_kong_sandbox"):
+   for x: float in [-25.5,25.5]: _box(Vector3(x,2,boundary_z),Vector3(39,4,0.3),color.darkened(0.2),true)
+  else: _box(Vector3(0,2,boundary_z),Vector3(90,4,0.3),color.darkened(0.2),true)
 
 # Parked street vehicles are fictional low-poly props, not controllable. Their
 # simple body collider is outside all public-space NPC routes and the ramp.
@@ -288,7 +302,7 @@ func _city() -> void:
   var x := -45.0 + float(i)*7.5
   var h := 10.0 + float((i*11)%7)*1.3
   # Keep the waterfront gateway visibly open as well as physically open.
-  if str(get_meta("operation_id", "")) == "the_harbour" and absf(x) < 8.0: continue
+  if str(get_meta("operation_id", "")) in ["the_harbour", "hong_kong_sandbox"] and absf(x) < 8.0: continue
   _accent(Vector3(x,h*0.5,-49),Vector3(6.8,h,3.0),Color(0.20+float(i%3)*0.025,0.28,0.31))
   for y: float in [4.0,7.0,10.0]:
    if y < h - 0.5:
@@ -342,20 +356,38 @@ func _city() -> void:
   _box(Vector3(x,2.85,-38),Vector3(0.7,0.1,0.7),Color(0.95,0.80,0.58))
  var op := str(get_meta("operation_id", ""))
  if op in ["the_streets", "the_district", "the_harbour"]:
-  var annex := preload("res://scripts/world/hong_kong_annex.gd").new()
-  annex.operation_id = op
-  annex.name = "MissionNeighbourhood"
-  if op == "the_streets":
-   annex.position = Vector3(-45,0,0)
-   annex.rotation.y = -PI/2.0
-  elif op == "the_district":
-   annex.position = Vector3(45,0,0)
-   annex.rotation.y = PI/2.0
-  else:
-   annex.position = Vector3(0,0,-45)
-   annex.rotation.y = PI
-  add_child(annex)
-  annex.build()
+  _attach_city_district(op)
+ elif op == "hong_kong_sandbox":
+  # The three neighbourhood builders join the shared city through open,
+  # walkable gateways. They are all instanced in this one scene and one save.
+  _attach_city_district("the_streets")
+  _attach_city_district("the_district")
+  _attach_city_district("the_harbour")
+
+func _attach_city_district(district_id: String) -> void:
+ var annex := preload("res://scripts/world/hong_kong_annex.gd").new()
+ annex.operation_id = district_id
+ annex.name = "District_" + district_id
+ if district_id == "the_streets":
+  annex.position = Vector3(-45,0,0)
+  annex.rotation.y = -PI/2.0
+ elif district_id == "the_district":
+  annex.position = Vector3(45,0,0)
+  annex.rotation.y = PI/2.0
+ else:
+  annex.position = Vector3(0,0,-45)
+  annex.rotation.y = PI
+ add_child(annex)
+ annex.build()
+ if district_id == "the_streets":
+  access_zones.append({"rect":Rect2(-70.0,-24.0,17.0,13.0),"floor_min":-0.1,"floor_max":4.8,"area":"market_staff"})
+  access_zones.append({"rect":Rect2(-75.0,-28.0,8.0,17.0),"floor_min":-0.1,"floor_max":4.8,"area":"service_corridor"})
+ elif district_id == "the_district":
+  access_zones.append({"rect":Rect2(55.0,-24.0,16.0,13.0),"floor_min":-0.1,"floor_max":4.8,"area":"office_staff"})
+ elif district_id == "the_harbour":
+  # Five tower levels stay within the moderate-height access footprint.
+  access_zones.append({"rect":Rect2(13.0,-93.0,9.0,19.0),"floor_min":3.0,"floor_max":12.7,"area":"corporate_staff"})
+  access_zones.append({"rect":Rect2(13.0,-93.0,9.0,19.0),"floor_min":12.7,"floor_max":17.0,"area":"executive_suite"})
 
 # Three mission-specific, walk-in interiors replace (rather than overlap) a
 # solid scenic block. The surrounding city remains a shared destination.
@@ -432,7 +464,12 @@ func _mountain() -> void:
  if str(get_meta("operation_id", "")) == "ngong_ping": _mountain_field_office()
  var dark := Color(0.22,0.24,0.20)
  # Broad public approach. The statue is a non-destructible landmark.
- _box(Vector3(0,0.03,0),Vector3(11,0.06,80),stone)
+ if preview_kind == "mountain":
+  # Leave the concealed service shaft and descending ramp uncovered behind
+  # the pedestal; the public approach terminates at the statue's front edge.
+  _box(Vector3(0,0.03,11),Vector3(11,0.06,58),stone)
+ else:
+  _box(Vector3(0,0.03,0),Vector3(11,0.06,80),stone)
  _box(Vector3(0,0.06,-22),Vector3(26,0.12,18),stone.lightened(0.08))
  for x: float in [-22.0,-14.0,14.0,22.0]:
   _box(Vector3(x,1.5,13),Vector3(7,3,7),Color(0.65,0.53,0.39),true)
@@ -444,8 +481,7 @@ func _mountain() -> void:
  # The landmark is intentionally a respectful, stylised public monument,
  # not a mission target. Its proportions are enlarged relative to visitors,
  # rather than presenting a six-metre miniature in the landscape.
- _box(Vector3(0,1.2,-29),Vector3(34,2.4,18),Color(0.42,0.39,0.33),true)
- _box(Vector3(0,2.43,-29),Vector3(32,0.15,16),Color(0.64,0.53,0.36))
+ _buddha_plinth()
  _buddha_approach()
  # A broad lotus-like ring sits on the pedestal; it remains scenic only.
  for i: int in range(16):
@@ -511,6 +547,11 @@ func _mountain() -> void:
   _landmark_part(landmark, Vector3(x,5.05,-28.29),Vector3(0.26,0.045,0.035),Color(0.28,0.24,0.20))
  _landmark_part(landmark, Vector3(0,4.91,-28.22),Vector3(0.15,0.20,0.12),Color(0.45,0.36,0.25))
  _landmark_part(landmark, Vector3(0,4.75,-28.33),Vector3(0.28,0.035,0.025),Color(0.31,0.25,0.20))
+ if str(get_meta("operation_id", "")) == "ngong_ping":
+  var facility := preload("res://scripts/world/ngong_ping_secret_facility.gd").new() as NgongPingSecretFacility
+  facility.name = "NgongPingSecretFacility"
+  add_child(facility)
+  facility.build(self)
  for x: float in [-30.0,-20.0,-12.0,12.0,20.0,30.0]:
   for z: float in [-33.0,-17.0,0.0,26.0,36.0]:
    if absf(x) < 17.5 and z < -20.0: continue # Keep the plinth clear.
@@ -547,13 +588,37 @@ func _mountain_field_office() -> void:
  var wall := Color(0.51,0.52,0.45)
  var trim := Color(0.26,0.31,0.27)
  for side: float in [-1.0,1.0]:
-  _box(Vector3(9,1.6,5+side*2.5),Vector3(5,3.2,0.2),wall,true)
-  for end: float in [-1.0,1.0]:
-   _box(Vector3(9+end*2.5,1.6,5+side*1.75),Vector3(0.2,3.2,1.5),wall,true)
+  _box(Vector3(9+side*2.5,1.6,5),Vector3(0.2,3.2,5.0),wall,true)
+ _box(Vector3(9,1.6,7.5),Vector3(5.0,3.2,0.2),wall,true)
+ # Two front wall panels leave a real, walkable two-metre entrance to the
+ # separate field archive; the statue remains well away from this office.
+ for side: float in [-1.0,1.0]:
+  _box(Vector3(9+side*1.75,1.6,2.5),Vector3(1.5,3.2,0.2),wall,true)
  _box(Vector3(9,3.25,5),Vector3(5.2,0.16,5.2),trim,true)
  _box(Vector3(9,0.018,5),Vector3(4.9,0.036,4.9),Color(0.45,0.43,0.36))
  _box(Vector3(11.2,1.2,6.5),Vector3(0.12,1.8,1.3),Color(0.34,0.27,0.20))
  _sign("FIELD ARCHIVE", Vector3(9,2.7,7.35), 28)
+
+# The pedestal is a stone shell around a central void. The rear aperture is
+# part of a concealed maintenance seam, not a hole in the public-facing front.
+func _buddha_plinth() -> void:
+ var stone := Color(0.42,0.39,0.33)
+ var cap := Color(0.64,0.53,0.36)
+ for side: float in [-1.0,1.0]:
+  _box(Vector3(side*10.25,1.2,-29),Vector3(13.5,2.4,18),stone,true)
+  _box(Vector3(side*10.25,2.42,-29),Vector3(13.0,0.15,17.4),cap)
+  _box(Vector3(side*2.72,1.2,-34),Vector3(1.55,2.4,8),stone,true)
+ # The public/front apron remains broad and seamless.
+ _box(Vector3(0,1.2,-24),Vector3(7.0,2.4,8.0),stone,true)
+ _box(Vector3(0,2.42,-24),Vector3(7.0,0.15,8.0),cap)
+ # A central shaft under the statue is open behind the sealed relief door.
+ for z: float in [-20.1,-37.9]:
+  if z > -30.0:
+   _box(Vector3(0,2.42,z),Vector3(6.8,0.15,0.2),cap)
+ for x: float in [-3.35,3.35]:
+  _box(Vector3(x,2.42,-29),Vector3(0.2,0.15,17.5),cap)
+ _box(Vector3(0,0.05,-20.0),Vector3(34,0.12,0.18),Color(0.39,0.34,0.28))
+ _box(Vector3(0,0.05,-38.0),Vector3(3.8,0.12,0.18),Color(0.39,0.34,0.28),false)
 
 # A broad physical approach to the public viewing terrace. The sloped
 # collider backs the visible shallow steps and overlaps the existing plinth.

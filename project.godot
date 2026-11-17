@@ -43,3 +43,4 @@ use_equipment={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":
 aim={"deadzone":0.2,"events":[Object(InputEventMouseButton,"button_index":2)]}
 fire={"deadzone":0.2,"events":[Object(InputEventMouseButton,"button_index":1)]}
 instinct={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":4194326,"location":1)]}
+disguise_inventory={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":73)]}

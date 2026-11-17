@@ -12,6 +12,8 @@ var recovered_keys: Array[String] = []
 var usb_decryption_seen: bool = false
 var selected: String = "training_sidearm"
 var last_mission: String = ""
+var acquired_outfits: Array[String] = ["civilian"]
+var equipped_outfit: String = "civilian"
 
 func configure(data: Variant) -> bool:
  missions.clear()
@@ -47,10 +49,20 @@ func next_mission() -> String:
   if not entry.get("optional", false) and not completed.has(entry["id"]) and is_unlocked(entry["id"]): return entry["id"]
  return ""
 
+func _mission_keys(entry: Dictionary) -> Array[String]:
+ var result: Array[String] = []
+ var raw: Variant = entry.get("key_ids", [])
+ if raw is Array:
+  for value: Variant in raw:
+   if value is String and not value.is_empty() and not result.has(value): result.append(value)
+ var single := str(entry.get("key_id", ""))
+ if not single.is_empty() and not result.has(single): result.append(single)
+ return result
+
 func mark_complete(id: String) -> bool:
  if not is_unlocked(id): return false
- var key_id := str(mission(id).get("key_id", ""))
- if not key_id.is_empty() and not recovered_keys.has(key_id): return false
+ for key_id: String in _mission_keys(mission(id)):
+  if not recovered_keys.has(key_id): return false
  if not completed.has(id): completed.append(id)
  return true
 
@@ -84,23 +96,36 @@ func select_item(id: String) -> bool:
 # Only a mission's own configured key can be added, never another mission's.
 func secure_key(mission_id: String, key_id: String) -> bool:
  var entry := mission(mission_id)
- if not is_unlocked(mission_id) or key_id.is_empty() or entry.get("key_id", "") != key_id: return false
+ if not is_unlocked(mission_id) or key_id.is_empty() or not _mission_keys(entry).has(key_id): return false
  if not recovered_keys.has(key_id): recovered_keys.append(key_id)
  return true
 
+func acquire_outfit(id: String) -> bool:
+ if not DisguiseSystem.has_outfit(id) or acquired_outfits.has(id): return false
+ acquired_outfits.append(id)
+ return true
+
+func equip_outfit(id: String) -> bool:
+ if not DisguiseSystem.has_outfit(id) or not acquired_outfits.has(id): return false
+ equipped_outfit = id
+ return true
+
 func usb_ready() -> bool:
- var count := 0
+ var expected: Array[String] = []
  for entry: Dictionary in missions:
-  var key_id := str(entry.get("key_id", ""))
-  if not key_id.is_empty():
-   count += 1
-   if not recovered_keys.has(key_id): return false
- return count == 5
+  for key_id: String in _mission_keys(entry):
+   if not expected.has(key_id): expected.append(key_id)
+ if expected.size() != 5: return false
+ for key_id: String in expected:
+  if not recovered_keys.has(key_id): return false
+ return true
 
 func restore(data: Dictionary) -> void:
  completed.clear()
  recovered_keys.clear()
  completed_lessons.clear()
+ acquired_outfits.assign(["civilian"])
+ equipped_outfit = "civilian"
  equipped_coins = 0
  usb_decryption_seen = false
  var raw_keys: Variant = data.get("recovered_keys", [])
@@ -112,9 +137,16 @@ func restore(data: Dictionary) -> void:
  for entry: Dictionary in missions:
   var id := str(entry["id"])
   if not is_unlocked(id): continue
-  var key_id := str(entry.get("key_id", ""))
-  if not key_id.is_empty() and key_id in raw_keys and not recovered_keys.has(key_id): recovered_keys.append(key_id)
-  if id in raw and (key_id.is_empty() or recovered_keys.has(key_id)): completed.append(id)
+  var required_keys := _mission_keys(entry)
+  for key_id: String in required_keys:
+   # Legacy individual city operations used these same physical key IDs. Preserve
+   # only keys explicitly recorded as recovered; old mission completion does not
+   # synthesize keys or sandbox target completion.
+   if key_id in raw_keys and not recovered_keys.has(key_id): recovered_keys.append(key_id)
+  var all_keys_found := true
+  for key_id: String in required_keys:
+   if not recovered_keys.has(key_id): all_keys_found = false
+  if id in raw and all_keys_found: completed.append(id)
  # Completed legacy Initiation necessarily required all three records.
  # For new or partial saves, only explicitly recognized lesson IDs count.
  var raw_lessons: Variant = data.get("completed_lessons", [])
@@ -133,6 +165,13 @@ func restore(data: Dictionary) -> void:
  if desired is String: select_item(desired)
  var last: Variant = data.get("last_mission", "")
  last_mission = last if last is String and is_unlocked(last) else ""
+ var raw_outfits: Variant = data.get("acquired_outfits", [])
+ if raw_outfits is Array:
+  for outfit_variant: Variant in raw_outfits:
+   var outfit_id := str(outfit_variant)
+   if DisguiseSystem.has_outfit(outfit_id) and not acquired_outfits.has(outfit_id): acquired_outfits.append(outfit_id)
+ var desired_outfit: Variant = data.get("equipped_outfit", "civilian")
+ if desired_outfit is String: equip_outfit(desired_outfit)
 
 func snapshot() -> Dictionary:
- return {"completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission}
+ return {"completed_lessons": completed_lessons.duplicate(), "equipped_coins": equipped_coins, "completed": completed.duplicate(), "recovered_keys": recovered_keys.duplicate(), "usb_decryption_seen": usb_decryption_seen, "selected": selected, "last_mission": last_mission, "acquired_outfits": acquired_outfits.duplicate(), "equipped_outfit": equipped_outfit}

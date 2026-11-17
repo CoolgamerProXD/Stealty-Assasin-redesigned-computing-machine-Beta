@@ -96,6 +96,8 @@ func run() -> void:
   key.pressed = true
   Input.parse_input_event(key)
   var on := await capture(id + "_wall_on")
+  var focus: InstinctFocus = world.get("instinct_focus")
+  check(focus != null and focus.focus_amount > 0.05 and focus.focus_amount < 1.0, id + " Instinct world grade eases toward its active state")
   var a := red_stats(off)
   var b := red_stats(on)
   print("VISUAL_METRIC: %s off=%d on=%d centroid=%.1f" % [id, a.x, b.x, b.y])
@@ -116,6 +118,7 @@ func run() -> void:
   var released := await capture(id + "_wall_released")
   var d := red_stats(released)
   check(d.x < c.x - 20, id + " release clears the through-wall silhouette")
+  check(focus.focus_amount > 0.05 and focus.focus_amount < 0.9, id + " Instinct world grade eases back toward normal after release")
   if id == "hotel":
    # Save actual rendered preset comparisons with the HUD and physical actor.
    camera.global_position = Vector3(-4, 2.2, 4)

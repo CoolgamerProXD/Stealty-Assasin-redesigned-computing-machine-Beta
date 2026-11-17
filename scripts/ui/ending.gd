@@ -17,12 +17,15 @@ func _ready() -> void:
  add_child(debrief)
  _label("BLACKLINE  /  OPERATION COMPLETE", 34)
  _label(str(Campaign.ending.get("name", "ASSIGNMENT")), 25)
- if str(Campaign.ending.get("id", "")) in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
-  _label("PRIMARY COMPLETE   /   PHYSICAL KEY SECURED\nOPTIONAL INTEL %s   /   WITNESS %s" % ["SECURED" if Campaign.ending.get("intel_found", false) else "NOT SECURED", "SPOKEN" if Campaign.ending.get("witness_found", false) else "NOT SPOKEN"], 19)
+ if str(Campaign.ending.get("id", "")) in ["tung_chung", "hong_kong_sandbox", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
+  if Campaign.ending.get("id", "") == "hong_kong_sandbox":
+   _label("ALL THREE MANDATORY TARGETS COMPLETE  /  KEYS 02, 03, 04 SECURED\nOPTIONAL INTEL %s" % ["SECURED" if Campaign.ending.get("intel_found", false) else "INCOMPLETE"], 19)
+  else:
+   _label("PRIMARY COMPLETE   /   PHYSICAL KEY SECURED\nOPTIONAL INTEL %s   /   WITNESS %s" % ["SECURED" if Campaign.ending.get("intel_found", false) else "NOT SECURED", "SPOKEN" if Campaign.ending.get("witness_found", false) else "NOT SPOKEN"], 19)
  else:
   _label("Records secured: %d" % Campaign.ending.get("records", 0), 20)
  _label("RUBY  /  DEBRIEF\n" + str(Campaign.ending.get("debrief", "")), 21)
- if str(Campaign.ending.get("id", "")) in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
+ if str(Campaign.ending.get("id", "")) in ["tung_chung", "hong_kong_sandbox", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
   _label("USB KEYS  /  %d OF 5%s" % [Campaign.progress.recovered_keys.size(), ("  —  DECRYPTION INITIATED" if Campaign.progress.usb_decryption_seen else "  —  DECRYPTION READY") if Campaign.progress.usb_ready() else ""], 19)
  var unlock := str(Campaign.ending.get("unlock", ""))
  if not unlock.is_empty(): _label("LOADOUT UNLOCKED  /  " + Campaign.item_label(unlock), 20)
