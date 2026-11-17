@@ -145,7 +145,15 @@ func _build_underground_levels() -> void:
 func _build_level_shell(floor_y: float, center_z: float, width: float, depth: float, height: float, tint: Color) -> void:
 	var wall_color := tint.darkened(0.23)
 	_box("SublevelNorthRetainingWall",Vector3(0,floor_y+height*0.5,center_z-depth*0.5),Vector3(width,height,0.36),wall_color,true)
-	_box("SublevelSouthRetainingWall",Vector3(0,floor_y+height*0.5,center_z+depth*0.5),Vector3(width,height,0.36),wall_color,true)
+	if is_equal_approx(floor_y,FLOORS_UNDER[0]):
+		# The core ramp crosses the first sublevel's south wall; leave a real
+		# central doorway rather than sealing the ramp behind the wall shell.
+		var doorway_width := 3.8
+		var side_width := (width-doorway_width)*0.5
+		for side: float in [-1.0,1.0]:
+			_box("SublevelSouthRetainingWall",Vector3(side*(doorway_width*0.5+side_width*0.5),floor_y+height*0.5,center_z+depth*0.5),Vector3(side_width,height,0.36),wall_color,true)
+	else:
+		_box("SublevelSouthRetainingWall",Vector3(0,floor_y+height*0.5,center_z+depth*0.5),Vector3(width,height,0.36),wall_color,true)
 	_box("SublevelWestRetainingWall",Vector3(-width*0.5,floor_y+height*0.5,center_z),Vector3(0.36,height,depth),wall_color,true)
 	_box("SublevelEastRetainingWall",Vector3(width*0.5,floor_y+height*0.5,center_z),Vector3(0.36,height,depth),wall_color,true)
 	if is_equal_approx(floor_y,FLOORS_UNDER[0]):
@@ -161,7 +169,13 @@ func _build_level_shell(floor_y: float, center_z: float, width: float, depth: fl
 	for x: float in [-width*0.5+0.5,width*0.5-0.5]:
 		_box("SublevelStructuralRib",Vector3(x,floor_y+height*0.5,center_z),Vector3(0.38,height-0.2,depth-0.5),tint.lightened(0.09),true)
 	for z: float in [center_z-depth*0.5+0.5,center_z+depth*0.5-0.5]:
-		_box("SublevelStructuralRib",Vector3(0,floor_y+height*0.5,z),Vector3(width-0.5,height-0.2,0.38),tint.lightened(0.09),true)
+		if is_equal_approx(floor_y,FLOORS_UNDER[0]) and z > center_z:
+			var rib_doorway_width := 3.8
+			var rib_side_width := (width-0.5-rib_doorway_width)*0.5
+			for side: float in [-1.0,1.0]:
+				_box("SublevelStructuralRib",Vector3(side*(rib_doorway_width*0.5+rib_side_width*0.5),floor_y+height*0.5,z),Vector3(rib_side_width,height-0.2,0.38),tint.lightened(0.09),true)
+		else:
+			_box("SublevelStructuralRib",Vector3(0,floor_y+height*0.5,z),Vector3(width-0.5,height-0.2,0.38),tint.lightened(0.09),true)
 
 func _build_room(label: String, center: Vector3, span: Vector2, tint: Color, subtitle: String, style: int) -> void:
 	var x := center.x
