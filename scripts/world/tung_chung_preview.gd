@@ -56,7 +56,7 @@ func permitted_exit(point: Vector3) -> Vector3:
  for zone: Dictionary in access_zones:
   var rect: Variant = zone.get("rect")
   if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= float(zone.get("floor_min",-100.0)) and point.y <= float(zone.get("floor_max",100.0)):
-   var center := rect.get_center()
+   var center: Vector2 = rect.get_center()
    return Vector3(center.x,point.y,center.y)
  var area: Variant = get_meta("restricted_rect", null)
  if not area is Rect2: return point

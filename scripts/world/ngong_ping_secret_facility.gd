@@ -250,6 +250,7 @@ func _build_sublevel_connectors() -> void:
 		lamp.omni_range = 7.5
 		lamp.shadow_enabled = false
 		add_child(lamp)
+func _build_buddha_interior() -> void:
 	# A continuous hidden switchback corridor climbs from Sublevel 01 through
 	# the plinth into the statue's first inner chamber. Its 21.6 m ramp rises
 	# five metres (a gentle 13.4 degree slope); collision-backed sidewalls and a
