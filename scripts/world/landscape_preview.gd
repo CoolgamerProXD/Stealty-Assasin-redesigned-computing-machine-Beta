@@ -203,7 +203,7 @@ func _ground(color: Color) -> void:
   _box(Vector3(24.25,-0.2,-5),Vector3(41.5,0.4,100),color,true)
   # A narrow, buried corridor continues under the plinth to the concealed
   # statue-interior stair. Both openings remain covered by the stone shell.
-  _box(Vector3(0,-0.2,-37.0),Vector3(7,0.4,26),color,true)
+  _box(Vector3(0,-0.2,-31.0),Vector3(7,0.4,14),color,true)
   _box(Vector3(0,-0.2,13.5),Vector3(7,0.4,75),color,true)
  else:
   _box(Vector3(0,-0.2,0), Vector3(90,0.4,90), color, true)
