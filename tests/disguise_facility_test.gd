@@ -121,11 +121,14 @@ func run() -> void:
 	final_world.call("_interact")
 	check(bool(final_world.get("facility_discovered")) and facility.entry_open,"interacting with the real rear pedestal panel reveals the physical entrance")
 	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
-	facility_player.global_position = Vector3(0,0.1,-39.0)
+	facility_player.global_position = Vector3(0,0.75,-39.0)
+	facility_player.rotation.y = 0.0
+	facility_player.velocity = Vector3.ZERO
 	facility_player.set_physics_process(true)
-	print("DISGUISE MOVE STATE: paused=",paused," physics=",facility_player.is_physics_processing()," intro=",final_world.get("intro_active"))
+	for _frame: int in range(6): await physics_frame
+	print("DISGUISE MOVE STATE: paused=",paused," physics=",facility_player.is_physics_processing()," floor=",facility_player.is_on_floor()," position=",facility_player.global_position)
 	Input.action_press("move_forward")
-	print("DISGUISE INPUT: pressed=",Input.is_action_pressed("move_forward")," vector=",Input.get_vector("move_left","move_right","move_forward","move_back")," floor=",facility_player.is_on_floor())
+	print("DISGUISE INPUT: pressed=",Input.is_action_pressed("move_forward")," vector=",Input.get_vector("move_left","move_right","move_forward","move_back"))
 	await create_timer(3.8).timeout
 	Input.action_release("move_forward")
 	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
