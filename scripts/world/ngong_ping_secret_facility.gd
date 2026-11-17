@@ -148,7 +148,16 @@ func _build_level_shell(floor_y: float, center_z: float, width: float, depth: fl
 	_box("SublevelSouthRetainingWall",Vector3(0,floor_y+height*0.5,center_z+depth*0.5),Vector3(width,height,0.36),wall_color,true)
 	_box("SublevelWestRetainingWall",Vector3(-width*0.5,floor_y+height*0.5,center_z),Vector3(0.36,height,depth),wall_color,true)
 	_box("SublevelEastRetainingWall",Vector3(width*0.5,floor_y+height*0.5,center_z),Vector3(0.36,height,depth),wall_color,true)
-	_box("SublevelCeiling",Vector3(0,floor_y+height,center_z),Vector3(width,0.22,depth),tint.darkened(0.12),true)
+	if is_equal_approx(floor_y,FLOORS_UNDER[0]):
+		# Keep an overhead shaft clear above the descending exterior ramp; the
+		# ordinary full-width ceiling would overlap the player capsule at the
+		# concealed entrance and prevent entry into the first sublevel.
+		_box("SublevelCeiling",Vector3(-16.25,floor_y+height,center_z),Vector3(27.5,0.22,depth),tint.darkened(0.12),true)
+		_box("SublevelCeiling",Vector3(16.25,floor_y+height,center_z),Vector3(27.5,0.22,depth),tint.darkened(0.12),true)
+		_box("SublevelCeiling",Vector3(0,floor_y+height,-67.0),Vector3(width,0.22,30.0),tint.darkened(0.12),true)
+		_box("SublevelCeiling",Vector3(0,floor_y+height,-33.0),Vector3(width,0.22,2.0),tint.darkened(0.12),true)
+	else:
+		_box("SublevelCeiling",Vector3(0,floor_y+height,center_z),Vector3(width,0.22,depth),tint.darkened(0.12),true)
 	for x: float in [-width*0.5+0.5,width*0.5-0.5]:
 		_box("SublevelStructuralRib",Vector3(x,floor_y+height*0.5,center_z),Vector3(0.38,height-0.2,depth-0.5),tint.lightened(0.09),true)
 	for z: float in [center_z-depth*0.5+0.5,center_z+depth*0.5-0.5]:
