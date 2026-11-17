@@ -92,7 +92,7 @@ func set_disguise(new_role: String) -> void:
  elif new_role == "manager": mapped = "executive"
  if not outfit_inventory.has(mapped): outfit_inventory.append(mapped)
  outfit_id = mapped
- role = DisguiseSystem.role_for_outfit(outfit_id)
+ role = "staff" if new_role == "staff" else DisguiseSystem.role_for_outfit(outfit_id)
  if body_mesh: body_mesh.set_outfit(outfit_id)
 
 func acquire_outfit(id: String) -> bool:
