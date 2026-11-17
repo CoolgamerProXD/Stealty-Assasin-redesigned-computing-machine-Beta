@@ -131,7 +131,10 @@ func run() -> void:
 	print("DISGUISE INPUT: pressed=",Input.is_action_pressed("move_forward")," vector=",Input.get_vector("move_left","move_right","move_forward","move_back"))
 	await create_timer(3.8).timeout
 	Input.action_release("move_forward")
-	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
+	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," basis_forward=",-facility_player.global_basis.z," slides=",facility_player.get_slide_collision_count())
+	for slide_index: int in range(facility_player.get_slide_collision_count()):
+		var slide := facility_player.get_slide_collision(slide_index)
+		print("DISGUISE ROUTE COLLISION: ",slide.get_collider().name," at=",slide.get_collider().global_position," normal=",slide.get_normal())
 	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
 	Input.action_press("move_back")
 	await create_timer(7.8).timeout
