@@ -196,7 +196,7 @@ func _process(_delta: float) -> void:
 
 func _ground(color: Color) -> void:
  var op := str(get_meta("operation_id", ""))
- if op == "ngong_ping":
+ if op == "ngong_ping" or preview_kind == "mountain":
   # The narrow void in the public plaza is entirely behind the Buddha plinth
   # and roofed by the hidden access corridor; the surface does not seal it.
   _box(Vector3(-24.25,-0.2,-5),Vector3(41.5,0.4,100),color,true)
@@ -464,7 +464,7 @@ func _mountain() -> void:
  if str(get_meta("operation_id", "")) == "ngong_ping": _mountain_field_office()
  var dark := Color(0.22,0.24,0.20)
  # Broad public approach. The statue is a non-destructible landmark.
- if str(get_meta("operation_id", "")) == "ngong_ping":
+ if preview_kind == "mountain":
   # Leave the concealed service shaft and descending ramp uncovered behind
   # the pedestal; the public approach terminates at the statue's front edge.
   _box(Vector3(0,0.03,11),Vector3(11,0.06,58),stone)
