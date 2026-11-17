@@ -14,7 +14,7 @@
 - Python data tests: **9/9 passed** locally (`python3 -m unittest discover -s tests -p 'test_*.py' -v`).
 - `git diff --check`: passed before commit.
 - Godot 4.4.1 workflow run [44042285895](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44042285895): workflow conclusion **success**. Headless job passed import, main-scene startup, behavioral regression, integrated Hong Kong campaign, outfit/facility, coin progression, NPC route soak, camera/display sampling, through-wall Instinct rendering, cinematic captures, and Hong Kong staged environment captures. This is CI automation using the hosted Linux/Xvfb environment, not human review or target-device evidence.
-- The Windows job in that run was **skipped** because the workflow only runs it when the commit message contains `[windows]`. A separate `[windows]` CI trigger is required before marking Windows export/smoke coverage complete.
+- In run [44042990998](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44042990998), both headless and Windows jobs concluded **success**. The Windows job verified official Godot 4.4.1 and export templates, imported/exported the project, and launched its configured scenes headlessly from the Windows release executable. This validates automated Windows export/smoke coverage; it is not a Windows interactive visual playtest and not a benchmark on the specified Iris Xe laptop. The prior run's Windows job was skipped because the workflow gates it on `[windows]` in the commit message.
 - Local sandbox had no Godot executable; Godot runtime testing was performed by CI, not locally.
 
 ## Visual evidence and review
