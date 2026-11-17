@@ -358,7 +358,14 @@ func _build_level_lighting(floor_y: float, center_z: float, tint: Color) -> void
 			lamp.omni_range = 7.5
 			lamp.shadow_enabled = false
 			lamp.add_to_group("quality_practicals")
-			lamp.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
+			var graphics_quality := "MEDIUM"
+			var practicals_enabled := true
+			var campaign_service := get_node_or_null("/root/Campaign")
+			if campaign_service:
+				var quality_settings: Dictionary = campaign_service.get("settings")
+				graphics_quality = str(quality_settings.get("graphics","MEDIUM"))
+				practicals_enabled = bool(quality_settings.get("practicals",true))
+			lamp.visible = graphics_quality != "LOW" and practicals_enabled
 			add_child(lamp)
 
 func _build_staff_routes() -> void:

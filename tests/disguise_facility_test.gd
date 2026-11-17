@@ -123,13 +123,14 @@ func run() -> void:
 	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
 	facility_player.global_position = Vector3(0,0.1,-37.6)
 	facility_player.set_physics_process(true)
+	print("DISGUISE MOVE STATE: paused=",paused," physics=",facility_player.is_physics_processing()," intro=",final_world.get("intro_active"))
 	Input.action_press("move_forward")
-	for _frame: int in range(180): await physics_frame
+	await create_timer(4.5).timeout
 	Input.action_release("move_forward")
 	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
 	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
 	Input.action_press("move_back")
-	for _frame: int in range(390): await physics_frame
+	await create_timer(8.0).timeout
 	Input.action_release("move_back")
 	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position))
 	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
