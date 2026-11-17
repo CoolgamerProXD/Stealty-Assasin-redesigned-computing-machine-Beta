@@ -121,7 +121,7 @@ func run() -> void:
 	final_world.call("_interact")
 	check(bool(final_world.get("facility_discovered")) and facility.entry_open,"interacting with the real rear pedestal panel reveals the physical entrance")
 	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
-	facility_player.global_position = Vector3(0,0.75,-39.0)
+	facility_player.global_position = Vector3(0,0.75,-36.5)
 	facility_player.rotation.y = 0.0
 	facility_player.velocity = Vector3.ZERO
 	facility_player.set_physics_process(true)
