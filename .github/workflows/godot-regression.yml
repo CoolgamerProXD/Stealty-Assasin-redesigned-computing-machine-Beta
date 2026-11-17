@@ -131,7 +131,7 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "import", "startup", "tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
+          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
