@@ -134,7 +134,12 @@ func run() -> void:
 	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," basis_forward=",-facility_player.global_basis.z," slides=",facility_player.get_slide_collision_count())
 	for slide_index: int in range(facility_player.get_slide_collision_count()):
 		var slide := facility_player.get_slide_collision(slide_index)
-		print("DISGUISE ROUTE COLLISION: ",slide.get_collider().name," at=",slide.get_collider().global_position," normal=",slide.get_normal())
+		var collider_node: Node3D = slide.get_collider() as Node3D
+		var collider_size := Vector3.ZERO
+		for collider_child: Node in collider_node.get_children():
+			if collider_child is CollisionShape3D and collider_child.shape is BoxShape3D:
+				collider_size = (collider_child.shape as BoxShape3D).size
+		print("DISGUISE ROUTE COLLISION: ",collider_node.get_path()," at=",collider_node.global_position," size=",collider_size," normal=",slide.get_normal())
 	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
 	Input.action_press("move_back")
 	await create_timer(7.8).timeout
