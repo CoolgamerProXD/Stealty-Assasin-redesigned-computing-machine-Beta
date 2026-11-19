@@ -119,6 +119,20 @@ jobs:
           TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/visual-test-output" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/hong_kong_capture_test.gd 2>&1 | tee "$RUNNER_TEMP/hkvisual.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^HKVIS FAIL:' "$RUNNER_TEMP/hkvisual.log"; then exit 1; fi
           grep -E '^HKVIS RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hkvisual.log"
+      - name: Assignment 006 campaign visual acceptance capture suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/assignment006-visual-acceptance" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 240 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/assignment006_visual_acceptance.gd 2>&1 | tee "$RUNNER_TEMP/assignment006-visual.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^A006 FAIL:' "$RUNNER_TEMP/assignment006-visual.log"; then exit 1; fi
+          grep -E '^A006 RESULT: [0-9]+ checks, 0 failures; 18 requested views staged$' "$RUNNER_TEMP/assignment006-visual.log"
+      - name: Upload Assignment 006 genuine campaign views
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: assignment006-visual-acceptance
+          path: assignment006-visual-acceptance/*
+          if-no-files-found: ignore
       - name: Upload rendered comparisons
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -137,13 +151,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
+          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
-              if name in ("tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
+              if name in ("tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema", "assignment006-visual"):
+                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^A006 RESULT:|^A006 FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:

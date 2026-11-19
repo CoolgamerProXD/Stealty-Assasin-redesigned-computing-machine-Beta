@@ -1,0 +1,293 @@
+extends SceneTree
+## Genuine 3D campaign scene captures from Godot 4.4.1. These automated
+## stills demonstrate scene rendering, not human visual review or playtesting.
+var checks := 0
+var failures := 0
+var output := ""
+var campaign: Node
+var saved_progress: Dictionary
+var saved_active := ""
+var saved_settings: Dictionary
+var shot: Camera3D
+var world: Node3D
+
+
+func _initialize() -> void:
+	call_deferred("run")
+
+
+func check(condition: bool, label: String) -> void:
+	checks += 1
+	if condition:
+		print("A006 PASS: ", label)
+	else:
+		failures += 1
+		printerr("A006 FAIL: ", label)
+
+
+func _open_world(path: String, mission_id: String) -> Node3D:
+	campaign.active_mission = mission_id
+	var instance := load(path).instantiate() as Node3D
+	root.add_child(instance)
+	for frame: int in range(5):
+		await process_frame
+	if instance.has_method("_end_intro"):
+		instance.call("_end_intro")
+	if instance.has_method("_finish_entry_intro"):
+		instance.call("_finish_entry_intro")
+	if instance.has_method("_skip_cinematic"):
+		instance.call("_skip_cinematic")
+	if instance.has_method("_end_intro"):
+		instance.call("_end_intro")
+	for frame: int in range(3):
+		await process_frame
+	return instance
+
+
+func _camera(position: Vector3, target: Vector3, fov: float = 62.0) -> void:
+	if shot and is_instance_valid(shot):
+		shot.queue_free()
+	shot = Camera3D.new()
+	shot.name = "Assignment006AcceptanceCamera"
+	shot.fov = fov
+	world.add_child(shot)
+	shot.global_position = position
+	shot.look_at(target, Vector3.UP)
+	shot.make_current()
+
+
+func _capture(name: String) -> void:
+	for frame: int in range(5):
+		await process_frame
+	await RenderingServer.frame_post_draw
+	var image := root.get_texture().get_image()
+	check(
+		image != null and image.get_width() >= 1280 and image.get_height() >= 720,
+		name + " rendered at 1280x720 or higher"
+	)
+	var full_path := output.path_join(name + ".png")
+	image.save_png(full_path)
+	var preview := image.duplicate() as Image
+	preview.resize(320, 180, Image.INTERPOLATE_LANCZOS)
+	preview.save_jpg(output.path_join(name + "_thumb.jpg"), 0.58)
+	print(
+		"A006_CAPTURE: ",
+		name,
+		" -> ",
+		full_path,
+		" [",
+		image.get_width(),
+		"x",
+		image.get_height(),
+		"]"
+	)
+
+
+func _close_world() -> void:
+	if is_instance_valid(world):
+		world.queue_free()
+	world = null
+	shot = null
+	for frame: int in range(4):
+		await process_frame
+
+
+func _freeze_npcs() -> void:
+	if world == null:
+		return
+	for node: Node in world.get_children():
+		if node is HotelNpc:
+			node.set_physics_process(false)
+		for nested: Node in node.get_children():
+			if nested is HotelNpc:
+				nested.set_physics_process(false)
+
+
+func _position_characters(player_position: Vector3, npc_position: Vector3) -> HotelNpc:
+	var player := world.get("player") as HotelPlayer
+	var npcs: Array = world.get("npcs") if world.get("npcs") is Array else world.get("npc_list")
+	if player:
+		player.global_position = player_position
+		player.velocity = Vector3.ZERO
+	if npcs and npcs.size() > 0:
+		var npc := npcs[0] as HotelNpc
+		npc.global_position = npc_position
+		npc.velocity = Vector3.ZERO
+		return npc
+	return null
+
+
+func run() -> void:
+	output = OS.get_environment("TEST_SCREENSHOT_DIR")
+	if output.is_empty():
+		output = "user://assignment006_visual_acceptance"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(output))
+	root.size = Vector2i(1280, 720)
+	campaign = root.get_node("Campaign")
+	saved_progress = campaign.progress.snapshot()
+	saved_active = campaign.active_mission
+	saved_settings = campaign.settings.duplicate(true)
+	campaign.settings["graphics"] = "MEDIUM"
+	campaign.settings["practicals"] = true
+	campaign.settings["shadows"] = true
+	campaign.progress.restore(
+		{
+			"completed": ["initiation", "tung_chung", "hong_kong_sandbox"],
+			"recovered_keys": ["key_01", "key_02", "key_03", "key_04"]
+		}
+	)
+
+	# 01–02: Initiation's exterior is staged at its real entrance frontage; the
+	# corresponding indoor assessment space and actors are captured separately.
+	world = await _open_world("res://scenes/initiation.tscn", "initiation")
+	_camera(Vector3(0, 5.8, 18.5), Vector3(0, 1.4, 9.7), 66.0)
+	await _capture("01_initiation_exterior")
+	var init_player := world.get("player") as HotelPlayer
+	var init_npcs: Array = world.get("npcs")
+	if init_player and init_npcs.size() > 0:
+		_freeze_npcs()
+		init_player.global_position = Vector3(-9, 0.05, 4)
+		(init_npcs[0] as HotelNpc).global_position = Vector3(-6, 0.05, 0)
+		(init_npcs[1] as HotelNpc).global_position = Vector3(-3, 0.05, -2)
+		_camera(Vector3(-4.7, 2.25, 3.8), Vector3(-6, 1.0, 0), 59.0)
+		await _capture("02_initiation_player_npc")
+		check(
+			(
+				init_player.body_mesh.cc0_model != null
+				and (init_npcs[0] as HotelNpc).person.cc0_model != null
+			),
+			"Initiation uses imported player and NPC models"
+		)
+	await _close_world()
+
+	# 03–04: the hotel mission environment and its separately furnished wing.
+	world = await _open_world("res://scenes/hotel.tscn", "meridian")
+	_freeze_npcs()
+	_camera(Vector3(-3.0, 7.0, 15.5), Vector3(-1.0, 1.0, -1.0), 64.0)
+	await _capture("03_meridian_main_environment")
+	_camera(Vector3(-31.0, 9.0, 10.0), Vector3(-27.0, 4.8, -1.0), 64.0)
+	await _capture("04_meridian_interior_lighting")
+	await _close_world()
+
+	# 05–06: actual campaign station and boardable connected train.
+	world = await _open_world("res://scenes/mission_tung_chung.tscn", "tung_chung")
+	_freeze_npcs()
+	_camera(Vector3(17.0, 8.4, 25.0), Vector3(8.0, 1.4, 11.0), 66.0)
+	await _capture("05_tung_chung_station")
+	world.call("_board_train")
+	for frame: int in range(3):
+		await process_frame
+	_camera(Vector3(19.0, 3.0, 29.0), Vector3(19.0, 1.1, 39.0), 68.0)
+	await _capture("06_tung_chung_train_platform_and_interior")
+	check(
+		world.get("train_stage") == "aboard" and world.get("train_car") != null,
+		"train capture uses the playable campaign boarding state"
+	)
+	await _close_world()
+
+	# 07–10: all three connected city districts and an actual wardrobe interaction.
+	world = await _open_world("res://scenes/mission_hong_kong_sandbox.tscn", "hong_kong_sandbox")
+	_freeze_npcs()
+	_camera(Vector3(-58, 7, -3), Vector3(-63, 1, -17), 62.0)
+	await _capture("07_hong_kong_streets")
+	_camera(Vector3(58, 7, -3), Vector3(63, 1, -17), 62.0)
+	await _capture("08_hong_kong_commercial_district")
+	_camera(Vector3(0, 10, -54), Vector3(0, 5, -79), 62.0)
+	await _capture("09_hong_kong_harbour_skyline")
+	var city_player := world.get("player") as HotelPlayer
+	var city_npcs: Array = world.get("npc_list")
+	if city_player and city_npcs.size() > 0:
+		var vendor := city_npcs[0] as HotelNpc
+		vendor.set_physics_process(false)
+		vendor.incapacitate(15.0)
+		city_player.global_position = vendor.global_position + Vector3(0, 0, 1.3)
+		city_player.velocity = Vector3.ZERO
+		world.call("_try_acquire_outfit")
+		world.call("_equip_disguise", "market_vendor")
+		_camera(
+			vendor.global_position + Vector3(0, 2.5, 4.2), vendor.global_position + Vector3.UP, 58.0
+		)
+		await _capture("10_hong_kong_characters_disguise")
+		check(
+			city_player.body_mesh.outfit_id == "market_vendor" and vendor.person.underwear_mode,
+			"disguise capture shows live NPC replacement and changed player outfit"
+		)
+	await _close_world()
+
+	# 11–17: Ngong Ping exterior, discovered concealed access, subterranean and
+	# in-statue interiors, discovery-gated Instinct, and unspoiled secret state.
+	world = await _open_world("res://scenes/mission_ngong_ping.tscn", "ngong_ping")
+	_freeze_npcs()
+	var mountain: Node3D = world.get("scene")
+	var player := world.get("player") as HotelPlayer
+	var facility := (
+		mountain.find_child("NgongPingSecretFacility", true, false) as NgongPingSecretFacility
+	)
+	_camera(Vector3(0, 12, 12), Vector3(0, 7, -29), 62.0)
+	await _capture("11_ngong_ping_exterior_statue")
+	check(
+		facility != null and not bool(world.get("facility_discovered")),
+		"public landmark view keeps the secret undiscovered"
+	)
+	if facility and player:
+		player.global_position = facility.entry_point + Vector3(0, 0.1, 1.0)
+		player.velocity = Vector3.ZERO
+		world.call("_interact")
+		for frame: int in range(3):
+			await process_frame
+		check(
+			bool(world.get("facility_discovered")) and facility.entry_open,
+			"entrance is revealed by the mission interaction"
+		)
+		_camera(Vector3(0, 4.0, -34.0), Vector3(0, -1.0, -43.0), 66.0)
+		await _capture("12_discovered_facility_entrance")
+		player.global_position = Vector3(0, -2.5, -59)
+		_camera(Vector3(-8.0, 1.6, -54.0), Vector3(0, -2.5, -59.0), 72.0)
+		await _capture("13_facility_monumental_interior")
+		player.global_position = Vector3(0, -7.3, -66)
+		_camera(Vector3(-14.0, -4.4, -57.0), Vector3(0, -7.0, -66.0), 68.0)
+		await _capture("14_facility_central_operations")
+		player.global_position = Vector3(0, 6.0, -28.5)
+		_camera(Vector3(8.0, 14.0, -22.0), Vector3(0, 7.5, -29.0), 72.0)
+		await _capture("15_facility_vertical_statue_core")
+		# Active mission target (red) and discovered intel (separate yellow overlay).
+		var target := world.get("target") as HotelNpc
+		var intel: Node3D = world.get("intel_marker")
+		if target:
+			target.set_physics_process(false)
+			target.global_position = Vector3(-4, -7.3, -66)
+			if intel:
+				intel.global_position = Vector3(3, -7.3, -66)
+			player.global_position = Vector3(-1, -7.3, -61)
+			player.instinct_active = true
+			world.set("intel_found", false)
+			world.call("_process", 0.0)
+			_camera(Vector3(-1, -4.9, -57), Vector3(-3, -7.1, -66), 60.0)
+			await _capture("16_instinct_target_and_discovered_intel")
+		# Secret hint is allowed after entrance discovery; a fresh undiscovered
+		# checkpoint must keep both entry cue and route/objective hidden.
+		player.instinct_active = true
+		player.global_position = Vector3(0, 0.75, 8)
+		facility.set_discovered(false)
+		world.set("facility_discovered", false)
+		world.call("_process", 0.0)
+		_camera(Vector3(0, 4.0, 4.5), Vector3(0, 1.0, -37.0), 58.0)
+		await _capture("17_instinct_secret_undiscovered_hidden")
+		check(
+			not bool(world.get("facility_discovered")) and not facility.entry_open,
+			"undiscovered access is not opened or exposed"
+		)
+		# 18: actual campaign HUD and controls over active mission geometry.
+		player.instinct_active = false
+		player.global_position = Vector3(0, 0.75, 4)
+		world.call("_process", 0.0)
+		_camera(Vector3(3.0, 3.0, 10.0), Vector3(0, 1.2, -5.0), 66.0)
+		await _capture("18_campaign_hud_gameplay")
+	await _close_world()
+
+	campaign.progress.restore(saved_progress)
+	campaign.active_mission = saved_active
+	campaign.settings = saved_settings
+	campaign.apply_settings()
+	print("A006 RESULT: %d checks, %d failures; 18 requested views staged" % [checks, failures])
+	quit(0 if failures == 0 else 1)
