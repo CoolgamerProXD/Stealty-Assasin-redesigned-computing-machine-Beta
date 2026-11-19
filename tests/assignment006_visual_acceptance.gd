@@ -3,6 +3,7 @@ extends SceneTree
 ## stills demonstrate scene rendering, not human visual review or playtesting.
 var checks := 0
 var failures := 0
+var captures := 0
 var output := ""
 var campaign: Node
 var saved_progress: Dictionary
@@ -57,6 +58,7 @@ func _camera(position: Vector3, target: Vector3, fov: float = 62.0) -> void:
 
 
 func _capture(name: String) -> void:
+	captures += 1
 	for frame: int in range(5):
 		await process_frame
 	await RenderingServer.frame_post_draw
@@ -197,7 +199,16 @@ func run() -> void:
 	var city_player := world.get("player") as HotelPlayer
 	var city_npcs: Array = world.get("npc_list")
 	if city_player and city_npcs.size() > 0:
-		var vendor := city_npcs[0] as HotelNpc
+		var vendor: HotelNpc
+		for candidate: HotelNpc in city_npcs:
+			if candidate.profile.outfit_id == "market_vendor":
+				vendor = candidate
+				break
+		if vendor == null:
+			vendor = city_npcs[0] as HotelNpc
+			vendor.profile.outfit_id = "market_vendor"
+			vendor.person.set_outfit("market_vendor")
+		vendor.outfit_taken = false
 		vendor.set_physics_process(false)
 		vendor.incapacitate(15.0)
 		city_player.global_position = vendor.global_position + Vector3(0, 0, 1.3)
@@ -230,6 +241,17 @@ func run() -> void:
 		"public landmark view keeps the secret undiscovered"
 	)
 	if facility and player:
+		# Capture before opening the one-way panel. Hiding a discovered secret
+		# requires restoring a fresh checkpoint, not toggling a local flag.
+		player.instinct_active = true
+		world.call("_process", 0.0)
+		_camera(Vector3(0, 4.0, 4.5), Vector3(0, 1.0, -37.0), 58.0)
+		await _capture("17_instinct_secret_undiscovered_hidden")
+		check(
+			not bool(world.get("facility_discovered")) and not facility.entry_open,
+			"undiscovered access is not opened or exposed"
+		)
+		player.instinct_active = false
 		player.global_position = facility.entry_point + Vector3(0, 0.1, 1.0)
 		player.velocity = Vector3.ZERO
 		world.call("_interact")
@@ -264,19 +286,6 @@ func run() -> void:
 			world.call("_process", 0.0)
 			_camera(Vector3(-1, -4.9, -57), Vector3(-3, -7.1, -66), 60.0)
 			await _capture("16_instinct_target_and_discovered_intel")
-		# Secret hint is allowed after entrance discovery; a fresh undiscovered
-		# checkpoint must keep both entry cue and route/objective hidden.
-		player.instinct_active = true
-		player.global_position = Vector3(0, 0.75, 8)
-		facility.set_discovered(false)
-		world.set("facility_discovered", false)
-		world.call("_process", 0.0)
-		_camera(Vector3(0, 4.0, 4.5), Vector3(0, 1.0, -37.0), 58.0)
-		await _capture("17_instinct_secret_undiscovered_hidden")
-		check(
-			not bool(world.get("facility_discovered")) and not facility.entry_open,
-			"undiscovered access is not opened or exposed"
-		)
 		# 18: actual campaign HUD and controls over active mission geometry.
 		player.instinct_active = false
 		player.global_position = Vector3(0, 0.75, 4)
@@ -284,6 +293,7 @@ func run() -> void:
 		_camera(Vector3(3.0, 3.0, 10.0), Vector3(0, 1.2, -5.0), 66.0)
 		await _capture("18_campaign_hud_gameplay")
 	await _close_world()
+	check(captures == 18, "all 18 distinct requested in-game views were captured")
 
 	campaign.progress.restore(saved_progress)
 	campaign.active_mission = saved_active
