@@ -31,6 +31,7 @@ var help_target: HotelNpc
 var help_incident: Vector3 = Vector3.ZERO
 var help_reported: bool = false
 var incident_help: bool = false
+var outfit_taken: bool = false
 
 func _ready() -> void:
  if profile == null: profile = NpcProfile.new()
@@ -43,6 +44,7 @@ func _ready() -> void:
  add_child(collision)
  person = StylizedPerson.new()
  person.role = profile.occupation
+ person.outfit_id = profile.outfit_id if DisguiseSystem.has_outfit(profile.outfit_id) else DisguiseSystem.default_for_occupation(profile.occupation)
  person.appearance_seed = profile.identity.hash()
  add_child(person)
  if profile.occupation == "security":
@@ -107,7 +109,7 @@ func observe_trespass(point: Vector3) -> void:
 
 # Perception invokes this once per incident, not once per sighting. The same
 # local suspicion/memory remains in use; visitors seek help rather than enforce.
-func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staff") -> void:
+func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staff", illegal_item: bool = false) -> void:
  if objective_completed or stunned_time > 0.0 or warning_cooldown > 0.0 or state in ["warning", "alerted", "seeking_help"]: return
  memory.observe("trespass", point, 1.0)
  investigation_target = point
@@ -115,13 +117,17 @@ func warn_trespass(point: Vector3, permitted_exit: Vector3, area: String = "staf
  exit_hint = permitted_exit
  incident_help = false
  var permission_role := "staff" if profile.occupation == "employee" else profile.occupation
- if profile.occupation == "civilian" or not AccessRules.can_enter(permission_role, area):
+ if illegal_item and profile.occupation == "security":
+  warning_remaining = 0.5
+  set_state("warning")
+  trespass_notice.emit(self, profile.identity + ": Put the visible training sidearm away.", exit_hint)
+ elif profile.occupation == "civilian" or not AccessRules.can_enter(permission_role, area):
   alert_remaining = 4.0
   set_state("seeking_help")
   _seek_help(point)
   trespass_notice.emit(self, profile.identity + ": Someone is in a restricted area. I should find staff.", exit_hint)
  else:
-  warning_remaining = 3.0
+  warning_remaining = 1.5
   set_state("warning")
   trespass_notice.emit(self, profile.identity + ": This area is restricted. Please leave now.", exit_hint)
 
@@ -147,7 +153,9 @@ func tick_trespass(delta: float, still_restricted: bool) -> void:
     set_state("alerted")
     alert_pulse_clock = 1.2
     _notify_nearby_security()
-    trespass_notice.emit(self, profile.identity + ": Security alert. Leave the restricted area.", exit_hint)
+    var alert_text := profile.identity + ": Security alert. Put the visible sidearm away and step back."
+    if player and not player.aiming: alert_text = profile.identity + ": Security alert. Leave the restricted area."
+    trespass_notice.emit(self, alert_text, exit_hint)
    else:
     set_state("seeking_help")
     _seek_help(player.global_position if player else investigation_target)
@@ -314,14 +322,23 @@ func _physics_process(delta: float) -> void:
    warning_cooldown = 5.0
    set_state("returning")
    if agent and not profile.schedule.is_empty(): agent.target_position = profile.schedule[schedule_index].destination
- elif player: tick_trespass(delta, not AccessRules.can_enter(player.role, _player_access_area()))
+ elif player:
+  var illegal_item_visible := player.aiming and player.equipment.selected == "training_sidearm"
+  var access_area := _player_access_area()
+  var restricted := not AccessRules.can_enter(player.role, access_area)
+  var suspicious_action := player.sprinting and access_area != "public"
+  tick_trespass(delta, restricted or illegal_item_visible or suspicious_action)
  advance_simulation(delta)
  if state == "seeking_help": _try_deliver_report()
  # Perception is throttled by the physics clock, not checked every frame.
  perception_clock += delta
  if perception_clock >= 0.4:
   perception_clock = 0.0
-  if player and not AccessRules.can_enter(player.role, _player_access_area()) and can_see(player.global_position):
+  var illegal_item_visible := player and player.aiming and player.equipment.selected == "training_sidearm"
+  var access_area := _player_access_area()
+  var restricted := player and not AccessRules.can_enter(player.role, access_area)
+  var suspicious_action := player and player.sprinting and access_area != "public"
+  if player and (restricted or suspicious_action or (illegal_item_visible and profile.occupation == "security")) and can_see(player.global_position):
    var ray_start := global_position + Vector3.UP * 1.3
    # Target the actual stance, so cover geometry, not a magic crouch bonus,
    # determines whether the player is visible.
@@ -329,7 +346,7 @@ func _physics_process(delta: float) -> void:
    var query := PhysicsRayQueryParameters3D.create(ray_start, ray_end)
    query.exclude = [get_rid(), player.get_rid()]
    var clear := get_world_3d().direct_space_state.intersect_ray(query).is_empty()
-   if can_see(player.global_position, clear): warn_trespass(player.global_position, _permitted_exit(), _player_access_area())
+   if can_see(player.global_position, clear): warn_trespass(player.global_position, _permitted_exit(), _player_access_area(), bool(illegal_item_visible))
  if agent and state in ["walking", "returning", "investigating", "seeking_help"]:
   if agent.is_navigation_finished():
    if state == "walking" and not profile.schedule.is_empty():
@@ -358,7 +375,8 @@ func _physics_process(delta: float) -> void:
   if alert_pulse_clock <= 0.0:
    # Alert animations may be used elsewhere, but security only fires at a
    # currently known trespasser and only while the player is still inside.
-   if alert_remaining > 0.0 and warning_remaining <= 0.0 and not AccessRules.can_enter(player.role, _player_access_area()):
+   var exposed := not AccessRules.can_enter(player.role, _player_access_area()) or (player.aiming and player.equipment.selected == "training_sidearm")
+   if alert_remaining > 0.0 and warning_remaining <= 0.0 and exposed:
     _fire_alert_pulse()
    alert_pulse_clock = 1.4
  if person:

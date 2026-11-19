@@ -25,7 +25,7 @@ func persist() -> bool:
 func checkpoint_path(id: String) -> String:
  if id == "meridian": return "user://meridian_save.json" # Preserve existing saves.
  if id == "initiation": return "user://initiation_save.json"
- if id in ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
+ if id in ["tung_chung", "hong_kong_sandbox", "the_streets", "the_district", "the_harbour", "ngong_ping"]:
   return "user://blackline_" + id + "_save.json"
  return ""
 
@@ -54,6 +54,22 @@ func award_initiation_lesson(record_id: String) -> bool:
  if not progress.award_lesson(record_id): return false
  if not persist():
   progress.completed_lessons.assign(previous)
+  return false
+ return true
+
+func acquire_outfit(id: String) -> bool:
+ var previous := progress.acquired_outfits.duplicate()
+ if not progress.acquire_outfit(id): return false
+ if not persist():
+  progress.acquired_outfits.assign(previous)
+  return false
+ return true
+
+func equip_outfit(id: String) -> bool:
+ var previous := progress.equipped_outfit
+ if not progress.equip_outfit(id): return false
+ if not persist():
+  progress.equipped_outfit = previous
   return false
  return true
 

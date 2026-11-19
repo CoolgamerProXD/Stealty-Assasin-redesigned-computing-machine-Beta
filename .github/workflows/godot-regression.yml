@@ -60,6 +60,13 @@ jobs:
           timeout 120 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/hong_kong_campaign_test.gd 2>&1 | tee "$RUNNER_TEMP/hk.log"
           if grep -E 'SCRIPT ERROR|ERROR:|^HK FAIL:' "$RUNNER_TEMP/hk.log"; then exit 1; fi
           grep -E '^HK RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hk.log"
+      - name: Outfit acquisition and concealed Ngong Ping facility
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 150 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --headless --path . --script res://tests/disguise_facility_test.gd 2>&1 | tee "$RUNNER_TEMP/disguise-facility.log"
+          if grep -E 'SCRIPT ERROR|ERROR:|^DISGUISE FAIL:' "$RUNNER_TEMP/disguise-facility.log"; then exit 1; fi
+          grep -E '^DISGUISE RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/disguise-facility.log"
       - name: Permanent lesson coin progression
         shell: bash
         run: |
@@ -124,13 +131,13 @@ jobs:
           root = pathlib.Path(os.environ["RUNNER_TEMP"])
           # Emit compact, separate notices before detailed excerpts: checks API
           # limits the number/size of annotations returned by some clients.
-          for name in ("version", "import", "startup", "tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
+          for name in ("version", "import", "startup", "tests", "hk", "disguise-facility", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
               path = root / (name + ".log")
               if not path.exists():
                   continue
               lines = path.read_text(errors="replace").splitlines()
               if name in ("tests", "hk", "coin", "hkvisual", "soak", "camera", "visual", "cinema"):
-                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:", line)]
+                  selected = [line for line in lines if re.search(r"^COIN RESULT:|^COIN FAIL:|^COIN BOUNDS DIAG:|^HKPERF:|^HKVIS RESULT:|^HKVIS FAIL:|^HK RESULT:|^HK FAIL:|^HK STAIR DIAG:|^HK INTERIOR DIAG:|^HK BUDDHA DIAG:|^HK FIELD DIAG:|^HK DEPLOYMENT DIAG:|^HK ANNEX GATE DIAG:|^HK TRAIN BOARD DIAG:|^HK TRAIN PURSUIT DIAG:|^HK TRAIN EXIT DIAG:|^HK EXTRACTION DIAG:|^HK UPPER OFFICE DIAG:|^HK ANNEX RAMP DIAG:|^HK BACK ROUTE DIAG:|^RESULT:|^CAMERA RESULT:|^VISUAL RESULT:|^VISUAL_METRIC:|^VISUAL FAIL:|^CINEMA RESULT:|^CINEMA_METRIC:|^PRESET_METRIC:|^STATION_SAMPLE:|^GAIT_DIAG:|^SOAK_DIAG:|^SOAK FAIL:|^SOAK RESULT:|^MENU_BOUNDS_DIAG:|^WING_DIAG:|^PREVIEW_ROUTE_DIAG:|^CITY_WALKWAY_DIAG:|^STATION_NAV_DIAG:|^CINEMA FAIL:|^DISPLAY_METRIC:|^DISPLAY_STARTUP:|^FAIL:|^CAMERA FAIL:|SCRIPT ERROR|ERROR:|^STEALTH_DIAG:|^EQUIP_DIAG:|^CAMERA_DIAG:|^DISGUISE PASS:|^DISGUISE FAIL:|^DISGUISE RESULT:", line)]
               elif name in ("import", "startup"):
                   selected = [line for line in lines if re.search(r"Godot Engine|SCRIPT ERROR|ERROR:|Headless 120", line)]
               else:
@@ -139,13 +146,74 @@ jobs:
               text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
               print(f"::notice title={name} summary::{text}")
           PYCODE
+      - name: Preview Assignment 004 districts
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_district_market", "hk_district_commercial"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 tower
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_skyscraper_lobby", "hk_skyscraper_interior"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 targets and Instinct
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_instinct_target_loan_shark", "hk_instinct_target_corporate_fixer"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 harbour target
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          name = "hk_instinct_target_harbour_businessman"
+          path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+          if path.exists():
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+      - name: Preview Assignment 004 awareness and objective HUD
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import base64, pathlib
+          for name in ("hk_awareness_local", "hk_completed_hud"):
+              path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
+              if not path.exists(): continue
+              data = base64.b64encode(path.read_bytes()).decode("ascii")
+              for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
+          PYCODE
+
       - name: Preview new campaign captures
         if: always()
         shell: bash
         run: |
           python3 - <<'PYCODE'
           import base64, pathlib
-          for name in ("hk_play_tung_chung", "hk_play_the_district", "hk_play_ngong_ping", "hk_neighbourhood_the_streets", "hk_neighbourhood_the_district", "hk_neighbourhood_the_harbour"):
+          for name in ("hk_play_tung_chung", "hk_tung_chung_departure_exterior", "hk_play_the_district", "hk_play_ngong_ping", "hk_neighbourhood_the_streets", "hk_neighbourhood_the_district", "hk_neighbourhood_the_harbour"):
               path = pathlib.Path("visual-test-output") / (name + "_thumb.jpg")
               if not path.exists(): continue
               encoded = base64.b64encode(path.read_bytes()).decode("ascii")
@@ -231,6 +299,7 @@ jobs:
               for i in range(0, len(data), 3000): print(f"::notice title=preview_{name}_{i // 3000}::{data[i:i+3000]}")
           PYCODE
 
+
   windows:
     if: contains(github.event.head_commit.message, '[windows]')
     runs-on: windows-latest
@@ -281,7 +350,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $path = "$env:GITHUB_WORKSPACE\build\windows"
-          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_the_streets', 'mission_the_district', 'mission_the_harbour', 'mission_ngong_ping', 'usb_decryption')
+          $scenes = @('main_menu', 'initiation', 'hotel', 'tung_chung_preview', 'hong_kong_preview', 'ngong_ping_preview', 'mission_tung_chung', 'mission_hong_kong_sandbox', 'mission_ngong_ping', 'usb_decryption')
           foreach ($scene in $scenes) {
             $log = "$path\smoke-$scene.log"
             $arguments = @('--headless', '--quit-after', '120', '--log-file', $log, "res://scenes/$scene.tscn")

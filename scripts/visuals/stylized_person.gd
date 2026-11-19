@@ -31,8 +31,28 @@ var weapon_aim_blend: float = 0.0
 var phase: float = 0.0
 var idle_phase: float = 0.0
 var idle_activity: String = "idle"
+var seated: bool = false
+var seated_blend: float = 0.0
 var ground_adjust: float = 0.0
 var clothing: StandardMaterial3D
+var trousers_material: StandardMaterial3D
+var outfit_id: String = "civilian"
+var underwear_top: MeshInstance3D
+var boxer_shorts: MeshInstance3D
+var vendor_apron: MeshInstance3D
+var role_hat: MeshInstance3D
+var role_badge: MeshInstance3D
+var upperwear_details: Array[MeshInstance3D] = []
+var underwear_mode: bool = false
+var cc0_model: Node3D
+var cc0_skeleton: Skeleton3D
+var left_hand_attachment: BoneAttachment3D
+var right_hand_attachment: BoneAttachment3D
+var cc0_bones: Dictionary = {}
+var cc0_clothes: Array[MeshInstance3D] = []
+var cc0_shoes: Array[MeshInstance3D] = []
+var underwear_straps: Array[MeshInstance3D] = []
+var cc0_model_name: String = ""
 # Identical immutable primitive meshes are reused across the population. Each
 # person retains independent materials, transforms and animated joints.
 static var primitive_meshes: Dictionary = {}
@@ -47,9 +67,20 @@ func _ready() -> void:
  var skin := _material(skin_variants[absi(appearance_seed) % skin_variants.size()])
  var dark := _material(hair_variants[absi(appearance_seed) % hair_variants.size()])
  clothing = _material(_role_color())
- var trousers := _material(Color(0.16, 0.18, 0.20))
+ trousers_material = _material(Color(0.16, 0.18, 0.20))
+ var trousers := trousers_material
  torso = _box(upper_body, Vector3(0, 1.22, 0), Vector3(0.48, 0.60, 0.24), clothing)
  torso.mesh = _jacket_mesh()
+ var underwear_mat := _material(Color(0.78,0.75,0.66))
+ underwear_top = _box(upper_body, Vector3(0,1.22,-0.012), Vector3(0.42,0.58,0.25), underwear_mat)
+ underwear_top.visible = false
+ boxer_shorts = _box(upper_body, Vector3(0,0.75,-0.015), Vector3(0.48,0.43,0.27), _material(Color(0.24,0.31,0.36)))
+ boxer_shorts.visible = false
+ for strap_x: float in [-0.15,0.15]:
+  var strap := _box(upper_body,Vector3(strap_x,1.49,-0.148),Vector3(0.065,0.30,0.025),underwear_mat)
+  strap.visible = false
+  underwear_straps.append(strap)
+  upperwear_details.append(strap)
  _box(upper_body, Vector3(0, 0.91, 0), Vector3(0.42, 0.16, 0.23), trousers)
  _box(upper_body, Vector3(0, 1.56, 0), Vector3(0.14, 0.12, 0.14), skin)
  var head := MeshInstance3D.new()
@@ -62,20 +93,44 @@ func _ready() -> void:
  head.position = Vector3(0, 1.73, 0)
  head.material_override = skin
  upper_body.add_child(head)
+ skin.roughness = 0.78
+ dark.roughness = 0.92
  _ellipsoid(upper_body, Vector3(0, 1.87, 0.015), Vector3(0.29, 0.11, 0.27), dark)
+ # Small face planes and seeded hair silhouettes add readable variation at
+ # gameplay distance while keeping the procedural model lightweight.
+ for side: float in [-1.0, 1.0]:
+  _ellipsoid(upper_body, Vector3(side * 0.145, 1.73, -0.005), Vector3(0.055, 0.085, 0.065), skin)
+ var style := absi(appearance_seed) % 4
+ match style:
+  1:
+   _ellipsoid(upper_body, Vector3(-0.075, 1.90, -0.035), Vector3(0.20, 0.075, 0.20), dark)
+   _ellipsoid(upper_body, Vector3(0.11, 1.85, 0.035), Vector3(0.08, 0.16, 0.21), dark)
+  2:
+   _ellipsoid(upper_body, Vector3(0, 1.79, 0.12), Vector3(0.24, 0.21, 0.16), dark)
+   _ellipsoid(upper_body, Vector3(0, 1.91, 0.015), Vector3(0.19, 0.07, 0.19), dark)
+  3:
+   _ellipsoid(upper_body, Vector3(0, 1.84, -0.105), Vector3(0.22, 0.11, 0.12), dark)
  var eye := _material(Color(0.08, 0.09, 0.10))
- _box(upper_body, Vector3(-0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
- _box(upper_body, Vector3(0.055, 1.76, -0.143), Vector3(0.035, 0.025, 0.015), eye)
- _box(upper_body, Vector3(0, 1.72, -0.158), Vector3(0.035, 0.045, 0.04), skin)
- _box(upper_body, Vector3(0, 1.66, -0.143), Vector3(0.07, 0.012, 0.015), dark)
+ var brow := _material(Color(0.20, 0.16, 0.14))
+ for side: float in [-1.0, 1.0]:
+  _box(upper_body, Vector3(side * 0.055, 1.79, -0.143), Vector3(0.043, 0.012, 0.012), brow)
+  _box(upper_body, Vector3(side * 0.055, 1.76, -0.151), Vector3(0.025, 0.018, 0.012), eye)
+ _ellipsoid(upper_body, Vector3(0, 1.72, -0.158), Vector3(0.040, 0.060, 0.035), skin)
+ _box(upper_body, Vector3(0, 1.66, -0.143), Vector3(0.055, 0.009, 0.012), _material(Color(0.34, 0.18, 0.16)))
  # Lapels, collar and belt establish clothed silhouettes instead of a capsule.
- _box(upper_body, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70)))
- _box(upper_body, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark)
+ upperwear_details.append(_box(upper_body, Vector3(0, 1.38, -0.127), Vector3(0.12, 0.27, 0.02), _material(Color(0.78, 0.77, 0.70))))
+ upperwear_details.append(_box(upper_body, Vector3(0, 0.98, -0.13), Vector3(0.40, 0.06, 0.025), dark))
  # Visible jacket seams, collar and a small lapel accent give the silhouette
  # structure without introducing any imported assets.
  for x: float in [-0.17, 0.17]:
-  _box(upper_body, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark)
- _box(upper_body, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin)
+  upperwear_details.append(_box(upper_body, Vector3(x, 1.26, -0.13), Vector3(0.025, 0.38, 0.02), dark))
+ upperwear_details.append(_box(upper_body, Vector3(0, 1.48, -0.13), Vector3(0.20, 0.06, 0.025), skin))
+ vendor_apron = _box(upper_body,Vector3(0,1.12,-0.15),Vector3(0.38,0.56,0.035),_material(Color(0.52,0.23,0.12)))
+ vendor_apron.visible = false
+ role_hat = _ellipsoid(upper_body,Vector3(0,1.98,0),Vector3(0.35,0.13,0.33),_material(Color(0.18,0.24,0.28)))
+ role_hat.visible = false
+ role_badge = _box(upper_body,Vector3(0.14,1.42,-0.15),Vector3(0.09,0.12,0.025),_material(Color(0.80,0.66,0.31)))
+ role_badge.visible = false
  left_leg = _leg(Vector3(-0.12, 0.88, 0), trousers, dark)
  right_leg = _leg(Vector3(0.12, 0.88, 0), trousers, dark)
  left_knee = left_leg.get_node("Knee")
@@ -84,16 +139,186 @@ func _ready() -> void:
  right_arm = _arm(Vector3(0.29, 1.47, 0), clothing, skin)
  left_elbow = left_arm.get_node("Elbow")
  right_elbow = right_arm.get_node("Elbow")
- if role == "security":
-  _box(upper_body, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65)))
-  _box(upper_body, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark)
+ if role in ["security", "facility_security", "corporate_security"]:
+  upperwear_details.append(_box(upper_body, Vector3(-0.14, 1.40, -0.15), Vector3(0.09, 0.08, 0.02), _material(Color(0.68, 0.72, 0.65))))
+  upperwear_details.append(_box(upper_body, Vector3(0, 1.95, 0), Vector3(0.34, 0.07, 0.28), dark))
  if role == "ruby":
   _box(upper_body, Vector3(0, 1.61, 0.12), Vector3(0.29, 0.48, 0.09), dark)
   _box(upper_body, Vector3(0, 1.03, 0.02), Vector3(0.48, 0.40, 0.25), clothing)
   _box(upper_body, Vector3(0, 1.40, -0.15), Vector3(0.06, 0.24, 0.02), _material(Color(0.68, 0.41, 0.32)))
- if role == "manager":
-  _box(upper_body, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20)))
-  _box(upper_body, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31)))
+ if role in ["manager", "executive", "facility_director"]:
+  upperwear_details.append(_box(upper_body, Vector3(0, 1.38, -0.15), Vector3(0.06, 0.29, 0.025), _material(Color(0.68, 0.42, 0.20))))
+  upperwear_details.append(_box(upper_body, Vector3(-0.13, 1.45, -0.15), Vector3(0.09, 0.06, 0.02), _material(Color(0.85, 0.67, 0.31))))
+ set_outfit(outfit_id)
+ _spawn_cc0_model()
+
+const CC0_MODEL_IDS: Array[String] = ["brad", "dale", "ellie", "gary", "hollis", "pickles", "rosa", "vance"]
+
+func _model_for_outfit(value: String) -> String:
+ if value == "underwear" and not cc0_model_name.is_empty(): return cc0_model_name
+ match value:
+  "market_vendor", "maintenance", "facility_technician": return "dale"
+  "hospitality": return "rosa"
+  "office_employee": return "brad"
+  "hotel_staff": return "vance"
+  "private_security", "facility_security": return "gary"
+  "corporate_security": return "brad"
+  "executive": return "pickles" if absi(appearance_seed) % 2 == 0 else "hollis"
+  "facility_research": return "ellie"
+  "facility_director": return "vance"
+  _: return CC0_MODEL_IDS[absi(appearance_seed) % CC0_MODEL_IDS.size()]
+
+func _spawn_cc0_model() -> void:
+ _load_cc0_model(_model_for_outfit(outfit_id))
+
+func _load_cc0_model(model_name: String) -> void:
+ if not CC0_MODEL_IDS.has(model_name):
+  push_warning("Unknown CC0 character model: " + model_name)
+  return
+ if weapon and weapon.get_parent(): weapon.reparent(self, true)
+ if quiet_tool and quiet_tool.get_parent(): quiet_tool.reparent(self, true)
+ if cc0_model:
+  var reusable_parts: Array[Node3D] = [underwear_top, boxer_shorts, vendor_apron, role_hat, role_badge]
+  for strap: MeshInstance3D in underwear_straps: reusable_parts.append(strap)
+  for reusable: Node3D in reusable_parts:
+   if is_instance_valid(reusable) and reusable.get_parent() == cc0_model: reusable.reparent(self, false)
+  remove_child(cc0_model)
+  cc0_model.queue_free()
+ cc0_model = null
+ cc0_skeleton = null
+ cc0_bones.clear()
+ cc0_clothes.clear()
+ cc0_shoes.clear()
+ left_hand_attachment = null
+ right_hand_attachment = null
+ var model_path := "res://assets/characters/makehuman_cc0/" + model_name + ".glb"
+ var packed := load(model_path) as PackedScene
+ if packed == null:
+  push_error("Could not import CC0 character scene: " + model_path)
+  return
+ cc0_model = packed.instantiate() as Node3D
+ if cc0_model == null:
+  push_error("Imported character root is not Node3D: " + model_path)
+  return
+ cc0_model.name = "CC0Character_" + model_name
+ add_child(cc0_model)
+ cc0_model_name = model_name
+ cc0_skeleton = _find_skeleton(cc0_model)
+ if cc0_skeleton == null:
+  push_error("Imported character has no Skeleton3D: " + model_path)
+  cc0_model.queue_free()
+  cc0_model = null
+  return
+ for bone_name: String in ["upperleg01.L", "upperleg01.R", "lowerleg01.L", "lowerleg01.R", "upperarm01.L", "upperarm01.R", "lowerarm01.L", "lowerarm01.R", "spine03", "spine04"]:
+  var bone_index := cc0_skeleton.find_bone(bone_name)
+  if bone_index >= 0: cc0_bones[bone_name] = bone_index
+ _collect_model_meshes(cc0_model)
+ # The imported skinned body fully replaces primitive body meshes. Existing
+ # controller/collision nodes are untouched; the procedural rig remains as a
+ # safe fallback if an import fails.
+ upper_body.visible = false
+ left_leg.visible = false
+ right_leg.visible = false
+ # Reuse covered, non-revealing underwear pieces for the acquired-outfit state.
+ underwear_top.reparent(cc0_model, false)
+ boxer_shorts.reparent(cc0_model, false)
+ for strap: MeshInstance3D in underwear_straps: strap.reparent(cc0_model, false)
+ vendor_apron.reparent(cc0_model, false)
+ role_hat.reparent(cc0_model, false)
+ role_badge.reparent(cc0_model, false)
+ _create_hand_attachments()
+ if weapon: _attach_equipment(weapon, right_hand_attachment, Vector3(0.025, -0.045, -0.015))
+ if quiet_tool: _attach_equipment(quiet_tool, left_hand_attachment, Vector3(0, -0.025, 0))
+ _update_cc0_outfit_visuals()
+
+func _find_skeleton(node: Node) -> Skeleton3D:
+ if node is Skeleton3D: return node as Skeleton3D
+ for child: Node in node.get_children():
+  var found := _find_skeleton(child)
+  if found: return found
+ return null
+
+func _collect_model_meshes(node: Node) -> void:
+ if node is MeshInstance3D:
+  var mesh_instance := node as MeshInstance3D
+  var mesh_name := mesh_instance.name.to_lower()
+  if mesh_name.contains("clothes"): cc0_clothes.append(mesh_instance)
+  elif mesh_name.contains("shoes"): cc0_shoes.append(mesh_instance)
+ for child: Node in node.get_children(): _collect_model_meshes(child)
+
+func _create_hand_attachments() -> void:
+ if cc0_skeleton == null: return
+ if cc0_skeleton.find_bone("wrist.R") >= 0:
+  right_hand_attachment = BoneAttachment3D.new()
+  right_hand_attachment.bone_name = "wrist.R"
+  cc0_skeleton.add_child(right_hand_attachment)
+ if cc0_skeleton.find_bone("wrist.L") >= 0:
+  left_hand_attachment = BoneAttachment3D.new()
+  left_hand_attachment.bone_name = "wrist.L"
+  cc0_skeleton.add_child(left_hand_attachment)
+
+func _attach_equipment(item: Node3D, attachment: BoneAttachment3D, offset: Vector3) -> void:
+ if attachment == null: return
+ item.reparent(attachment, false)
+ item.position = offset
+ item.rotation = Vector3.ZERO
+
+func _update_cc0_outfit_visuals() -> void:
+ if cc0_model == null: return
+ var undergarments := outfit_id == "underwear"
+ for mesh: MeshInstance3D in cc0_clothes: mesh.visible = not undergarments
+ for mesh: MeshInstance3D in cc0_shoes: mesh.visible = not undergarments
+ underwear_top.visible = undergarments
+ boxer_shorts.visible = undergarments
+ for strap: MeshInstance3D in underwear_straps: strap.visible = undergarments
+ vendor_apron.visible = not undergarments and outfit_id in ["market_vendor", "hospitality"]
+ role_hat.visible = not undergarments and outfit_id in ["private_security", "corporate_security", "facility_security"]
+ role_badge.visible = not undergarments and outfit_id in ["office_employee", "private_security", "corporate_security", "executive", "facility_technician", "facility_security", "facility_research", "facility_director"]
+ var tint := Color.WHITE
+ match outfit_id:
+  "market_vendor": tint = Color(1.0, 0.79, 0.65)
+  "hospitality": tint = Color(0.84, 0.88, 0.93)
+  "office_employee": tint = Color(0.78, 0.88, 0.98)
+  "maintenance", "facility_technician": tint = Color(0.70, 0.91, 0.76)
+  "hotel_staff": tint = Color(0.83, 0.93, 0.98)
+  "private_security", "corporate_security", "facility_security": tint = Color(0.68, 0.78, 0.95)
+  "executive", "facility_director": tint = Color(0.94, 0.84, 0.71)
+  "facility_research": tint = Color(0.78, 0.96, 0.92)
+ for mesh: MeshInstance3D in cc0_clothes:
+  if mesh.mesh == null: continue
+  for surface: int in range(mesh.mesh.get_surface_count()):
+   var source_material := mesh.get_active_material(surface)
+   if source_material is StandardMaterial3D:
+    var material := (source_material as StandardMaterial3D).duplicate() as StandardMaterial3D
+    material.albedo_color = tint
+    material.roughness = maxf(material.roughness, 0.65)
+    mesh.set_surface_override_material(surface, material)
+
+func _animate_cc0_rig(swing: float, gait: float, blend: float) -> void:
+ if cc0_skeleton == null: return
+ var crouch_pose := crouch_amount * 0.62
+ var seated_pose := seated_blend
+ _set_cc0_bone("upperleg01.L", Vector3.RIGHT, swing * 0.52 + crouch_pose + seated_pose * 0.9, blend)
+ _set_cc0_bone("upperleg01.R", Vector3.RIGHT, -swing * 0.52 + crouch_pose + seated_pose * 0.9, blend)
+ _set_cc0_bone("lowerleg01.L", Vector3.RIGHT, maxf(0.0, -swing) * 0.7 + seated_pose * 0.75, blend)
+ _set_cc0_bone("lowerleg01.R", Vector3.RIGHT, maxf(0.0, swing) * 0.7 + seated_pose * 0.75, blend)
+ var arm_swing := minf(gait * 0.12, 0.42)
+ var gesture := 0.0
+ if idle_activity == "warning": gesture = 0.75
+ elif idle_activity == "seeking_help": gesture = 0.50
+ elif idle_activity == "conversing": gesture = 0.26
+ gesture = maxf(gesture, interaction_action * 0.65)
+ _set_cc0_bone("upperarm01.L", Vector3.RIGHT, -arm_swing - gesture, blend)
+ _set_cc0_bone("upperarm01.R", Vector3.RIGHT, arm_swing - weapon_aim_blend * 0.85, blend)
+ _set_cc0_bone("lowerarm01.L", Vector3.RIGHT, gesture * 0.45, blend)
+ _set_cc0_bone("lowerarm01.R", Vector3.RIGHT, weapon_aim_blend * 0.7, blend)
+ _set_cc0_bone("spine03", Vector3.RIGHT, -0.05 * clampf(gait / 3.0, 0.0, 1.0) - crouch_pose * 0.22, blend)
+
+func _set_cc0_bone(bone_name: String, axis: Vector3, angle: float, weight: float) -> void:
+ if not cc0_bones.has(bone_name): return
+ var index: int = cc0_bones[bone_name]
+ var target := Quaternion(axis, angle)
+ cc0_skeleton.set_bone_pose_rotation(index, cc0_skeleton.get_bone_pose_rotation(index).slerp(target, weight))
 
 # Original stylized assessment sidearm, attached to the animated hand joint.
 func add_sidearm() -> void:
@@ -113,6 +338,7 @@ func add_sidearm() -> void:
  flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
  muzzle_flash = _box(weapon, Vector3(0, -0.38, 0), Vector3(0.13, 0.14, 0.13), flash_mat)
  muzzle_flash.visible = false
+ if right_hand_attachment: _attach_equipment(weapon, right_hand_attachment, Vector3(0.025, -0.045, -0.015))
 
 # An abstract coiled Quiet Line device is a visual cue for the existing
 # non-graphic fictional gadget. It does not add or change equipment mechanics.
@@ -135,6 +361,7 @@ func add_quiet_tool() -> void:
  for side: float in [-1.0,1.0]:
   _box(quiet_tool, Vector3(side*0.095,-0.02,0), Vector3(0.045,0.13,0.05), grip)
  quiet_tool.visible = false
+ if left_hand_attachment: _attach_equipment(quiet_tool, left_hand_attachment, Vector3(0, -0.025, 0))
 
 func use_quiet_tool() -> void:
  quiet_tool_action = 1.0
@@ -156,7 +383,50 @@ func _role_color() -> Color:
 
 func set_role(value: String) -> void:
  role = value
- if clothing: clothing.albedo_color = _role_color()
+ set_outfit(DisguiseSystem.default_for_occupation(value))
+
+func set_outfit(value: String) -> void:
+ outfit_id = value
+ underwear_mode = value == "underwear"
+ var definition := DisguiseSystem.outfit("civilian" if underwear_mode else value)
+ role = "underwear" if underwear_mode else str(definition.get("role", "visitor"))
+ if clothing == null: return
+ if underwear_mode:
+  var skin := _skin_color()
+  clothing.albedo_color = skin
+  trousers_material.albedo_color = skin
+  torso.visible = false
+  underwear_top.visible = true
+  boxer_shorts.visible = true
+  for detail: MeshInstance3D in upperwear_details: detail.visible = false
+  vendor_apron.visible = false
+  role_hat.visible = false
+  role_badge.visible = false
+ else:
+  clothing.albedo_color = definition.get("color",Color(0.20,0.21,0.25))
+  trousers_material.albedo_color = Color(0.18,0.21,0.24) if value not in ["market_vendor","hospitality"] else Color(0.28,0.23,0.18)
+  torso.visible = true
+  torso.mesh = _jacket_mesh()
+  underwear_top.visible = false
+  boxer_shorts.visible = false
+  for detail: MeshInstance3D in upperwear_details: detail.visible = true
+  vendor_apron.visible = value in ["market_vendor","hospitality"]
+  role_hat.visible = value in ["market_vendor","private_security","corporate_security","facility_security"]
+  role_badge.visible = value in ["office_employee","private_security","corporate_security","executive","facility_technician","facility_security","facility_research","facility_director"]
+ if cc0_model:
+  var desired_model := _model_for_outfit(value)
+  if desired_model != cc0_model_name:
+   _load_cc0_model(desired_model)
+  else:
+   _update_cc0_outfit_visuals()
+
+func _skin_color() -> Color:
+ var variants: Array[Color] = [Color(0.68,0.46,0.34),Color(0.46,0.29,0.23),Color(0.76,0.57,0.46),Color(0.56,0.39,0.30)]
+ return variants[absi(appearance_seed)%variants.size()]
+
+func set_seated(value: bool) -> void:
+ seated = value
+ if value: gait_speed = 0.0
 
 func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> void:
  if not left_leg: return
@@ -225,6 +495,21 @@ func animate_motion(delta: float, speed: float, turning_rate: float = 0.0) -> vo
   weapon.visible = weapon_draw > 0.03
   muzzle_flash.visible = weapon_draw > 0.5 and weapon_recoil > 0.72
  weapon_recoil = maxf(0.0, weapon_recoil - delta * 6.0)
+ _animate_cc0_rig(swing, gait_speed, blend)
+ # A simple seated pose supports passenger idles without changing the player
+ # rig or requiring a second skeletal-animation path.
+ seated_blend = move_toward(seated_blend, 1.0 if seated else 0.0, delta * 4.5)
+ if seated_blend > 0.001:
+  upper_body.position.y = lerpf(upper_body.position.y,-0.42,seated_blend)
+  left_leg.position.y = lerpf(left_leg.position.y,0.48,seated_blend)
+  right_leg.position.y = lerpf(right_leg.position.y,0.48,seated_blend)
+  left_leg.rotation.x = lerpf(left_leg.rotation.x,0.85,seated_blend)
+  right_leg.rotation.x = lerpf(right_leg.rotation.x,0.85,seated_blend)
+  left_knee.rotation.x = lerpf(left_knee.rotation.x,-0.95,seated_blend)
+  right_knee.rotation.x = lerpf(right_knee.rotation.x,-0.95,seated_blend)
+  var lap_pose := 0.46 if idle_activity == "phone" else 0.24
+  left_arm.rotation.x = lerpf(left_arm.rotation.x,lap_pose,seated_blend)
+  right_arm.rotation.x = lerpf(right_arm.rotation.x,0.18,seated_blend)
 
 # Approximate the low point of the rotating ellipsoid shoe in character-local
 # space. The shared root is already grounded by CharacterBody3D; we deliberately

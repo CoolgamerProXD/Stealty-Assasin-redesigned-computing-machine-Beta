@@ -27,6 +27,7 @@ var fps_label: Label
 var instinct_strength: float = 0.0
 var instinct_red: StandardMaterial3D
 var instinct_yellow: StandardMaterial3D
+var instinct_focus: InstinctFocus
 @export var instinct_item_range: float = 4.0
 @export var instinct_target_range: float = 16.0
 @export var instinct_target_color: Color = Color(1.0, 0.08, 0.05)
@@ -694,6 +695,8 @@ func _use_equipment() -> void:
     best = distance
   if nearest:
    nearest.incapacitate(12.0)
+   if nearest == primary_npc:
+    mission.set_target_temporary_incapacitation(str(mission.primary_target.get("id", "")), true)
    player.body_mesh.use_quiet_tool()
    gadget_audio.play()
    message = "Quiet Line: " + nearest.profile.identity + " temporarily incapacitated."
@@ -807,6 +810,10 @@ func _clear_reach(point: Vector3, maximum: float, excluded: RID = RID()) -> bool
  return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 func _setup_instinct() -> void:
+ instinct_focus = InstinctFocus.new()
+ instinct_focus.name = "InstinctFocus"
+ instinct_focus.player = player
+ add_child(instinct_focus)
  instinct_red = _highlight_material(instinct_target_color)
  # The primary identity is provided by the briefing. Draw its actual mesh even
  # behind opaque walls; ordinary NPCs and unknown items never use this pass.
@@ -931,7 +938,7 @@ func _on_interaction(object: Interactable) -> void:
    else: message = mission.objective_text()
 
 func save_game() -> void:
- if SaveStore.write(save_path, SessionSnapshot.capture(player, mission)):
+ if SaveStore.write(save_path, SessionSnapshot.capture(player, mission, primary_npc)):
   message = "Progress saved."
  else:
   message = "Save failed. Check storage permissions."
@@ -993,6 +1000,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
  if player == null or hud == null: return
  _update_instinct(_delta)
+ if primary_npc and mission.target_temporarily_incapacitated and primary_npc.stunned_time <= 0.0:
+  mission.set_target_temporary_incapacitation(str(mission.primary_target.get("id", "")), false)
  var area := AccessRules.area_at(player.global_position)
  var access := "AUTHORIZED" if AccessRules.can_enter(player.role, area) else "RESTRICTED"
  var highest := 0.0

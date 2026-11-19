@@ -1,0 +1,163 @@
+extends SceneTree
+## Godot 4.4.1 automated role, clothing, persistence, and final-operation checks.
+## This validates runtime systems; it is not a human playthrough.
+var checks: int = 0
+var failures: int = 0
+
+func _initialize() -> void:
+	call_deferred("run")
+
+func check(condition: bool, label: String) -> void:
+	checks += 1
+	if condition: print("DISGUISE PASS: ",label)
+	else:
+		failures += 1
+		printerr("DISGUISE FAIL: ",label)
+
+func any_visible(meshes: Array[MeshInstance3D]) -> bool:
+	for mesh: MeshInstance3D in meshes:
+		if is_instance_valid(mesh) and mesh.visible: return true
+	return false
+
+func run() -> void:
+	var campaign := root.get_node("Campaign")
+	var old_path: String = campaign.campaign_path
+	var old_active: String = campaign.active_mission
+	var old_progress: Dictionary = campaign.progress.snapshot()
+	var temporary_campaign_path := "user://disguise_facility_test_%d.json" % Time.get_ticks_usec()
+	campaign.campaign_path = temporary_campaign_path
+	campaign.progress.restore({})
+	var ids := DisguiseSystem.all_ids()
+	check(ids.size() >= 12,"catalog provides distinct role-based outfits")
+	check(DisguiseSystem.can_access("civilian","public") and not DisguiseSystem.can_access("civilian","office_staff"),"civilian permissions stay public")
+	check(DisguiseSystem.can_access("market_vendor","market_staff") and not DisguiseSystem.can_access("market_vendor","executive_suite"),"market role is local, not universal")
+	check(DisguiseSystem.can_access("office_employee","office_staff") and not DisguiseSystem.can_access("office_employee","market_staff"),"office clothing has commercial access only")
+	check(DisguiseSystem.can_access("corporate_security","corporate_staff") and not DisguiseSystem.can_access("corporate_security","executive_suite"),"corporate security cannot enter the executive suite")
+	check(DisguiseSystem.can_access("executive","executive_suite") and not DisguiseSystem.can_access("executive","facility_ops"),"executive clothes do not grant secret-facility access")
+	check(DisguiseSystem.can_access("facility_technician","facility_maintenance") and not DisguiseSystem.can_access("facility_technician","facility_checkpoint"),"facility technician access is limited")
+	check(DisguiseSystem.can_access("facility_security","facility_checkpoint") and not DisguiseSystem.can_access("facility_security","facility_ops"),"facility security access is checkpoint-scoped")
+	check(DisguiseSystem.can_access("facility_research","facility_research") and DisguiseSystem.can_access("facility_research","buddha_interior") and not DisguiseSystem.can_access("facility_research","facility_ops"),"research attire grants only appropriate internal access")
+	check(DisguiseSystem.can_access("facility_director","facility_ops") and DisguiseSystem.can_access("facility_director","buddha_interior"),"director attire reaches command and concealed statue spaces")
+
+	var player := HotelPlayer.new()
+	root.add_child(player)
+	player.set_physics_process(false)
+	player.set_process_unhandled_input(false)
+	await process_frame
+	check(player.outfit_id == "civilian" and player.outfit_inventory == ["civilian"],"new player starts with only civilian clothing")
+	check(player.body_mesh.cc0_model != null and player.body_mesh.cc0_skeleton != null and player.body_mesh.cc0_model_name in ["brad","dale","ellie","gary","hollis","pickles","rosa","vance"] and player.body_mesh.cc0_clothes.size() > 0,"player renders a textured, skinned CC0 character scene")
+	check(not player.acquire_outfit("not_an_outfit") and not player.equip_outfit("market_vendor"),"invalid or unowned outfits cannot be added or equipped")
+	check(player.acquire_outfit("market_vendor") and not player.acquire_outfit("market_vendor"),"acquisition succeeds once and prevents duplicates")
+	check(player.equip_outfit("market_vendor") and player.role == "vendor" and player.body_mesh.outfit_id == "market_vendor","equipping changes gameplay role and visible character outfit")
+	check(player.body_mesh.cc0_model_name == "dale" and player.body_mesh.cc0_model != null and any_visible(player.body_mesh.cc0_clothes),"vendor outfit switches to an imported workwear body and visible garment mesh")
+	check(player.body_mesh.vendor_apron.visible and not player.body_mesh.underwear_mode,"vendor outfit has its distinct procedural apron")
+	check(player.acquire_outfit("facility_security") and player.equip_outfit("facility_security"),"special facility uniform can be acquired and switched to")
+	check(player.body_mesh.cc0_model_name == "gary" and player.body_mesh.cc0_model != null and player.body_mesh.weapon.get_parent() == player.body_mesh.right_hand_attachment,"switching outfits reloads the matching skinned model without losing hand equipment")
+	var wardrobe := player.outfit_snapshot()
+	player.equip_outfit("civilian")
+	player.restore_outfits(wardrobe)
+	check(player.outfit_id == "facility_security" and player.outfit_inventory.has("market_vendor"),"checkpoint wardrobe restores owned and currently equipped outfits")
+	campaign.progress.restore({})
+	check(campaign.progress.acquire_outfit("market_vendor") and campaign.progress.equip_outfit("market_vendor"),"campaign progression stores recovered and equipped outfit IDs")
+	var progress_copy := CampaignProgress.new()
+	progress_copy.configure(JSON.parse_string(FileAccess.get_file_as_string("res://resources/campaign.json")))
+	progress_copy.restore(campaign.progress.snapshot())
+	check(progress_copy.acquired_outfits.has("market_vendor") and progress_copy.equipped_outfit == "market_vendor","campaign save migration retains only explicit outfit records")
+
+	var subdued := HotelNpc.new()
+	subdued.profile = NpcProfile.new()
+	subdued.profile.identity = "Uniformed officer"
+	subdued.profile.occupation = "security"
+	subdued.profile.outfit_id = "facility_security"
+	root.add_child(subdued)
+	subdued.set_physics_process(false)
+	await process_frame
+	check(subdued.person.outfit_id == "facility_security" and subdued.person.role_hat.visible,"NPC role appearance is unique and uses its assigned uniform")
+	check(subdued.incapacitate(12.0),"ordinary NPC can be temporarily subdued without objective completion")
+	subdued.person.set_outfit("underwear")
+	subdued.outfit_taken = true
+	check(subdued.is_inside_tree() and subdued.person.underwear_mode and subdued.person.underwear_top.visible and subdued.person.boxer_shorts.visible,"clothing recovery leaves the NPC present and fully covered")
+	check(subdued.person.cc0_model_name == "gary" and not any_visible(subdued.person.cc0_clothes) and not any_visible(subdued.person.cc0_shoes),"acquired clothing is removed from the NPC while the skinned model remains covered in underwear")
+	check(not subdued.objective_completed and subdued.stunned_time > 0.0,"taking clothing does not convert incapacitation into target completion")
+
+	# Exercise the real mission interaction, not just the appearance helper.
+	campaign.progress.restore({"completed":["initiation","tung_chung"],"recovered_keys":["key_01"]})
+	campaign.active_mission = "hong_kong_sandbox"
+	var sandbox := load("res://scenes/mission_hong_kong_sandbox.tscn").instantiate() as Node3D
+	root.add_child(sandbox)
+	await process_frame
+	await process_frame
+	sandbox.call("_skip_cinematic")
+	var targets: Array = sandbox.get("sandbox_targets")
+	var loan_shark: HotelNpc = targets[0]
+	loan_shark.set_physics_process(false)
+	loan_shark.incapacitate(12.0)
+	var player_in_sandbox: HotelPlayer = sandbox.get("player")
+	player_in_sandbox.set_physics_process(false)
+	player_in_sandbox.global_position = loan_shark.global_position + Vector3(0,0,1.2)
+	check(sandbox.call("_try_acquire_outfit"),"mission interaction acquires clothing from a subdued real NPC")
+	check(loan_shark.outfit_taken and loan_shark.person.underwear_mode and player_in_sandbox.outfit_inventory.has("market_vendor"),"live loot updates NPC appearance and player wardrobe together")
+	sandbox.call("_equip_disguise","market_vendor")
+	check(player_in_sandbox.outfit_id == "market_vendor" and AccessRules.can_enter(player_in_sandbox.role,"market_staff"),"field wardrobe selection changes role-based area access")
+	var campaign_save: Dictionary = campaign.progress.snapshot()
+	check(campaign_save["acquired_outfits"].has("market_vendor") and campaign_save["equipped_outfit"] == "market_vendor","wardrobe ownership and equip choice persist in campaign save data")
+	sandbox.queue_free()
+	await process_frame
+
+	# Final-operation geometry and the concealed interior are checked in the
+	# actual campaign scene. The entry is physically inside the rear Buddha base.
+	campaign.progress.restore({"completed":["initiation","tung_chung","hong_kong_sandbox"],"recovered_keys":["key_01","key_02","key_03","key_04"]})
+	campaign.active_mission = "ngong_ping"
+	var final_world := load("res://scenes/mission_ngong_ping.tscn").instantiate() as Node3D
+	root.add_child(final_world)
+	await process_frame
+	await process_frame
+	final_world.call("_skip_cinematic")
+	var mountain: Node3D = final_world.get("scene")
+	var facility := mountain.find_child("NgongPingSecretFacility",true,false) as NgongPingSecretFacility
+	var landmark := mountain.find_child("ScenicBuddhaLandmark",true,false) as Node3D
+	check(facility != null and landmark != null and landmark.visible,"Ngong Ping contains the public Buddha landmark and attached hidden installation")
+	check(mountain.find_child("FacilitySlab_Sublevel_1",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_2",true,false) != null and mountain.find_child("FacilitySlab_Sublevel_3",true,false) != null,"facility has three physically separate interconnected underground floors")
+	check(mountain.find_child("BuddhaInteriorNavigation_1",true,false) != null and mountain.find_child("BuddhaInteriorNavigation_5",true,false) != null and mountain.find_child("ConcealedBuddhaInteriorFloor_5",true,false) != null and mountain.find_child("StatueCoreConnectingRamp",true,false) != null,"five chamber floors connect to the buried installation through the statue core")
+	check(mountain.find_child("CentralOperationsFloor",true,false) != null and mountain.find_child("RESEARCH_LABORATORIES",true,false) != null and mountain.find_child("UNDERGROUND_TRANSIT_CONCOURSE",true,false) != null,"central operations, research, and transit spaces are present")
+	check(final_world.get("target").global_position.y < -7.0 and final_world.get("exit_marker").global_position.y < -7.0,"final coordinator and extraction occupy the hidden complex")
+	var field_office := mountain.find_child("MountainFieldOffice",true,false)
+	var key_marker: Node3D = final_world.get("key_marker")
+	check(field_office != null and key_marker.global_position.y > 0.0 and key_marker.global_position.z > 0.0,"physical Key 05 remains in the separate accessible field archive")
+	var operations_area := str(mountain.call("player_access_area",Vector3(0,-8.15,-66)))
+	check(operations_area == "facility_ops" and not AccessRules.can_enter("executive",operations_area) and AccessRules.can_enter("facility_director",operations_area),"world geometry assigns Central Operations to a role-locked access zone")
+	var facility_player: HotelPlayer = final_world.get("player")
+	facility_player.set_physics_process(false)
+	facility_player.global_position = facility.entry_point + Vector3(0,-0.45,1.2)
+	final_world.call("_interact")
+	check(bool(final_world.get("facility_discovered")) and facility.entry_open,"interacting with the real rear pedestal panel reveals the physical entrance")
+	for npc: HotelNpc in final_world.get("npc_list"): npc.set_physics_process(false)
+	facility_player.global_position = Vector3(0,0.75,-36.5)
+	facility_player.rotation.y = 0.0
+	facility_player.velocity = Vector3.ZERO
+	facility_player.set_physics_process(true)
+	for _frame: int in range(6): await physics_frame
+	Input.action_press("move_forward")
+	await create_timer(3.8).timeout
+	Input.action_release("move_forward")
+	print("DISGUISE ENTRY ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity)
+	check(facility_player.global_position.z < -44.0 and facility_player.global_position.y < -1.0,"player walks down the concealed ramp into Sublevel 01")
+	Input.action_press("move_back")
+	await create_timer(7.8).timeout
+	Input.action_release("move_back")
+	print("DISGUISE CORE ROUTE: ",facility_player.global_position," velocity=",facility_player.velocity," inside=",facility.is_inside_statue(facility_player.global_position))
+	check(facility.is_inside_statue(facility_player.global_position) and facility_player.global_position.y > 0.9 and not landmark.visible,"the continuous core ramp carries the player into a concealed chamber inside the landmark")
+	check(final_world.find_child("DisguiseInventory",true,false) != null,"mission builds the playable disguise inventory UI")
+
+	for node: Node in [final_world,subdued,player]:
+		if is_instance_valid(node): node.queue_free()
+	await process_frame
+	campaign.campaign_path = old_path
+	campaign.active_mission = old_active
+	campaign.progress.restore(old_progress)
+	for suffix: String in ["", ".bak", ".tmp"]:
+		var file_path := temporary_campaign_path + suffix
+		if FileAccess.file_exists(file_path): DirAccess.remove_absolute(ProjectSettings.globalize_path(file_path))
+	if failures == 0: print("DISGUISE RESULT: %d checks, 0 failures" % checks)
+	else: printerr("DISGUISE RESULT: %d checks, %d failures" % [checks,failures])
+	quit(0 if failures == 0 else 1)

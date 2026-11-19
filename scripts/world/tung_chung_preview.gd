@@ -5,8 +5,10 @@ var npcs: Array[HotelNpc] = []
 var robber: HotelNpc
 var operative: HotelNpc
 var hud: Label
+var access_zones: Array[Dictionary] = []
 var message: String = "SCOUTING PREVIEW  /  Approach the two distinctive people. Escape returns to the menu."
 var materials: Dictionary = {}
+var meshes: Dictionary = {}
 
 func _ready() -> void:
  _environment()
@@ -40,12 +42,25 @@ func _start_ambience(kind: String) -> void:
 # Campaign instances may designate a small authored restricted zone. The
 # independent exploration previews remain public and keep their old behavior.
 func player_access_area(point: Vector3) -> String:
- var area: Variant = get_meta("restricted_rect", null)
- if area is Rect2 and area.has_point(Vector2(point.x, point.z)): return "staff"
+ for zone: Dictionary in access_zones:
+  var rect: Variant = zone.get("rect")
+  var floor_min := float(zone.get("floor_min", -100.0))
+  var floor_max := float(zone.get("floor_max", 100.0))
+  if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= floor_min and point.y <= floor_max:
+   return str(zone.get("area","staff"))
+ if has_meta("restricted_rect"):
+  var area: Variant = get_meta("restricted_rect")
+  if area is Rect2 and area.has_point(Vector2(point.x, point.z)): return "staff"
  return "public"
 
 func permitted_exit(point: Vector3) -> Vector3:
- var area: Variant = get_meta("restricted_rect", null)
+ for zone: Dictionary in access_zones:
+  var rect: Variant = zone.get("rect")
+  if rect is Rect2 and rect.has_point(Vector2(point.x,point.z)) and point.y >= float(zone.get("floor_min",-100.0)) and point.y <= float(zone.get("floor_max",100.0)):
+   var center: Vector2 = rect.get_center()
+   return Vector3(center.x,point.y,center.y)
+ if not has_meta("restricted_rect"): return point
+ var area: Variant = get_meta("restricted_rect")
  if not area is Rect2: return point
  var options: Array[Vector3] = [Vector3(area.position.x - 0.8,point.y,point.z), Vector3(area.end.x + 0.8,point.y,point.z), Vector3(point.x,point.y,area.position.y - 0.8), Vector3(point.x,point.y,area.end.y + 0.8)]
  var best := options[0]
@@ -57,19 +72,25 @@ func footstep_surface(_point: Vector3) -> String:
  return "stone"
 
 func _environment() -> void:
+ var station_scene: bool = get_script().resource_path == "res://scripts/world/tung_chung_preview.gd"
+ var operation := str(get_meta("operation_id", ""))
+ var station_mood: bool = station_scene or operation == "tung_chung"
  var env := WorldEnvironment.new()
  var data := Environment.new()
  data.background_mode = Environment.BG_COLOR
- data.background_color = Color(0.11, 0.17, 0.22)
+ data.background_color = Color(0.025, 0.045, 0.055) if station_mood else Color(0.11, 0.17, 0.22)
  data.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
- data.ambient_light_color = Color(0.75, 0.82, 0.85)
- data.ambient_light_energy = 0.9
+ data.ambient_light_color = Color(0.47, 0.58, 0.61) if station_mood else Color(0.75, 0.82, 0.85)
+ data.ambient_light_energy = 0.58 if station_mood else 0.9
+ data.adjustment_enabled = station_mood
+ data.adjustment_contrast = 1.08 if station_mood else 1.0
+ data.adjustment_saturation = 0.88 if station_mood else 1.0
  env.environment = data
  add_child(env)
  var sun := DirectionalLight3D.new()
- sun.rotation_degrees = Vector3(-55, -25, 0)
- sun.light_energy = 0.85
- var operation := str(get_meta("operation_id", ""))
+ sun.rotation_degrees = Vector3(-48, -25, 0)
+ sun.light_color = Color(0.61, 0.75, 0.81) if station_mood else Color.WHITE
+ sun.light_energy = 0.22 if station_mood else 0.85
  if operation == "the_streets":
   sun.light_color = Color(1.0,0.82,0.68)
  elif operation == "the_district":
@@ -77,6 +98,10 @@ func _environment() -> void:
  elif operation == "the_harbour":
   sun.light_color = Color(0.70,0.84,1.0)
   sun.light_energy = 0.75
+ elif operation == "hong_kong_sandbox":
+  # Clear late-day light keeps the connected skyline readable across districts.
+  sun.light_color = Color(1.0,0.88,0.72)
+  sun.light_energy = 0.92
  elif operation == "ngong_ping":
   sun.light_color = Color(1.0,0.91,0.75)
  sun.shadow_enabled = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["shadows"])
@@ -124,20 +149,16 @@ func _station_navigation_mesh() -> NavigationMesh:
     mesh.add_polygon(PackedInt32Array([a,a+xs.size(),a+xs.size()+1,a+1]))
  return mesh
 
-func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = false) -> void:
+func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = false, finish: String = "plain") -> Node3D:
  var holder: Node3D = StaticBody3D.new() if solid else Node3D.new()
  holder.position = pos
  add_child(holder)
  var part := MeshInstance3D.new()
- var mesh := BoxMesh.new()
- mesh.size = size
- part.mesh = mesh
- if not materials.has(color):
-  var material := StandardMaterial3D.new()
-  material.albedo_color = color
-  material.roughness = 0.78
-  materials[color] = material
- part.material_override = materials[color]
+ if not meshes.has(size): meshes[size] = StationMaterials.box_mesh(size)
+ part.mesh = meshes[size]
+ var material_key := finish + ":" + color.to_html(true)
+ if not materials.has(material_key): materials[material_key] = StationMaterials.material(color, finish)
+ part.material_override = materials[material_key]
  holder.add_child(part)
  if solid:
   var collider := CollisionShape3D.new()
@@ -145,6 +166,7 @@ func _box(pos: Vector3, size: Vector3, color: Color, solid: bool = false) -> voi
   shape.size = size
   collider.shape = shape
   holder.add_child(collider)
+ return holder
 
 func _sign(text: String, pos: Vector3, size: int = 38) -> void:
  var label := Label3D.new()
@@ -161,64 +183,65 @@ func _station() -> void:
  var wall := Color(0.58, 0.64, 0.65)
  var dark := Color(0.15, 0.22, 0.25)
  var orange := Color(0.88, 0.49, 0.19)
- _box(Vector3(0,-0.2,0), Vector3(44,0.4,28), floor_color, true)
- _box(Vector3(0,5.3,0), Vector3(44,0.25,28), Color(0.36,0.42,0.43))
- _box(Vector3(0,2.6,-14), Vector3(44,5.2,0.3), wall, true)
- _box(Vector3(-22,2.6,0), Vector3(0.3,5.2,28), wall, true)
- _box(Vector3(22,2.6,0), Vector3(0.3,5.2,28), wall, true)
+ _box(Vector3(0,-0.2,0), Vector3(44,0.4,28), floor_color, true, "terrazzo")
+ _box(Vector3(0,5.3,0), Vector3(44,0.25,28), Color(0.43,0.48,0.47), false, "concrete")
+ _box(Vector3(0,2.6,-14), Vector3(44,5.2,0.3), wall, true, "tile")
+ _box(Vector3(-22,2.6,0), Vector3(0.3,5.2,28), wall, true, "tile")
+ _box(Vector3(22,2.6,0), Vector3(0.3,5.2,28), wall, true, "tile")
  if str(get_meta("operation_id", "")) == "tung_chung":
   # Fictional platform doorway aligns with the playable carriage aisle.
-  _box(Vector3(-2.5,2.6,14), Vector3(39,5.2,0.3), wall, true)
-  _box(Vector3(21.5,2.6,14), Vector3(1,5.2,0.3), wall, true)
- else: _box(Vector3(0,2.6,14), Vector3(44,5.2,0.3), wall, true)
+  _box(Vector3(-2.5,2.6,14), Vector3(39,5.2,0.3), wall, true, "tile")
+  _box(Vector3(21.5,2.6,14), Vector3(1,5.2,0.3), wall, true, "tile")
+ else: _box(Vector3(0,2.6,14), Vector3(44,5.2,0.3), wall, true, "tile")
  # Rhythm of columns, floor strips and ceiling lights establishes the concourse.
  for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
   for z: float in [-6.0,6.0]:
-   _box(Vector3(x,2.6,z), Vector3(0.6,5.2,0.6), Color(0.76,0.79,0.76), true)
-   _box(Vector3(x,0.35,z), Vector3(0.8,0.7,0.8), dark)
-  _box(Vector3(x,5.1,0), Vector3(4.8,0.05,0.3), Color(1.0,0.91,0.72))
+   _box(Vector3(x,2.6,z), Vector3(0.6,5.2,0.6), Color(0.56,0.62,0.62), true, "concrete")
+   _box(Vector3(x,0.35,z), Vector3(0.8,0.7,0.8), dark, false, "brushed_metal")
+  _box(Vector3(x,5.1,0), Vector3(4.8,0.05,0.3), Color(0.82,0.72,0.55), false, "emissive")
  for x: float in [-14.0,-7.0,0.0,7.0,14.0]:
   _box(Vector3(x,0.015,0), Vector3(0.04,0.03,26), Color(0.40,0.46,0.46))
- _box(Vector3(-15,1.1,-11.5), Vector3(8,2.2,2), dark)
- _box(Vector3(-15,1.35,-10.45), Vector3(7.5,0.12,0.12), orange)
+ _box(Vector3(-15,1.1,-11.5), Vector3(8,2.2,2), dark, false, "painted_metal")
+ _box(Vector3(-15,1.35,-10.45), Vector3(7.5,0.12,0.12), orange, false, "emissive")
  _sign("TICKETS  /  CUSTOMER SERVICE", Vector3(-15,2.65,-10.35), 32)
  for x: float in [-19.0,-17.5,-16.0,-14.5]:
-  _box(Vector3(x,0.6,-8.5), Vector3(0.75,1.2,0.55), Color(0.24,0.35,0.37))
-  _box(Vector3(x,1.23,-8.5), Vector3(0.6,0.07,0.45), orange)
+  _box(Vector3(x,0.6,-8.5), Vector3(0.75,1.2,0.55), Color(0.24,0.35,0.37), true, "painted_metal")
+  _box(Vector3(x,1.23,-8.5), Vector3(0.6,0.07,0.45), orange, false, "emissive")
  # Shops are scenic frontages, not claimed as usable interiors.
  for x: float in [-3.0,4.0,11.0]:
-  _box(Vector3(x,1.7,-12.6), Vector3(6,3.4,2.2), Color(0.26,0.31,0.30))
-  _box(Vector3(x,1.5,-11.42), Vector3(5.3,2.1,0.06), Color(0.32,0.49,0.49))
-  _box(Vector3(x,3.0,-11.35), Vector3(5.5,0.45,0.08), dark)
+  _box(Vector3(x,1.7,-12.6), Vector3(6,3.4,2.2), Color(0.23,0.30,0.31), false, "painted_metal")
+  _box(Vector3(x,1.5,-11.42), Vector3(5.3,2.1,0.06), Color(0.40,0.57,0.59,0.40), false, "glass")
+  _box(Vector3(x,3.0,-11.35), Vector3(5.5,0.45,0.08), dark, false, "painted_metal")
  _sign("PAPER & PRESS", Vector3(-3,3,-11.28), 30)
  _sign("TEA HOUSE", Vector3(4,3,-11.28), 30)
  _sign("MARKET", Vector3(11,3,-11.28), 30)
  # Fictional concourse stairway and upper landing; no railway access.
- _box(Vector3(17,3.125,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true)
+ _box(Vector3(17,3.125,-6), Vector3(8,0.35,4), Color(0.39,0.47,0.47), true, "painted_metal")
  _station_stair_collision()
- _box(Vector3(17,3.9,-3.95), Vector3(8,1.1,0.12), Color(0.31,0.47,0.49))
+ _box(Vector3(17,3.9,-3.95), Vector3(8,1.1,0.12), Color(0.31,0.47,0.49), false, "brushed_metal")
  for i: int in range(16):
-  _box(Vector3(14.5, float(i)*0.22+0.04, 3.5-float(i)*0.47), Vector3(2.4,0.12,0.48), Color(0.34,0.39,0.38))
-  _box(Vector3(13.25,float(i)*0.22+0.7,3.5-float(i)*0.47), Vector3(0.08,0.12,0.48), dark)
-  _box(Vector3(15.75,float(i)*0.22+0.7,3.5-float(i)*0.47), Vector3(0.08,0.12,0.48), dark)
+  _box(Vector3(14.5, float(i)*0.22+0.04, 3.5-float(i)*0.47), Vector3(2.4,0.12,0.48), Color(0.42,0.49,0.48), false, "terrazzo")
+  _box(Vector3(13.25,float(i)*0.22+0.7,3.5-float(i)*0.47), Vector3(0.08,0.12,0.48), dark, false, "brushed_metal")
+  _box(Vector3(15.75,float(i)*0.22+0.7,3.5-float(i)*0.47), Vector3(0.08,0.12,0.48), dark, false, "brushed_metal")
  _sign("CONCOURSE  /  UPPER WALKWAY", Vector3(17,4.65,-3.85), 28)
  # The information island is solid; seating remains decorative.
- _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38), true)
- _box(Vector3(-1,1.15,0), Vector3(5.2,0.12,2.2), Color(0.76,0.75,0.66))
+ _box(Vector3(-1,0.55,0), Vector3(5,1.1,2), Color(0.26,0.36,0.38), true, "painted_metal")
+ _box(Vector3(-1,1.15,0), Vector3(5.2,0.12,2.2), Color(0.72,0.71,0.63), false, "terrazzo")
+ _box(Vector3(-1,2.05,0.12), Vector3(3.0,0.9,0.06), Color(0.24,0.58,0.61), false, "glass")
  _sign("INFORMATION", Vector3(-1,2.6,0.5), 36)
  for x: float in [5.0,9.0,13.0]:
-  _box(Vector3(x,0.5,5), Vector3(2.7,0.15,0.8), Color(0.30,0.29,0.25))
-  _box(Vector3(x,0.8,5.4), Vector3(2.7,0.65,0.12), Color(0.30,0.29,0.25))
-  for side: float in [-0.9,0.9]: _box(Vector3(x+side,0.22,5), Vector3(0.12,0.5,0.55), dark)
+  _box(Vector3(x,0.5,5), Vector3(2.7,0.15,0.8), Color(0.25,0.20,0.16), false, "wood")
+  _box(Vector3(x,0.8,5.4), Vector3(2.7,0.65,0.12), Color(0.31,0.39,0.38), false, "fabric")
+  for side: float in [-0.9,0.9]: _box(Vector3(x+side,0.22,5), Vector3(0.12,0.5,0.55), dark, false, "brushed_metal")
  # Fictional platform edge and stationary train facade; no rail-access mechanics.
- _box(Vector3(0,0.025,10.7), Vector3(43,0.05,0.25), Color(0.95,0.75,0.20))
+ _box(Vector3(0,0.025,10.7), Vector3(43,0.05,0.25), Color(0.94,0.66,0.20), false, "emissive")
  var campaign_train := str(get_meta("operation_id", "")) == "tung_chung"
  if campaign_train:
-  _box(Vector3(-1.25,1.7,12.6), Vector3(35.5,3.4,1.3), Color(0.75,0.78,0.76), true)
-  _box(Vector3(-1.25,1.8,11.92), Vector3(35.0,1.0,0.05), dark)
+  _box(Vector3(-1.25,1.7,12.6), Vector3(35.5,3.4,1.3), Color(0.61,0.69,0.68), true, "painted_metal")
+  _box(Vector3(-1.25,1.8,11.92), Vector3(35.0,1.0,0.05), dark, false, "glass")
  else:
-  _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.75,0.78,0.76), true)
-  _box(Vector3(0,1.8,11.92), Vector3(37,1.0,0.05), dark)
+  _box(Vector3(0,1.7,12.6), Vector3(38,3.4,1.3), Color(0.61,0.69,0.68), true, "painted_metal")
+  _box(Vector3(0,1.8,11.92), Vector3(37,1.0,0.05), dark, false, "glass")
  for x: float in [-16.0,-12.0,-8.0,-4.0,0.0,4.0,8.0,12.0,16.0]:
   if campaign_train and x == 16.0: continue
   _box(Vector3(x,1.8,11.87), Vector3(2.3,0.75,0.06), Color(0.31,0.44,0.47))
@@ -234,9 +257,88 @@ func _station() -> void:
   _box(Vector3(x,2.4,-11.34),Vector3(1.1,0.58,0.025),Color(0.84,0.72,0.50))
   _box(Vector3(x,2.4,-11.30),Vector3(0.96,0.44,0.02),Color(0.26,0.39,0.37))
  for x: float in [-17.0,-9.0,-1.0,7.0,15.0]:
-  _box(Vector3(x,1.0,11.83),Vector3(0.035,1.9,0.035),Color(0.92,0.65,0.27))
-  _box(Vector3(x,2.9,11.83),Vector3(0.8,0.10,0.035),Color(0.92,0.65,0.27))
+  _box(Vector3(x,1.0,11.83),Vector3(0.035,1.9,0.035),Color(0.92,0.65,0.27),false,"emissive")
+  _box(Vector3(x,2.9,11.83),Vector3(0.8,0.10,0.035),Color(0.92,0.65,0.27),false,"emissive")
+ _station_architecture()
+ _station_lighting()
 
+func _station_architecture() -> void:
+ # Shallow barrel-vault ribs lift the ceiling rhythm above the concourse. One
+ # MultiMesh batches every repeated segment into a single material/draw call.
+ var rib_transforms: Array[Transform3D] = []
+ for z: float in [-10.0,-1.0,8.0]:
+  for i: int in range(24):
+   var x0 := -20.0 + 40.0 * float(i) / 24.0
+   var x1 := -20.0 + 40.0 * float(i + 1) / 24.0
+   var y0 := 4.18 + 1.05 * sqrt(maxf(0.0, 1.0 - (x0 / 20.0) * (x0 / 20.0)))
+   var y1 := 4.18 + 1.05 * sqrt(maxf(0.0, 1.0 - (x1 / 20.0) * (x1 / 20.0)))
+   var delta := Vector2(x1 - x0, y1 - y0)
+   var basis := Basis(Vector3(0,0,1),atan2(delta.y,delta.x)).scaled(Vector3(delta.length(),0.24,0.34))
+   rib_transforms.append(Transform3D(basis,Vector3((x0+x1)*0.5,(y0+y1)*0.5,z)))
+ var ribs := MultiMesh.new()
+ ribs.transform_format = MultiMesh.TRANSFORM_3D
+ ribs.mesh = StationMaterials.box_mesh(Vector3.ONE)
+ ribs.instance_count = rib_transforms.size()
+ for i: int in range(rib_transforms.size()): ribs.set_instance_transform(i,rib_transforms[i])
+ var rib_mesh := MultiMeshInstance3D.new()
+ rib_mesh.name = "VaultRibs"
+ rib_mesh.multimesh = ribs
+ rib_mesh.material_override = StationMaterials.material(Color(0.49,0.55,0.54),"concrete")
+ rib_mesh.custom_aabb = AABB(Vector3(-21,3.7,-11),Vector3(42,1.8,21))
+ add_child(rib_mesh)
+ # Dark cable trays and narrow emissive wayfinding strips give the high ceiling
+ # a believable service zone without filling it with extra point lights.
+ for x: float in [-18.0,-10.0,-2.0,6.0,14.0]:
+  _box(Vector3(x,4.86,0),Vector3(0.16,0.16,22),Color(0.14,0.22,0.24),false,"painted_metal")
+ for z: float in [-11.0,-3.0,5.0,12.0]:
+  _box(Vector3(20.85,2.2,z),Vector3(0.025,0.7,1.8),Color(0.33,0.45,0.46),false,"painted_metal")
+  _box(Vector3(20.82,2.2,z-0.45),Vector3(0.018,0.36,0.62),Color(0.91,0.61,0.29),false,"emissive")
+ # Ticket-control lanes: physical waist-high islands with broad, clear gaps.
+ # The campaign path from deployment to courier stays on the west side.
+ for x: float in [-6.0,-2.0,2.0,6.0]:
+  _box(Vector3(x,0.43,-8.0),Vector3(1.35,0.86,0.95),Color(0.20,0.30,0.32),true,"brushed_metal")
+  _box(Vector3(x,0.91,-8.0),Vector3(1.15,0.08,0.72),Color(0.63,0.67,0.62),false,"terrazzo")
+  _box(Vector3(x,0.99,-8.0),Vector3(0.48,0.035,0.5),Color(0.90,0.57,0.23),false,"emissive")
+  _box(Vector3(x-0.52,0.95,-8.38),Vector3(0.035,0.04,0.45),Color(0.54,0.68,0.62),false,"emissive")
+ # Wall-mounted departure boards, framed poster cases, and a continuous tactile
+ # strip make station functions legible without using copied real-world signs.
+ _box(Vector3(0.0,4.25,-4.2),Vector3(8.5,0.9,0.22),Color(0.10,0.17,0.19),false,"painted_metal")
+ _box(Vector3(0.0,4.28,-4.07),Vector3(7.7,0.54,0.035),Color(0.17,0.34,0.35),false,"emissive")
+ _sign("TUNG CHUNG   ·   PLATFORM 01     /     SERVICE INTERRUPTED",Vector3(0,4.3,-4.03),24)
+ for x: float in [-20.6,-16.8,-11.0,11.0]:
+  var side := -13.78 if absf(x) > 16.0 else 13.78
+  if side > 0.0 and str(get_meta("operation_id", "")) == "tung_chung" and absf(x) > 16.0:
+   continue # Keep the walk-on train doorway completely clear.
+  _box(Vector3(x,2.65,side),Vector3(2.0,2.3,0.04),Color(0.18,0.27,0.29),false,"brushed_metal")
+  _box(Vector3(x,2.65,side-0.035 if side < 0.0 else side+0.035),Vector3(1.78,2.06,0.025),Color(0.48,0.36,0.27),false,"wood")
+ # Amber tactile guidance and a rough dark boarding edge contrast the pale floor.
+ _box(Vector3(-1.0,0.012,8.5),Vector3(34,0.024,0.16),Color(0.77,0.51,0.20),false,"rubber")
+ _box(Vector3(0.0,-0.005,12.1),Vector3(42,0.045,0.55),Color(0.17,0.22,0.23),false,"rubber")
+ # Signage brackets and a restrained red service light establish the operation's
+ # own transit-noir accent; no logos, recognizable maps, or copied station marks.
+ _box(Vector3(1.0,4.58,7.92),Vector3(8.9,0.08,0.42),Color(0.80,0.35,0.28),false,"emissive")
+ _sign("EXIT  →     PLATFORM 01",Vector3(1,4.2,7.84),32)
+
+func _station_lighting() -> void:
+ # Low-cost practicals: one cool overhead rhythm and two warm service pools.
+ # They never cast shadows; the existing directional light owns the shadow map.
+ var lights: Array[Array] = [
+  [Vector3(-15,4.55,-3),Color(1.0,0.69,0.43),0.62,8.0],
+  [Vector3(-5,4.55,1),Color(0.67,0.85,0.88),0.48,9.0],
+  [Vector3(5,4.55,-2),Color(0.76,0.88,0.87),0.48,9.0],
+  [Vector3(15,4.55,1),Color(0.96,0.67,0.42),0.58,8.0],
+  [Vector3(19.8,3.1,10),Color(0.45,0.72,0.77),0.42,6.0],
+ ]
+ for spec: Array in lights:
+  var light := OmniLight3D.new()
+  light.position = spec[0]
+  light.light_color = spec[1]
+  light.light_energy = float(spec[2])
+  light.omni_range = float(spec[3])
+  light.shadow_enabled = false
+  light.add_to_group("quality_practicals")
+  light.visible = Campaign.settings["graphics"] != "LOW" and bool(Campaign.settings["practicals"])
+  add_child(light)
 
 # Invisible smooth collision follows the visible stair treads. The ends
 # overlap the concourse and landing to avoid a capsule-catching vertical lip.

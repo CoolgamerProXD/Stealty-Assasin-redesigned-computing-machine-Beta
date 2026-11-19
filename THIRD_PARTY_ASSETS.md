@@ -11,9 +11,16 @@ and complete file list are documented in `assets/kenney_furniture/PROVENANCE.md`
 The GLB files are unmodified; project code changes their placement, scale and
 materials, and supplies separate collision geometry.
 
-All other scenery, people, UI and sound effects are project-authored procedural
-assets. The synthesized effects and ambient beds are not recordings. Reference
-research informed design only; it did not supply copied artwork or code.
+The eight CC0 MakeHuman-derived character models in
+`assets/characters/makehuman_cc0/` are by HongJaeKIM94 and contributors, from
+RUBBERNECK assets pinned at `7c331e647229364f3160790fe158beedf132075a`.
+The upstream CC0 license, model-specific asset inventory, conversion notes and
+rebuild command are included alongside the GLBs. `StylizedPerson` now instantiates the skinned models for campaign actors, selects
+models from the outfit/appearance, tints clothing materials by role, and applies
+procedural skeleton motion. Runtime import/render fit remains to be verified in
+Godot 4.4.1. Other scenery, UI and sound effects remain project-authored
+procedural assets; synthesized effects and ambient beds are not recordings. Reference research informed
+design only; it did not supply copied artwork or code.
 
 Godot 4.4.1 is a separate external tool/runtime; its licences are available at
 https://godotengine.org/license/. The Windows workflow downloads official engine

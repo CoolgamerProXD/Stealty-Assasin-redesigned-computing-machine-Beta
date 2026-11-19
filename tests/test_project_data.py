@@ -73,18 +73,37 @@ class PopulationDataTests(unittest.TestCase):
         self.assertEqual(initiation["primary_target"]["id"], "assessment_unit")
         self.assertEqual(initiation["required_action"], "disable_assessment_unit")
 
-    def test_hong_kong_has_five_distinct_ordered_keys_and_placements(self):
+    def test_hong_kong_campaign_rebuild_has_one_connected_city_operation(self):
         campaign = json.loads((ROOT / "resources/campaign.json").read_text())
         ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())
-        ids = ["tung_chung", "the_streets", "the_district", "the_harbour", "ngong_ping"]
-        entries = [entry for entry in campaign["missions"] if entry["id"] in ids]
-        self.assertEqual([entry["id"] for entry in entries], ids)
-        self.assertEqual([entry["key_id"] for entry in entries], [f"key_{i:02d}" for i in range(1, 6)])
-        self.assertEqual(set(ops), set(ids))
-        self.assertEqual({ops[id]["placement"] for id in ids}, {"target", "guard", "safe"})
-        for entry in entries:
-            self.assertTrue((ROOT / entry["scene"].removeprefix("res://")).is_file())
-            self.assertTrue(ops[entry["id"]]["clue"])
+        ids = [entry["id"] for entry in campaign["missions"]]
+        self.assertEqual(ids, ["initiation", "meridian", "tung_chung", "hong_kong_sandbox", "ngong_ping"])
+        self.assertFalse({"the_streets", "the_district", "the_harbour"}.intersection(ids))
+        self.assertEqual(campaign["missions"][2]["key_id"], "key_01")
+        sandbox = campaign["missions"][3]
+        self.assertEqual(sandbox["key_ids"], ["key_02", "key_03", "key_04"])
+        self.assertEqual(campaign["missions"][4]["key_id"], "key_05")
+        self.assertEqual(ops["hong_kong_sandbox"]["map"], "city")
+        self.assertEqual([target["id"] for target in ops["hong_kong_sandbox"]["targets"]], ["loan_shark", "corporate_fixer", "harbour_businessman"])
+        self.assertEqual([key["id"] for key in ops["hong_kong_sandbox"]["keys"]], ["key_02", "key_03", "key_04"])
+        for target in ops["hong_kong_sandbox"]["targets"]:
+            self.assertTrue(target["identity"] and target["dialogue"] and target["routine"])
+            self.assertGreaterEqual(len(target["routine"]), 3)
+            self.assertEqual(len(target["start"]), 3)
+        scene = ROOT / sandbox["scene"].removeprefix("res://")
+        self.assertTrue(scene.is_file())
+        self.assertIn('operation_id = "hong_kong_sandbox"', scene.read_text())
+        for key in ["key_01", "key_02", "key_03", "key_04", "key_05"]:
+            self.assertEqual(sum(mission.get("key_id") == key or key in mission.get("key_ids", []) for mission in campaign["missions"]), 1)
+
+    def test_legacy_city_data_remains_only_for_migration_and_district_builders(self):
+        campaign = json.loads((ROOT / "resources/campaign.json").read_text())
+        ops = json.loads((ROOT / "resources/hong_kong_operations.json").read_text())
+        for legacy_id in ["the_streets", "the_district", "the_harbour"]:
+            self.assertNotIn(legacy_id, [mission["id"] for mission in campaign["missions"]])
+            self.assertIn(legacy_id, ops)
+        self.assertIn('if operation_id == "hong_kong_sandbox":', (ROOT / "scripts/missions/hong_kong_operation.gd").read_text())
+        self.assertTrue((ROOT / "scripts/world/destructible_glass.gd").is_file())
 
     def test_main_scene_and_script_exist(self):
         self.assertIn('run/main_scene="res://scenes/main_menu.tscn"', (ROOT / "project.godot").read_text())
