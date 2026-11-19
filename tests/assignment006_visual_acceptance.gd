@@ -9,6 +9,9 @@ var campaign: Node
 var saved_progress: Dictionary
 var saved_active := ""
 var saved_settings: Dictionary
+var saved_campaign_path := ""
+var saved_settings_path := ""
+var scratch_campaign_path := ""
 var shot: Camera3D
 var world: Node3D
 
@@ -129,6 +132,13 @@ func run() -> void:
 	saved_progress = campaign.progress.snapshot()
 	saved_active = campaign.active_mission
 	saved_settings = campaign.settings.duplicate(true)
+	saved_campaign_path = campaign.campaign_path
+	saved_settings_path = campaign.settings_path
+	# Outfit acquisition in a real mission normally persists campaign state.
+	# Isolate this scene-capture fixture so running it locally cannot overwrite
+	# the player's campaign, settings, or per-mission checkpoint files.
+	scratch_campaign_path = "user://assignment006_visual_acceptance_%d.json" % Time.get_ticks_usec()
+	campaign.campaign_path = scratch_campaign_path
 	campaign.settings["graphics"] = "MEDIUM"
 	campaign.settings["practicals"] = true
 	campaign.settings["shadows"] = true
@@ -298,6 +308,11 @@ func run() -> void:
 	campaign.progress.restore(saved_progress)
 	campaign.active_mission = saved_active
 	campaign.settings = saved_settings
+	campaign.campaign_path = saved_campaign_path
+	campaign.settings_path = saved_settings_path
 	campaign.apply_settings()
+	var scratch_path := ProjectSettings.globalize_path(scratch_campaign_path)
+	if FileAccess.file_exists(scratch_path):
+		DirAccess.remove_absolute(scratch_path)
 	print("A006 RESULT: %d checks, %d failures; 18 requested views staged" % [checks, failures])
 	quit(0 if failures == 0 else 1)
