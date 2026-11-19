@@ -120,6 +120,7 @@ jobs:
           if grep -E 'SCRIPT ERROR|ERROR:|^HKVIS FAIL:' "$RUNNER_TEMP/hkvisual.log"; then exit 1; fi
           grep -E '^HKVIS RESULT: [0-9]+ checks, 0 failures$' "$RUNNER_TEMP/hkvisual.log"
       - name: Assignment 006 campaign visual acceptance capture suite
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
