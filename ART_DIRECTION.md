@@ -1,5 +1,9 @@
 # Art direction — Project Assassin
 
+## Assignment 006 implementation status
+
+This is an acceptance standard, not a claim that the present scenes meet it. The eight CC0-imported human models, role-based outfits and facility architecture now have Godot 4.4.1 CI import/functional coverage (run [44518105768](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44518105768)). Recovered campaign thumbnails remain visibly stylized and blockout-like; they do not demonstrate the grounded, material-specific finish described below. No human/cultural review, complete before/after set or target-device performance gate has passed. The overhaul remains incomplete and this section must not be used as approval of the art.
+
 **Version:** 0.1 research-led proposal. This defines a target and guardrails; it is not a claim of completion, realism, or visual approval. The goal is an original, coherent stealth-action presentation with grounded contemporary environments and readable human silhouettes, using HITMAN: Codename 47 only as a high-level quality aspiration. Do not reproduce its models, maps, compositions, textures, UI, sound, or proprietary techniques.
 
 ## Visual promise

@@ -1,3 +1,7 @@
+# Assignment 006 target performance status
+
+No measurement has been made on the requested Windows 11 / i5-1335U / 16 GB / Intel Iris Xe machine. Current assignment 006 visuals, including imported skinned characters and new facility/city geometry, must not be assigned a target FPS or memory claim. Prior Linux/Xvfb/Mesa samples elsewhere in this file refer to older builds/scenes and software rendering; they are not the target-device result. CI pass/fail, headless launches, and fixed-view FPS samples are not substitutes for a warmed-up, repeatable interactive route on the target machine. Record renderer, graphics preset, resolution, NPC load, median/p95/p99 frame time, memory, Windows build, power profile, driver and build SHA during that test. Until available, the target performance acceptance gate remains **unverified**.
+
 # Current sprint performance status
 
 LOW/MEDIUM/HIGH remain Compatibility-renderer presets. Shadow and local-light overrides and a near/far camera-distance toggle apply live; LOW suppresses shadows and local lights. Neighbourhood practicals are shadowless and bounded, and one beacon changes intensity. No dynamic GI or full day/night system is implemented. The three new neighbourhoods add geometry and agents; target-device profiling is still essential. TESTING.md records software-rendered CI samples, which must not be confused with actual Windows/Iris Xe benchmarks. WINDOWS_PLAYTEST_CHECKLIST.md describes the required measurements.

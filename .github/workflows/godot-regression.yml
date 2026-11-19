@@ -124,8 +124,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          set +e
           TEST_SCREENSHOT_DIR="$GITHUB_WORKSPACE/assignment006-visual-acceptance" xvfb-run -a --server-args="-screen 0 1280x720x24" timeout 240 "$RUNNER_TEMP/Godot_v4.4.1-stable_linux.x86_64" --audio-driver Dummy --rendering-method gl_compatibility --path . --script res://tests/assignment006_visual_acceptance.gd 2>&1 | tee "$RUNNER_TEMP/assignment006-visual.log"
-          if grep -E 'SCRIPT ERROR|ERROR:|^A006 FAIL:' "$RUNNER_TEMP/assignment006-visual.log"; then exit 1; fi
+          test_status=${PIPESTATUS[0]}
+          set -e
+          python3 - "$RUNNER_TEMP/assignment006-visual.log" "$test_status" <<'PYCODE'
+          import pathlib, re, sys
+          lines = pathlib.Path(sys.argv[1]).read_text(errors="replace").splitlines()
+          important = [line for line in lines if re.search(r"^A006 (RESULT|FAIL):|SCRIPT ERROR|ERROR:", line)]
+          if not important:
+              important = [f"visual acceptance process exited with status {sys.argv[2]} without a result line"]
+          text = " | ".join(important[-15:])
+          text = text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+          print(f"::notice title=Assignment 006 visual acceptance::{text}")
+          PYCODE
+          if [ "$test_status" -ne 0 ] || grep -E 'SCRIPT ERROR|ERROR:|^A006 FAIL:' "$RUNNER_TEMP/assignment006-visual.log"; then exit 1; fi
           grep -E '^A006 RESULT: [0-9]+ checks, 0 failures; 18 requested views staged$' "$RUNNER_TEMP/assignment006-visual.log"
       - name: Upload Assignment 006 genuine campaign views
         if: always()

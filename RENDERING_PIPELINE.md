@@ -1,6 +1,6 @@
 # Rendering and visual production pipeline
 
-**Status:** staged plan plus a first source-level prototype. Current baseline is Godot 4.4.1, GL Compatibility, 1280×720. The player and hotel/campaign Instinct paths now instantiate a screen-space grade helper; procedural figures gained small seeded face/hair-shape variation. These changes are not yet validated by Godot CI or rendered visual review. No renderer migration, new external asset import, before/after visual capture, or Windows target measurement has happened. This remains an incomplete campaign-wide overhaul.
+**Status:** active, incomplete Assignment 006 implementation. Baseline is Godot 4.4.1, GL Compatibility, 1280×720. The campaign uses eight provenance-recorded CC0 skinned character models, role/outfit swaps, bone-driven motion, hand equipment, and a discovery-gated Instinct grade; multi-level Ngong Ping facility and campaign environments are implemented in existing scenes. CI run [44518105768](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44518105768) passed Godot import, export and gameplay/disguise/facility checks. The recovered selected CI thumbnails remain visually simple/stylized and are not an art sign-off. A new 18-view genuine-scene capture suite is being exercised by CI; no approved old/new comparison, human visual review, interactive playthrough, cultural review or Windows/Iris Xe target benchmark is established. Renderer choice remains Compatibility for portability, not because it won target-device comparison.
 
 ## Non-negotiable integration rules
 

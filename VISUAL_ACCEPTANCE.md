@@ -1,43 +1,34 @@
-# Visual overhaul acceptance report — checkpoint 2
+# Assignment 006 visual acceptance report
 
-**Overall: INCOMPLETE / PARTIAL PROTOTYPE.** This report is intentionally conservative. The work below is still not the requested campaign-wide quality upgrade. No complete-overhaul, target-device performance, or human visual-acceptance claim is made.
+**Status: INCOMPLETE — no campaign-wide art sign-off.** This report distinguishes Godot import/functional automation, staged screenshots, and human visual/device review. None are interchangeable. The current bar is the `ART_DIRECTION.md` and `RENDERING_PIPELINE.md` gate set; a passing engine test alone is not acceptance.
 
-## Work present in source
+## Verified implementation and regressions
 
-- Researched and documented project facts, technical tradeoffs, visual direction, pipeline, and asset provenance in `VISUAL_RESEARCH.md`, `ART_DIRECTION.md`, `RENDERING_PIPELINE.md`, and `ASSET_PROVENANCE.md`.
-- Added a renderer-compatible screen-space Instinct grade helper and shader; wired it into hotel and campaign operations while leaving mission-specific object eligibility/highlighting logic in place.
-- Added a few original seeded face/hair-shape variations and roughness settings to the existing procedural primitive character. This remains a stylized, primitive-built character, not a realistic skinned human or garment system.
-- Extended the existing rendered Instinct regression with easing-state assertions.
-- Connected the eight MakeHuman-derived CC0 GLBs to `StylizedPerson`, which is used by player, NPC, cinematic and passenger actors. Model selection follows appearance seed/outfit, role-color tints preserve the PBR textures, the existing weapon/tool rigs attach to imported wrist bones, and the prior locomotion/gesture state drives the imported skeleton. Acquired clothing swaps to a different skinned garment model; the subdued NPC remains in singlet/boxer meshes. Automated GDScript checks now assert imported player/NPC scenes, skeleton bones, equipment hand attachments, outfit model swaps and fully-covered clothing recovery. This integration has **not yet been run in Godot**; correct import, fit, pose, texture/material response and visible animations remain unverified. Provenance is recorded in `assets/characters/makehuman_cc0/PROVENANCE.md` and `ASSET_PROVENANCE.md`.
+- Eight pinned MakeHuman/MPFB-derived CC0 GLBs are integrated through `StylizedPerson` for player, NPC, cinematic and passenger scenes. Role/outfit selection, garment materials, bone-driven movement/gestures, equipment attachments and fully covered clothing recovery are implemented. Godot 4.4.1 CI run [44518105768](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44518105768) passed both Windows and headless jobs; the headless disguise/facility suite asserted imported player/NPC models, outfit changes, equipment attachment and clothing coverage. This is automated runtime evidence, not animation/fit/material acceptance.
+- The same run passed the integrated Hong Kong campaign, target/key/progression tests, NPC route cycles, camera/display, rendered Instinct and existing cinematic/environment capture suites. It also passed Windows import/export and headless executable smoke. It is not an interactive Windows playthrough or target-machine test.
+- The multi-level Ngong Ping facility is collision-backed in code and tested as connected subterranean floors and chambers within the recognizable landmark shell. Its rear entrance is mission-discovery gated; the separate field archive contains Key 05. `tests/disguise_facility_test.gd` passed route and discovery checks in run 44518105768. This does not constitute cultural/community review.
+- The city, skyscraper, hotel, station/train and mountain changes are procedural/GDScript work; no commercial game assets were copied. Pinned sources and conversion steps are recorded in `ASSET_PROVENANCE.md` and `assets/characters/makehuman_cc0/PROVENANCE.md`.
 
-## Automated checks
+## Scripted images and visual inspection
 
-- Python data and asset-structure tests: **11/11 passed** locally (`python3 -m unittest discover -s tests -p 'test_*.py' -v`), including both new CC0 character GLB checks. glTF-Validator `2.0.0-dev.3.10` reported zero errors and zero warnings for all eight GLBs after MikkTSpace tangents were generated. These checks are not Godot import/runtime or visual tests.
-- `git diff --check`: passed before commit.
-- Godot 4.4.1 workflow run [44042285895](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44042285895): workflow conclusion **success**. Headless job passed import, main-scene startup, behavioral regression, integrated Hong Kong campaign, outfit/facility, coin progression, NPC route soak, camera/display sampling, through-wall Instinct rendering, cinematic captures, and Hong Kong staged environment captures. This is CI automation using the hosted Linux/Xvfb environment, not human review or target-device evidence.
-- In run [44042990998](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44042990998), both headless and Windows jobs concluded **success**. The Windows job verified official Godot 4.4.1 and export templates, imported/exported the project, and launched its configured scenes headlessly from the Windows release executable. This validates automated Windows export/smoke coverage; it is not a Windows interactive visual playtest and not a benchmark on the specified Iris Xe laptop. The prior run's Windows job was skipped because the workflow gates it on `[windows]` in the commit message.
-- Local sandbox had no Godot executable; Godot runtime testing was performed by CI, not locally.
+- The repository now contains `tests/assignment006_visual_acceptance.gd`, which requests 18 real Godot scene captures at 1280×720 spanning Initiation, Meridian, Tung Chung/station/train, Hong Kong's districts/harbour/disguise, Ngong Ping's public exterior and discovered entry, underground and statue-core spaces, target/intel Instinct and gameplay HUD. The CI job writes PNGs and small review JPEGs to an `assignment006-visual-acceptance` artifact.
+- First run [44520489133](https://github.com/CoolgamerProXD/Stealty-Assasin-reimagined-Beta/actions/runs/44520489133) passed import and all preceding campaign/render/capture suites but **failed the newly added acceptance capture step**. The Actions log/artifact host returned `EOF`, and the check annotation cap omitted that step's diagnostic; the result is unresolved. A subsequent workflow edit emits the capture failure details directly and the next run is required before any capture claim.
+- Partial annotation-recovered previews from the earlier successful CI run are under `screenshots/assignment006/ci/`. I visually inspected examples: `hk_play_ngong_ping.jpg` depicts a very simplified green low-poly approach to the landmark; `hk_skyscraper_interior.jpg` depicts a sparse, flat, angular interior. They establish that scenes rendered, but also show that the environments still read as blockout/prototype geometry rather than the grounded, materially rich campaign finish requested. One lobby thumbnail is truncated/invalid. These small previews are not the 18-view suite and cannot support a final-quality claim.
+- There is **no complete, verified 18-image set**, no equivalent-condition old/new baseline comparison, no high-resolution reviewer-approved evidence, and no recorded human visual approval. The screenshots are not described as artistic acceptance.
 
-## Visual evidence and review
+## Human playtest, culture and target-device gates
 
-- The required **18 paired, equivalent-condition before/after views have not been captured**. No baseline/candidate comparison set exists yet. The CI artifact captures are targeted regression screenshots, not this complete old/new matrix.
-- Automated rendering assertions passed in CI. No human visual review has been performed. No interactive playtest has been performed for this visual change.
-- The user-provided 18-scenario list is not reproduced in this checkpoint's available session context. The 18-item proposed matrix in `RENDERING_PIPELINE.md` is a coverage aid, not a claim that it exactly matches the user's original list; reconcile the scenario names before visual sign-off.
+- No continuous human interactive playthrough of every campaign mission, disguise transition, save/checkpoint, Instinct discovery state and secret facility is recorded. Existing CI tests are scripted/staged and some freeze background NPCs or position actors/cameras directly.
+- No cultural/community review of the Tian Tan Big Buddha representation or fictional facility premise is recorded. Preserve the separate, intact public landmark and seek appropriate review before calling the depiction respectful/approved.
+- No measurement was made on Windows 11 / i5-1335U / 16 GB / Intel Iris Xe at 1280×720. Linux Xvfb/Mesa figures in `PERFORMANCE.md` are hosted software-renderer measurements, not Iris Xe performance.
 
-## Performance and platform
+## Remaining acceptance work
 
-- Target: Windows 11, i5-1335U, 16 GB, Intel Iris Xe, 1280×720.
-- **No benchmark on this target laptop was performed.** No Windows renderer comparison, route frame-time distribution, memory measurement, GPU-driver test, or power-mode test has been made for the prototype.
-- CI Xvfb/Mesa results are software-rendered hosted-runner results and are not Iris Xe performance. Existing historical measurements in `PERFORMANCE.md` remain caveated and do not measure this prototype or the target laptop.
+1. Repair the new capture suite using its next direct CI diagnostic; verify it produces exactly 18 distinct 1280×720 PNGs and review each image at useful scale. Record any missing/poor views, not just the count.
+2. Establish the required equivalent-condition before/after set (same camera, lighting/exposure, character state, renderer and preset) for the requested scenarios. Current scripted views alone are not before/after evidence.
+3. Continue the campaign-wide environment, garment/material, dynamic-lighting and UI polish until actual images meet the stated direction; do not substitute asset/model presence for scene quality.
+4. Conduct and record interactive playtesting and appropriate cultural/landmark review when possible.
+5. Run an honest Windows export and target-device performance pass on the specified machine if accessible; otherwise mark those gates unverified.
+6. Update the six required project documents with final verified outcomes, commit/push to the active branch, and leave a clean worktree.
 
-## Unmet acceptance criteria / next work
-
-- Trigger and pass the Windows Godot 4.4.1 export plus exported-scene smoke suite.
-- Inspect actual screen-shader output and overlay/HUD composition; validate in Compatibility and chosen target renderer, including focus-loss, pause, transitions and all missions.
-- Capture all 18 user scenarios before and after at the same camera, lighting, player/NPC, renderer, preset and resolution; human-review them and save labeled evidence.
-- Build a genuinely improved, varied human/garment pipeline and apply it throughout campaign NPCs without breaking outfit permissions, persistence, animation, or full civilian coverage.
-- Upgrade coherent architecture/materials/lighting across every campaign family; current changes do not do this.
-- Conduct interactive disguise, movement, NPC, mission, save/load, discovery and secret-facility playtests.
-- Benchmark the exact Windows/Iris Xe laptop and report measured results; if inaccessible, explicitly leave the target performance criterion unverified.
-
-**Release gate:** keep this checkpoint partial until the unmet criteria are tested and reviewed. A passing build or selected scene improvement alone does not constitute completion.
+Until then, assignment completion remains blocked. Do not fabricate visual approval, playtesting, target-device measurements, or capture success.
